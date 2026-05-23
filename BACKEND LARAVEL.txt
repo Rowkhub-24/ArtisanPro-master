@@ -1,0 +1,236 @@
+backend/
+├── app/
+│   ├── Console/
+│   │   ├── Commands/
+│   │   │   ├── CalculateScoring.php
+│   │   │   ├── ProcessCommissions.php
+│   │   │   └── SendDailyNotifications.php
+│   │   └── Kernel.php
+│   │
+│   ├── Exceptions/
+│   │   ├── Handler.php
+│   │   └── ApiException.php
+│   │
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Api/
+│   │   │   │   └── V1/
+│   │   │   │       ├── AuthController.php
+│   │   │   │       ├── ArtisanController.php
+│   │   │   │       ├── ClientController.php
+│   │   │   │       ├── ReservationController.php
+│   │   │   │       ├── DevisController.php
+│   │   │   │       ├── PaymentController.php
+│   │   │   │       ├── MessageController.php
+│   │   │   │       ├── AvisController.php
+│   │   │   │       ├── LitigeController.php
+│   │   │   │       ├── CategoryController.php
+│   │   │   │       ├── SearchController.php
+│   │   │   │       ├── NotificationController.php
+│   │   │   │       ├── GeolocationController.php
+│   │   │   │       ├── AcademyController.php
+│   │   │   │       ├── ScoringController.php
+│   │   │   │       └── Admin/
+│   │   │   │           ├── DashboardController.php
+│   │   │   │           ├── UserManageController.php
+│   │   │   │           ├── DisputeManageController.php
+│   │   │   │           ├── PaymentManageController.php
+│   │   │   │           └── ReportController.php
+│   │   │   │
+│   │   │   └── Web/                 # Pages admin Laravel (optionnel)
+│   │   │       └── AdminController.php
+│   │   │
+│   │   ├── Middleware/
+│   │   │   ├── Authenticate.php
+│   │   │   ├── RoleMiddleware.php
+│   │   │   ├── Cors.php
+│   │   │   ├── RateLimit.php
+│   │   │   └── VerifyJwtToken.php
+│   │   │
+│   │   ├── Requests/
+│   │   │   ├── Api/
+│   │   │   │   ├── V1/
+│   │   │   │   │   ├── RegisterRequest.php
+│   │   │   │   │   ├── LoginRequest.php
+│   │   │   │   │   ├── DevisRequest.php
+│   │   │   │   │   ├── ReservationRequest.php
+│   │   │   │   │   ├── PaymentRequest.php
+│   │   │   │   │   ├── AvisRequest.php
+│   │   │   │   │   ├── LitigeRequest.php
+│   │   │   │   │   ├── ArtisanProfileRequest.php
+│   │   │   │   │   └── AdminRequest.php
+│   │   │   │   └── ApiRequest.php
+│   │   │   └── Web/
+│   │   │
+│   │   └── Resources/
+│   │       ├── Api/
+│   │       │   └── V1/
+│   │       │       ├── UserResource.php
+│   │       │       ├── ArtisanResource.php
+│   │       │       ├── ReservationResource.php
+│   │       │       ├── DevisResource.php
+│   │       │       ├── AvisResource.php
+│   │       │       └── LitigeResource.php
+│   │       └── Web/
+│   │
+│   ├── Models/
+│   │   ├── User.php
+│   │   ├── Client.php
+│   │   ├── Artisan.php
+│   │   ├── Admin.php
+│   │   ├── Categorie.php
+│   │   ├── Prestation.php
+│   │   ├── ArtisanSpecialite.php
+│   │   ├── Devis.php
+│   │   ├── Reservation.php
+│   │   ├── Paiement.php
+│   │   ├── Avis.php
+│   │   ├── Message.php
+│   │   ├── Litige.php
+│   │   ├── Sinistre.php
+│   │   ├── Notification.php
+│   │   ├── Certification.php
+│   │   ├── PortfolioImage.php
+│   │   ├── Formation.php
+│   │   ├── ArtisanFormation.php
+│   │   ├── HistoriqueGeolocalisation.php
+│   │   ├── SystemeScoringDetail.php
+│   │   ├── FournisseurPartenaire.php
+│   │   └── Assurance.php
+│   │
+│   ├── Services/
+│   │   ├── Auth/
+│   │   │   ├── JwtService.php
+│   │   │   └── OtpService.php
+│   │   ├── Payment/
+│   │   │   ├── CinetPayService.php
+│   │   │   ├── FedaPayService.php
+│   │   │   └── PaymentInterface.php
+│   │   ├── Notification/
+│   │   │   ├── EmailService.php
+│   │   │   ├── SmsService.php
+│   │   │   └── PushService.php
+│   │   ├── Geolocation/
+│   │   │   └── GoogleMapsService.php
+│   │   ├── Scoring/
+│   │   │   └── ScoringCalculator.php
+│   │   ├── Commission/
+│   │   │   └── CommissionService.php
+│   │   ├── Storage/
+│   │   │   └── MediaService.php
+│   │   └── Messaging/
+│   │       └── WebSocketService.php
+│   │
+│   ├── Repositories/
+│   │   ├── BaseRepository.php
+│   │   ├── ArtisanRepository.php
+│   │   ├── ClientRepository.php
+│   │   ├── ReservationRepository.php
+│   │   ├── DevisRepository.php
+│   │   ├── PaymentRepository.php
+│   │   └── LitigeRepository.php
+│   │
+│   ├── Events/
+│   │   ├── UserRegistered.php
+│   │   ├── ReservationCreated.php
+│   │   ├── ReservationConfirmed.php
+│   │   ├── PaymentProcessed.php
+│   │   ├── MessageSent.php
+│   │   ├── LitigeOpened.php
+│   │   └── ArtisanScoringUpdated.php
+│   │
+│   ├── Listeners/
+│   │   ├── SendWelcomeEmail.php
+│   │   ├── SendReservationNotification.php
+│   │   ├── ProcessCommission.php
+│   │   ├── UpdateScoring.php
+│   │   └── NotifyAdminLitige.php
+│   │
+│   ├── Jobs/
+│   │   ├── ProcessPayment.php
+│   │   ├── SendDailyReport.php
+│   │   ├── CleanExpiredTokens.php
+│   │   ├── SyncArtisanGeolocation.php
+│   │   └── CalculateDailyScoring.php
+│   │
+│   └── Traits/
+│       ├── ApiResponseTrait.php
+│       ├── ImageUploadTrait.php
+│       └── NotificationTrait.php
+│
+├── database/
+│   ├── migrations/
+│   │   ├── 2024_01_01_000001_create_users_table.php
+│   │   ├── 2024_01_01_000002_create_clients_table.php
+│   │   ├── 2024_01_01_000003_create_artisans_table.php
+│   │   ├── 2024_01_01_000004_create_admins_table.php
+│   │   ├── 2024_01_01_000005_create_categories_table.php
+│   │   ├── 2024_01_01_000006_create_prestations_table.php
+│   │   ├── 2024_01_01_000007_create_devis_table.php
+│   │   ├── 2024_01_01_000008_create_reservations_table.php
+│   │   ├── 2024_01_01_000009_create_paiements_table.php
+│   │   ├── 2024_01_01_000010_create_avis_table.php
+│   │   ├── 2024_01_01_000011_create_messages_table.php
+│   │   ├── 2024_01_01_000012_create_litiges_table.php
+│   │   ├── 2024_01_01_000013_create_notifications_table.php
+│   │   ├── 2024_01_01_000014_create_certifications_table.php
+│   │   ├── 2024_01_01_000015_create_portfolio_images_table.php
+│   │   ├── 2024_01_01_000016_create_formations_table.php
+│   │   ├── 2024_01_01_000017_create_artisan_formations_table.php
+│   │   ├── 2024_01_01_000018_create_historique_geolocalisation_table.php
+│   │   ├── 2024_01_01_000019_create_systeme_scoring_detail_table.php
+│   │   └── 2024_01_01_000020_create_sinistres_table.php
+│   │
+│   ├── seeders/
+│   │   ├── DatabaseSeeder.php
+│   │   ├── CategoriesSeeder.php
+│   │   ├── AdminUserSeeder.php
+│   │   └── TestArtisansSeeder.php
+│   │
+│   └── factories/
+│       ├── UserFactory.php
+│       ├── ArtisanFactory.php
+│       ├── ReservationFactory.php
+│       └── AvisFactory.php
+│
+├── routes/
+│   ├── api.php                    # Routes API V1
+│   ├── web.php                    # Routes web (admin Laravel)
+│   ├── channels.php               # WebSocket channels
+│   └── console.php                # CLI routes
+│
+├── config/
+│   ├── api.php
+│   ├── jwt.php
+│   ├── payment.php
+│   ├── services.php               # SendGrid, Twilio, Google Maps
+│   ├── cors.php
+│   └── websockets.php
+│
+├── public/
+│   └── index.php
+│
+├── resources/
+│   ├── lang/
+│   │   └── fr/
+│   └── views/
+│       └── emails/                # Templates email
+│
+├── storage/
+│   ├── app/
+│   │   ├── public/                # Uploads (portfolio, certifications)
+│   │   └── logs/
+│   └── framework/
+│
+├── tests/
+│   ├── Feature/
+│   │   ├── AuthTest.php
+│   │   ├── ReservationTest.php
+│   │   └── PaymentTest.php
+│   └── Unit/
+│
+├── .env
+├── .env.example
+├── composer.json
+├── artisan
+└── phpunit.xml

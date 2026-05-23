@@ -1,0 +1,260 @@
+frontend/
+├── public/
+│   ├── index.html
+│   ├── manifest.json            # PWA
+│   ├── robots.txt
+│   └── assets/
+│       ├── images/
+│       └── icons/
+│
+├── src/
+│   ├── main.jsx                 # Point d'entrée
+│   ├── App.jsx
+│   ├── App.css
+│   │
+│   ├── assets/
+│   │   ├── fonts/
+│   │   ├── images/
+│   │   ├── icons/
+│   │   └── illustrations/
+│   │
+│   ├── components/
+│   │   ├── ui/                  # Composants atomiques
+│   │   │   ├── Button/
+│   │   │   │   ├── Button.jsx
+│   │   │   │   ├── Button.module.css
+│   │   │   │   └── index.js
+│   │   │   ├── Input/
+│   │   │   ├── Modal/
+│   │   │   ├── Loader/
+│   │   │   ├── Toast/
+│   │   │   ├── Card/
+│   │   │   ├── Badge/
+│   │   │   ├── Rating/
+│   │   │   └── Pagination/
+│   │   │
+│   │   ├── layout/
+│   │   │   ├── Header/
+│   │   │   │   ├── Header.jsx
+│   │   │   │   ├── NavLinks.jsx
+│   │   │   │   ├── MobileMenu.jsx
+│   │   │   │   └── NotificationBell.jsx
+│   │   │   ├── Footer/
+│   │   │   ├── Sidebar/
+│   │   │   ├── Layout.jsx
+│   │   │   └── DashboardLayout.jsx
+│   │   │
+│   │   ├── forms/
+│   │   │   ├── RegisterForm.jsx
+│   │   │   ├── LoginForm.jsx
+│   │   │   ├── DevisForm.jsx
+│   │   │   ├── ArtisanProfileForm.jsx
+│   │   │   └── ReservationForm.jsx
+│   │   │
+│   │   ├── artisan/
+│   │   │   ├── ArtisanCard/
+│   │   │   ├── ArtisanFilter/
+│   │   │   ├── ArtisanMap/
+│   │   │   ├── PortfolioGallery/
+│   │   │   ├── CertificationList/
+│   │   │   ├── AvailabilityCalendar/
+│   │   │   └── ScoreGauge/
+│   │   │
+│   │   ├── client/
+│   │   │   ├── ReservationTimeline/
+│   │   │   ├── PaymentSummary/
+│   │   │   └── DevisStatus/
+│   │   │
+│   │   ├── reservation/
+│   │   │   ├── ReservationCard/
+│   │   │   ├── ReservationStatusBadge/
+│   │   │   └── CancelReservationModal/
+│   │   │
+│   │   ├── messaging/
+│   │   │   ├── Chat/
+│   │   │   │   ├── ChatWindow.jsx
+│   │   │   │   ├── MessageBubble.jsx
+│   │   │   │   ├── MessageInput.jsx
+│   │   │   │   └── AttachmentPreview.jsx
+│   │   │   ├── ConversationList.jsx
+│   │   │   └── ConversationItem.jsx
+│   │   │
+│   │   ├── payment/
+│   │   │   ├── MobileMoneyForm/
+│   │   │   ├── PaymentSuccess/
+│   │   │   └── PaymentHistory/
+│   │   │
+│   │   ├── notifications/
+│   │   │   ├── NotificationCenter/
+│   │   │   └── NotificationItem/
+│   │   │
+│   │   └── admin/
+│   │       ├── DataTable/
+│   │       ├── StatsCard/
+│   │       ├── Chart/
+│   │       ├── UserManagementTable/
+│   │       └── DisputeModal/
+│   │
+│   ├── pages/
+│   │   ├── Public/
+│   │   │   ├── HomePage/
+│   │   │   │   ├── HomePage.jsx
+│   │   │   │   └── HeroSection.jsx
+│   │   │   ├── ArtisanListPage/
+│   │   │   │   ├── ArtisanListPage.jsx
+│   │   │   │   ├── SearchBar.jsx
+│   │   │   │   └── FilterSidebar.jsx
+│   │   │   ├── ArtisanDetailPage/
+│   │   │   │   ├── ArtisanDetailPage.jsx
+│   │   │   │   ├── ArtisanInfo.jsx
+│   │   │   │   ├── PortfolioTab.jsx
+│   │   │   │   ├── AvisTab.jsx
+│   │   │   │   └── CertificationTab.jsx
+│   │   │   ├── LoginPage.jsx
+│   │   │   ├── RegisterPage.jsx
+│   │   │   ├── ForgotPasswordPage.jsx
+│   │   │   └── LegalPages/
+│   │   │
+│   │   ├── Client/
+│   │   │   ├── Dashboard/
+│   │   │   │   ├── ClientDashboard.jsx
+│   │   │   │   ├── UpcomingReservations.jsx
+│   │   │   │   └── RecentActivities.jsx
+│   │   │   ├── Reservations/
+│   │   │   │   ├── ClientReservations.jsx
+│   │   │   │   └── ReservationDetailPage.jsx
+│   │   │   ├── Devis/
+│   │   │   │   ├── NewDevisPage.jsx
+│   │   │   │   └── MyDevisList.jsx
+│   │   │   ├── Messages/
+│   │   │   │   └── ClientMessages.jsx
+│   │   │   ├── Profile/
+│   │   │   │   └── ClientProfile.jsx
+│   │   │   └── Payments/
+│   │   │       └── ClientPayments.jsx
+│   │   │
+│   │   ├── Artisan/
+│   │   │   ├── Dashboard/
+│   │   │   │   ├── ArtisanDashboard.jsx
+│   │   │   │   ├── EarningsWidget.jsx
+│   │   │   │   └── UpcomingInterventions.jsx
+│   │   │   ├── Reservations/
+│   │   │   │   ├── ArtisanReservations.jsx
+│   │   │   │   └── ArtisanReservationDetail.jsx
+│   │   │   ├── Devis/
+│   │   │   │   └── ArtisanDevisList.jsx
+│   │   │   ├── Planning/
+│   │   │   │   └── ArtisanPlanning.jsx
+│   │   │   ├── Profile/
+│   │   │   │   ├── ArtisanProfileEdit.jsx
+│   │   │   │   ├── ArtisanPortfolio.jsx
+│   │   │   │   └── ArtisanCertifications.jsx
+│   │   │   ├── Academy/
+│   │   │   │   └── ArtisanAcademy.jsx
+│   │   │   ├── Earnings/
+│   │   │   │   └── ArtisanEarnings.jsx
+│   │   │   ├── Messages/
+│   │   │   │   └── ArtisanMessages.jsx
+│   │   │   └── LiveTracking/
+│   │   │       └── ArtisanLiveTracking.jsx
+│   │   │
+│   │   ├── Admin/
+│   │   │   ├── Dashboard/
+│   │   │   │   └── AdminDashboard.jsx
+│   │   │   ├── Users/
+│   │   │   │   ├── AdminUsers.jsx
+│   │   │   │   └── AdminArtisans.jsx
+│   │   │   ├── Categories/
+│   │   │   │   └── AdminCategories.jsx
+│   │   │   ├── Disputes/
+│   │   │   │   └── AdminDisputes.jsx
+│   │   │   ├── Payments/
+│   │   │   │   └── AdminPayments.jsx
+│   │   │   ├── Academy/
+│   │   │   │   └── AdminAcademy.jsx
+│   │   │   └── Reports/
+│   │   │       └── AdminReports.jsx
+│   │   │
+│   │   └── Shared/
+│   │       ├── NotificationsPage.jsx
+│   │       ├── AccountSettings.jsx
+│   │       └── ConversationPage.jsx
+│   │
+│   ├── routes/
+│   │   ├── AppRoutes.jsx
+│   │   ├── PrivateRoute.jsx
+│   │   ├── RoleBasedRoute.jsx
+│   │   └── routeConfig.js
+│   │
+│   ├── services/
+│   │   ├── api/
+│   │   │   ├── axiosInstance.js
+│   │   │   ├── endpoints/
+│   │   │   │   ├── auth.js
+│   │   │   │   ├── artisans.js
+│   │   │   │   ├── reservations.js
+│   │   │   │   ├── devis.js
+│   │   │   │   ├── payments.js
+│   │   │   │   ├── messages.js
+│   │   │   │   ├── notifications.js
+│   │   │   │   └── admin.js
+│   │   │   └── interceptors.js
+│   │   ├── socket/
+│   │   │   └── socketService.js
+│   │   └── storage/
+│   │       └── localStorageService.js
+│   │
+│   ├── hooks/
+│   │   ├── useAuth.js
+│   │   ├── useSocket.js
+│   │   ├── useGeolocation.js
+│   │   ├── useNotifications.js
+│   │   ├── useReservation.js
+│   │   ├── useDebounce.js
+│   │   ├── useLocalStorage.js
+│   │   └── useApi.js
+│   │
+│   ├── context/
+│   │   ├── AuthContext.jsx
+│   │   ├── SocketContext.jsx
+│   │   ├── NotificationContext.jsx
+│   │   └── ThemeContext.jsx
+│   │
+│   ├── store/                     # Redux Toolkit
+│   │   ├── store.js
+│   │   ├── slices/
+│   │   │   ├── authSlice.js
+│   │   │   ├── artisanSlice.js
+│   │   │   ├── reservationSlice.js
+│   │   │   ├── notificationSlice.js
+│   │   │   └── uiSlice.js
+│   │   └── hooks/
+│   │       └── index.js
+│   │
+│   ├── utils/
+│   │   ├── formatters.js          # prix, date, téléphone
+│   │   ├── validators.js          # validation formulaires
+│   │   ├── constants.js           # constantes applicatives
+│   │   ├── errorHandler.js
+│   │   └── helpers.js
+│   │
+│   ├── styles/
+│   │   ├── globals.css
+│   │   ├── tailwind.css
+│   │   └── theme/
+│   │       └── colors.js
+│   │
+│   └── __tests__/
+│       ├── components/
+│       ├── pages/
+│       └── services/
+│
+├── .env
+├── .env.example
+├── .eslintrc.js
+├── .prettierrc
+├── index.html
+├── package.json
+├── vite.config.js
+├── tailwind.config.js
+└── README.md

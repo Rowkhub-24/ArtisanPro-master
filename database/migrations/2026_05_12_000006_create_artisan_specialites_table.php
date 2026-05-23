@@ -1,0 +1,28 @@
+<?php
+// database/migrations/2026_05_12_000006_create_artisan_specialites_table.php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('artisan_specialites', function (Blueprint $table) {
+            $table->foreignId('id_artisan')
+                  ->constrained('artisans')
+                  ->onDelete('cascade');
+            $table->foreignId('id_categorie')
+                  ->constrained('categories')
+                  ->onDelete('cascade');
+            $table->primary(['id_artisan', 'id_categorie']);
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('artisan_specialites');
+    }
+};

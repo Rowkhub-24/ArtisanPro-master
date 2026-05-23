@@ -1,0 +1,41 @@
+<?php
+
+use App\Http\Controllers\Admin\ArtisanController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PaiementController;
+use App\Http\Controllers\Admin\ReservationController;
+use App\Http\Controllers\Admin\UserController;
+use Illuminate\Support\Facades\Route;
+
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+
+    // Dashboard
+    Route::get('/', DashboardController::class)->name('dashboard');
+
+    // Utilisateurs
+    Route::get('users',                    [UserController::class, 'index'])->name('users.index');
+    Route::get('users/{user}',             [UserController::class, 'show'])->name('users.show');
+    Route::patch('users/{user}/statut',    [UserController::class, 'updateStatut'])->name('users.statut');
+    Route::delete('users/{user}',          [UserController::class, 'destroy'])->name('users.destroy');
+
+    // Artisans
+    Route::get('artisans',                       [ArtisanController::class, 'index'])->name('artisans.index');
+    Route::get('artisans/{artisan}',             [ArtisanController::class, 'show'])->name('artisans.show');
+    Route::patch('artisans/{artisan}/badge',     [ArtisanController::class, 'updateBadge'])->name('artisans.badge');
+
+    // Catégories
+    Route::get('categories',              [CategoryController::class, 'index'])->name('categories.index');
+    Route::post('categories',             [CategoryController::class, 'store'])->name('categories.store');
+    Route::patch('categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('categories/{category}',[CategoryController::class, 'destroy'])->name('categories.destroy');
+
+    // Réservations
+    Route::get('reservations', [ReservationController::class, 'index'])->name('reservations.index');
+
+    // Paiements
+    Route::get('paiements', [PaiementController::class, 'index'])->name('paiements.index');
+
+    // Rapports / analytics
+    Route::get('reports', \App\Http\Controllers\Portal\AdminReportsController::class)->name('reports');
+});
