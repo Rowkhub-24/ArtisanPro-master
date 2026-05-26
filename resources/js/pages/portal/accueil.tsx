@@ -1,9 +1,12 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowRight, Star, MapPin, Search, UserPlus, Wrench, ChevronRight, CheckCircle, Phone, Hammer, Zap, Paintbrush, Layers } from 'lucide-react';
 import { SharedData } from '@/types';
+import { useState } from 'react';
+import PublicNavbar from '@/components/public-navbar';
+import { useLocale } from '@/i18n/use-locale';
 
 interface CategoryRow { id: number; nom: string; icone: string | null; description: string | null; nombre_artisans: number; }
-interface ArtisanCard { id: number; metier: string; note_moyenne: string | number; badge: string; tarifs_horaire: string | number | null; zone_intervention: string | null; prenom: string | null; nom: string | null; categories: string[]; }
+interface ArtisanCard { id: number; metier: string; note_moyenne: string | number; badge: string; tarifs_horaire: string | number | null; zone_intervention: string | null; prenom: string | null; nom: string | null; avatar_url?: string | null; categories: string[]; }
 interface Props { categories: CategoryRow[]; artisansMisEnAvant: ArtisanCard[]; }
 
 const CAT_ICONS: Record<string, React.ElementType> = {
@@ -26,39 +29,16 @@ const STATS = [
 
 export default function Accueil({ categories, artisansMisEnAvant }: Props) {
     const { auth } = usePage<SharedData>().props;
+    const { t } = useLocale();
 
     return (
         <div className="min-h-screen bg-[hsl(36,33%,97%)]">
             <Head title="ArtisanPro — Trouvez votre artisan à Porto-Novo" />
 
-            {/* NAVBAR */}
-            <header className="fixed top-0 inset-x-0 z-50 border-b border-white/8 bg-[hsl(20,14%,10%)]/95 backdrop-blur-md">
-                <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
-                    <Link href="/" className="flex items-center gap-2.5">
-                        <img src="/images/ArtisanPro.jpg" alt="ArtisanPro" className="h-12 w-12 object-contain" />
-                    </Link>
-                    <nav className="hidden md:flex items-center gap-1">
-                        <Link href={route('artisans.index')} className="rounded-lg px-3.5 py-2 text-sm font-medium text-white/70 hover:text-white hover:bg-white/8 transition-all">Annuaire</Link>
-                        <Link href={route('about')} className="rounded-lg px-3.5 py-2 text-sm font-medium text-white/70 hover:text-white hover:bg-white/8 transition-all">À propos</Link>
-                        <Link href={route('faq')} className="rounded-lg px-3.5 py-2 text-sm font-medium text-white/70 hover:text-white hover:bg-white/8 transition-all">FAQ</Link>
-                        <Link href={route('contact')} className="rounded-lg px-3.5 py-2 text-sm font-medium text-white/70 hover:text-white hover:bg-white/8 transition-all">Contact</Link>
-                    </nav>
-                    <div className="flex items-center gap-2">
-                        {auth.user ? (
-                            <Link href={route('dashboard')} className="inline-flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-amber-900/25 transition-all">
-                                Mon espace <ArrowRight className="h-4 w-4" />
-                            </Link>
-                        ) : (
-                            <>
-                                <Link href={route('login')} className="rounded-lg px-3.5 py-2 text-sm font-medium text-white/70 hover:text-white transition-all">Connexion</Link>
-                                <Link href={route('register')} className="inline-flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-amber-900/25 transition-all">
-                                    S&apos;inscrire
-                                </Link>
-                            </>
-                        )}
-                    </div>
-                </div>
-            </header>
+            {/* NAVBAR — via composant partagé */}
+            <PublicNavbar />
+
+            {/* Modal Diagnostic IA — géré dans PublicNavbar */}
 
             {/* HERO */}
             <section className="relative min-h-screen flex items-center overflow-hidden pt-16">
@@ -198,8 +178,14 @@ export default function Accueil({ categories, artisansMisEnAvant }: Props) {
                                 <div className="h-1 w-full bg-gradient-to-r from-amber-400 to-orange-500" />
                                 <div className="flex flex-col flex-1 p-5 gap-3.5">
                                     <div className="flex items-start justify-between">
-                                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 text-amber-700 font-bold text-base border border-amber-200">
-                                            {(a.prenom?.[0] ?? '?')}{(a.nom?.[0] ?? '')}
+                                        <div className="flex h-11 w-11 items-center justify-center rounded-xl overflow-hidden border border-amber-200 shrink-0">
+                                            {a.avatar_url ? (
+                                                <img src={a.avatar_url} alt={`${a.prenom} ${a.nom}`} className="h-full w-full object-cover" />
+                                            ) : (
+                                                <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-100 text-amber-700 font-bold text-base">
+                                                    {(a.prenom?.[0] ?? '?')}{(a.nom?.[0] ?? '')}
+                                                </div>
+                                            )}
                                         </div>
                                         <span className="rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs font-semibold text-amber-700">{a.badge}</span>
                                     </div>

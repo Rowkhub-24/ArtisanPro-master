@@ -1,16 +1,11 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Home, Search, Users, Settings, FileText, Calendar, TrendingUp, Wrench, ArrowRight } from 'lucide-react';
+import { Home, Search, Settings, FileText, Calendar, Wrench, ArrowRight, TrendingUp } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Tableau de bord',
-        href: '/dashboard',
-    },
+    { title: 'Tableau de bord', href: '/dashboard' },
 ];
 
 export default function Dashboard() {
@@ -20,209 +15,151 @@ export default function Dashboard() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tableau de bord - ArtisanPro" />
-            <div className="flex flex-col gap-8 p-6 bg-gradient-to-br from-slate-50 via-white to-blue-50 min-h-screen">
-                {/* Welcome Section */}
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-                                Bienvenue, {auth.user?.prenom}
-                            </h1>
-                            <p className="mt-2 text-lg text-gray-600">
-                                Compte {role === 'client' ? 'client' : role === 'artisan' ? 'artisan' : role} · 
-                                <span className="font-medium text-blue-600"> Plateforme Porto-Novo</span>
-                            </p>
+            <div className="min-h-screen bg-[hsl(36,33%,97%)] p-6 space-y-6">
+
+                {/* Welcome banner */}
+                <div className="relative overflow-hidden rounded-2xl bg-[hsl(20,14%,10%)] p-8 shadow-xl">
+                    <div className="absolute top-0 right-1/4 h-48 w-48 rounded-full bg-amber-500/10 blur-[60px]" />
+                    <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="space-y-2">
+                            <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-amber-400">
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                                {role === 'client' ? 'Espace Client' : role === 'artisan' ? 'Espace Artisan' : 'Tableau de bord'}
+                            </span>
+                            <h1 className="text-3xl font-extrabold text-white">Bienvenue, {auth.user?.prenom} 👋</h1>
+                            <p className="text-white/50">Plateforme ArtisanPro · Porto-Novo, Bénin</p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <span className="text-sm text-gray-600">En ligne</span>
+                            <div className="h-2 w-2 bg-emerald-400 rounded-full animate-pulse" />
+                            <span className="text-sm text-white/60">En ligne</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Quick Actions Grid */}
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                    <Card className="group border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
-                        <CardHeader className="pb-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/20">
-                                    <Search className="h-6 w-6" />
-                                </div>
-                                <ArrowRight className="h-5 w-5 text-white/60 group-hover:text-white transition-colors" />
+                {/* Quick actions */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <Link href={route('artisans.index')}
+                        className="group flex flex-col gap-4 rounded-2xl border border-[hsl(30,20%,88%)] bg-white p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+                        <div className="flex items-center justify-between">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 border border-amber-100 text-amber-600">
+                                <Search className="h-6 w-6" />
                             </div>
-                            <CardTitle className="text-xl">Annuaire</CardTitle>
-                            <CardDescription className="text-blue-100">
-                                Rechercher des artisans par métier
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Button asChild variant="secondary" className="w-full bg-white/20 hover:bg-white/30 text-white border-0">
-                                <Link href={route('artisans.index')}>
-                                    Explorer l'annuaire
-                                </Link>
-                            </Button>
-                        </CardContent>
-                    </Card>
+                            <ArrowRight className="h-5 w-5 text-[hsl(20,10%,65%)] group-hover:text-amber-500 transition-colors" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-[hsl(20,14%,12%)] group-hover:text-amber-600 transition-colors">Annuaire</p>
+                            <p className="text-sm text-[hsl(20,10%,50%)]">Rechercher des artisans</p>
+                        </div>
+                    </Link>
 
-                    <Card className="group border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <CardHeader className="pb-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-                                    <Home className="h-6 w-6" />
-                                </div>
-                                <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                    <Link href={route('home')}
+                        className="group flex flex-col gap-4 rounded-2xl border border-[hsl(30,20%,88%)] bg-white p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+                        <div className="flex items-center justify-between">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 border border-orange-100 text-orange-600">
+                                <Home className="h-6 w-6" />
                             </div>
-                            <CardTitle className="text-xl text-gray-900">Accueil Public</CardTitle>
-                            <CardDescription className="text-gray-600">
-                                Voir la page d'accueil
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Button asChild variant="outline" className="w-full border-gray-300 hover:border-blue-500 hover:bg-blue-50">
-                                <Link href={route('home')}>
-                                    Visiter l'accueil
-                                </Link>
-                            </Button>
-                        </CardContent>
-                    </Card>
+                            <ArrowRight className="h-5 w-5 text-[hsl(20,10%,65%)] group-hover:text-amber-500 transition-colors" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-[hsl(20,14%,12%)] group-hover:text-amber-600 transition-colors">Accueil</p>
+                            <p className="text-sm text-[hsl(20,10%,50%)]">Page d&apos;accueil publique</p>
+                        </div>
+                    </Link>
 
                     {role === 'artisan' && (
-                        <Card className="group border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                            <CardHeader className="pb-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 text-green-600">
-                                        <FileText className="h-6 w-6" />
-                                    </div>
-                                    <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-green-600 transition-colors" />
+                        <Link href={route('artisan.devis')}
+                            className="group flex flex-col gap-4 rounded-2xl border border-[hsl(30,20%,88%)] bg-white p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+                            <div className="flex items-center justify-between">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600">
+                                    <FileText className="h-6 w-6" />
                                 </div>
-                                <CardTitle className="text-xl text-gray-900">Mes Devis</CardTitle>
-                                <CardDescription className="text-gray-600">
-                                    Gérer les demandes reçues
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <Button asChild variant="outline" className="w-full border-gray-300 hover:border-green-500 hover:bg-green-50">
-                                    <Link href={route('artisan.devis')}>
-                                        Voir les devis
-                                    </Link>
-                                </Button>
-                            </CardContent>
-                        </Card>
+                                <ArrowRight className="h-5 w-5 text-[hsl(20,10%,65%)] group-hover:text-amber-500 transition-colors" />
+                            </div>
+                            <div>
+                                <p className="font-bold text-[hsl(20,14%,12%)] group-hover:text-amber-600 transition-colors">Mes Devis</p>
+                                <p className="text-sm text-[hsl(20,10%,50%)]">Gérer les demandes reçues</p>
+                            </div>
+                        </Link>
                     )}
 
                     {role === 'client' && (
-                        <Card className="group border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                            <CardHeader className="pb-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
-                                        <Calendar className="h-6 w-6" />
-                                    </div>
-                                    <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-orange-600 transition-colors" />
+                        <Link href={route('client.reservations')}
+                            className="group flex flex-col gap-4 rounded-2xl border border-[hsl(30,20%,88%)] bg-white p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+                            <div className="flex items-center justify-between">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 border border-blue-100 text-blue-600">
+                                    <Calendar className="h-6 w-6" />
                                 </div>
-                                <CardTitle className="text-xl text-gray-900">Réservations</CardTitle>
-                                <CardDescription className="text-gray-600">
-                                    Suivre mes réservations
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <Button asChild variant="outline" className="w-full border-gray-300 hover:border-orange-500 hover:bg-orange-50">
-                                    <Link href={route('client.reservations')}>
-                                        Mes réservations
-                                    </Link>
-                                </Button>
-                            </CardContent>
-                        </Card>
+                                <ArrowRight className="h-5 w-5 text-[hsl(20,10%,65%)] group-hover:text-amber-500 transition-colors" />
+                            </div>
+                            <div>
+                                <p className="font-bold text-[hsl(20,14%,12%)] group-hover:text-amber-600 transition-colors">Réservations</p>
+                                <p className="text-sm text-[hsl(20,10%,50%)]">Suivre mes réservations</p>
+                            </div>
+                        </Link>
                     )}
 
-                    <Card className="group border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <CardHeader className="pb-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
-                                    <Settings className="h-6 w-6" />
-                                </div>
-                                <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-purple-600 transition-colors" />
+                    <Link href={role === 'client' ? route('client.profil') : role === 'artisan' ? route('artisan.profil') : route('profile.edit')}
+                        className="group flex flex-col gap-4 rounded-2xl border border-[hsl(30,20%,88%)] bg-white p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+                        <div className="flex items-center justify-between">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-50 border border-violet-100 text-violet-600">
+                                <Settings className="h-6 w-6" />
                             </div>
-                            <CardTitle className="text-xl text-gray-900">Profil</CardTitle>
-                            <CardDescription className="text-gray-600">
-                                Gérer mes informations
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Button asChild variant="outline" className="w-full border-gray-300 hover:border-purple-500 hover:bg-purple-50">
-                                <Link href={role === 'client' ? route('client.profil') : role === 'artisan' ? route('artisan.profil') : route('profile.edit')}>
-                                    Paramètres
-                                </Link>
-                            </Button>
-                        </CardContent>
-                    </Card>
+                            <ArrowRight className="h-5 w-5 text-[hsl(20,10%,65%)] group-hover:text-amber-500 transition-colors" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-[hsl(20,14%,12%)] group-hover:text-amber-600 transition-colors">Profil</p>
+                            <p className="text-sm text-[hsl(20,10%,50%)]">Gérer mes informations</p>
+                        </div>
+                    </Link>
                 </div>
 
-                {/* Stats & Info Section */}
+                {/* Info cards */}
                 <div className="grid gap-6 lg:grid-cols-2">
-                    <Card className="border-gray-200 bg-white">
-                        <CardHeader>
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-                                    <TrendingUp className="h-5 w-5" />
-                                </div>
-                                <div>
-                                    <CardTitle className="text-gray-900">Statistiques</CardTitle>
-                                    <CardDescription className="text-gray-600">
-                                        Vue d'ensemble de votre activité
-                                    </CardDescription>
-                                </div>
+                    <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white p-6 shadow-sm">
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 border border-amber-100 text-amber-600">
+                                <TrendingUp className="h-4 w-4" />
                             </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div className="rounded-lg bg-blue-50 p-4">
-                                    <p className="text-sm font-medium text-blue-600">Total des interactions</p>
-                                    <p className="text-2xl font-bold text-blue-900">24</p>
-                                </div>
-                                <div className="rounded-lg bg-green-50 p-4">
-                                    <p className="text-sm font-medium text-green-600">Taux de réponse</p>
-                                    <p className="text-2xl font-bold text-green-900">95%</p>
-                                </div>
+                            <div>
+                                <h2 className="text-base font-bold text-[hsl(20,14%,12%)]">Statistiques</h2>
+                                <p className="text-xs text-[hsl(20,10%,50%)]">Vue d&apos;ensemble de votre activité</p>
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="rounded-xl bg-amber-50 border border-amber-100 p-4">
+                                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Interactions</p>
+                                <p className="text-2xl font-extrabold text-amber-800 mt-1">24</p>
+                            </div>
+                            <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-4">
+                                <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">Taux de réponse</p>
+                                <p className="text-2xl font-extrabold text-emerald-800 mt-1">95%</p>
+                            </div>
+                        </div>
+                    </div>
 
-                    <Card className="border-gray-200 bg-white">
-                        <CardHeader>
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
-                                    <Wrench className="h-5 w-5" />
-                                </div>
-                                <div>
-                                    <CardTitle className="text-gray-900">Prochaines étapes</CardTitle>
-                                    <CardDescription className="text-gray-600">
-                                        Fonctionnalités en développement
-                                    </CardDescription>
-                                </div>
+                    <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white p-6 shadow-sm">
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 border border-orange-100 text-orange-600">
+                                <Wrench className="h-4 w-4" />
                             </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-2 w-2 bg-orange-500 rounded-full"></div>
-                                    <span className="text-sm text-gray-700">Intégration Mobile Money</span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
-                                    <span className="text-sm text-gray-700">Messagerie instantanée</span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                                    <span className="text-sm text-gray-700">Notifications push</span>
-                                </div>
+                            <div>
+                                <h2 className="text-base font-bold text-[hsl(20,14%,12%)]">Prochaines étapes</h2>
+                                <p className="text-xs text-[hsl(20,10%,50%)]">Fonctionnalités en développement</p>
                             </div>
-                            <div className="pt-2 border-t border-gray-200">
-                                <p className="text-xs text-gray-500">
-                                    <strong>API :</strong> <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">POST /api/v1/auth/login</code>
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                        <div className="space-y-3">
+                            {[
+                                { color: 'bg-amber-500', label: 'Intégration Mobile Money' },
+                                { color: 'bg-blue-500', label: 'Messagerie instantanée' },
+                                { color: 'bg-emerald-500', label: 'Notifications push' },
+                            ].map((item) => (
+                                <div key={item.label} className="flex items-center gap-3">
+                                    <div className={`h-2 w-2 rounded-full ${item.color}`} />
+                                    <span className="text-sm text-[hsl(20,10%,35%)]">{item.label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
         </AppLayout>

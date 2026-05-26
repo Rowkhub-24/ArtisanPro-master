@@ -67,26 +67,26 @@ export default function AdminUsersIndex({ users, filters }: Props) {
                 </div>
 
                 {/* Filters */}
-                <Card className="border-0 shadow-sm bg-white">
+                <Card className="rounded-2xl border border-[hsl(30,20%,88%)] shadow-sm bg-white">
                     <CardContent className="p-4">
                         <form onSubmit={submit} className="flex flex-wrap gap-3">
                             <div className="relative flex-1 min-w-48">
                                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                 <Input name="q" defaultValue={filters.q} placeholder="Nom, prénom, email..." className="pl-9 border-gray-200" />
                             </div>
-                            <select name="type" defaultValue={filters.type ?? ''} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none">
+                            <select name="type" defaultValue={filters.type ?? ''} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-amber-400 focus:outline-none">
                                 <option value="">Tous les types</option>
                                 <option value="client">Client</option>
                                 <option value="artisan">Artisan</option>
                                 <option value="admin">Admin</option>
                             </select>
-                            <select name="statut" defaultValue={filters.statut ?? ''} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none">
+                            <select name="statut" defaultValue={filters.statut ?? ''} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-amber-400 focus:outline-none">
                                 <option value="">Tous les statuts</option>
                                 <option value="actif">Actif</option>
                                 <option value="suspendu">Suspendu</option>
                                 <option value="banni">Banni</option>
                             </select>
-                            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                            <Button type="submit" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400">
                                 <Filter className="mr-2 h-4 w-4" />
                                 Filtrer
                             </Button>
@@ -95,16 +95,16 @@ export default function AdminUsersIndex({ users, filters }: Props) {
                 </Card>
 
                 {/* Table */}
-                <Card className="border-0 shadow-sm bg-white overflow-hidden">
+                <Card className="rounded-2xl border border-[hsl(30,20%,88%)] shadow-sm bg-white overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-b border-gray-100 bg-gray-50">
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Utilisateur</th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Inscription</th>
-                                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
+                                <tr className="border-b border-gray-100 bg-[hsl(36,33%,97%)]">
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[hsl(20,10%,50%)] uppercase tracking-wide">Utilisateur</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[hsl(20,10%,50%)] uppercase tracking-wide">Type</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[hsl(20,10%,50%)] uppercase tracking-wide">Statut</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[hsl(20,10%,50%)] uppercase tracking-wide">Inscription</th>
+                                    <th className="px-6 py-3 text-right text-xs font-semibold text-[hsl(20,10%,50%)] uppercase tracking-wide">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -120,7 +120,7 @@ export default function AdminUsersIndex({ users, filters }: Props) {
                                         <tr key={u.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-bold shrink-0">
+                                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white text-xs font-bold shrink-0">
                                                         {u.prenom.charAt(0)}{u.nom.charAt(0)}
                                                     </div>
                                                     <div>
@@ -176,7 +176,7 @@ export default function AdminUsersIndex({ users, filters }: Props) {
                             <div className="flex gap-1">
                                 {users.links.map((l, i) =>
                                     l.url ? (
-                                        <Link key={i} href={l.url} className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${l.active ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                                        <Link key={i} href={l.url} className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${l.active ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
                                             dangerouslySetInnerHTML={{ __html: l.label }} />
                                     ) : (
                                         <span key={i} className="px-3 py-1.5 text-sm text-gray-300" dangerouslySetInnerHTML={{ __html: l.label }} />

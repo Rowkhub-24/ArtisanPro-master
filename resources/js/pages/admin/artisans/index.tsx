@@ -60,20 +60,20 @@ export default function AdminArtisansIndex({ artisans, filters }: Props) {
                 </div>
 
                 {/* Filters */}
-                <Card className="border-0 shadow-sm bg-white">
+                <Card className="rounded-2xl border border-[hsl(30,20%,88%)] shadow-sm bg-white">
                     <CardContent className="p-4">
                         <form onSubmit={submit} className="flex flex-wrap gap-3">
                             <div className="relative flex-1 min-w-48">
                                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                 <Input name="q" defaultValue={filters.q} placeholder="Métier, nom..." className="pl-9 border-gray-200" />
                             </div>
-                            <select name="badge" defaultValue={filters.badge ?? ''} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none">
+                            <select name="badge" defaultValue={filters.badge ?? ''} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-amber-400 focus:outline-none">
                                 <option value="">Tous les badges</option>
                                 <option value="elite">Élite</option>
                                 <option value="certifie">Certifié</option>
                                 <option value="aucun">Standard</option>
                             </select>
-                            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                            <Button type="submit" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400">
                                 <Filter className="mr-2 h-4 w-4" />
                                 Filtrer
                             </Button>
@@ -92,11 +92,11 @@ export default function AdminArtisansIndex({ artisans, filters }: Props) {
                         artisans.data.map((a) => {
                             const bc = badgeConfig[a.badge] ?? badgeConfig.aucun;
                             return (
-                                <Card key={a.id} className="border-0 shadow-sm bg-white hover:shadow-md transition-shadow">
+                                <Card key={a.id} className="rounded-2xl border border-[hsl(30,20%,88%)] shadow-sm bg-white hover:shadow-md transition-shadow">
                                     <CardContent className="p-5">
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 text-white text-sm font-bold shrink-0">
+                                                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white text-sm font-bold shrink-0">
                                                     {a.user?.prenom?.charAt(0)}{a.user?.nom?.charAt(0)}
                                                 </div>
                                                 <div>
@@ -137,7 +137,7 @@ export default function AdminArtisansIndex({ artisans, filters }: Props) {
                                             <select
                                                 value={a.badge}
                                                 onChange={(e) => updateBadge(a.id, e.target.value)}
-                                                className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-700 focus:border-blue-500 focus:outline-none"
+                                                className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-700 focus:border-amber-400 focus:outline-none"
                                             >
                                                 <option value="aucun">Standard</option>
                                                 <option value="certifie">Certifié</option>
@@ -156,7 +156,7 @@ export default function AdminArtisansIndex({ artisans, filters }: Props) {
                     <div className="flex justify-center gap-1">
                         {artisans.links.map((l, i) =>
                             l.url ? (
-                                <Link key={i} href={l.url} className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${l.active ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                                <Link key={i} href={l.url} className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${l.active ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
                                     dangerouslySetInnerHTML={{ __html: l.label }} />
                             ) : (
                                 <span key={i} className="px-3 py-1.5 text-sm text-gray-300" dangerouslySetInnerHTML={{ __html: l.label }} />

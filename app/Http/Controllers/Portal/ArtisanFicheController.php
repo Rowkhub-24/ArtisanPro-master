@@ -13,7 +13,7 @@ class ArtisanFicheController extends Controller
     public function __invoke(Artisan $artisan): Response
     {
         $artisan->load([
-            'user:id,nom,prenom,email,telephone,adresse',
+            'user:id,nom,prenom,email,telephone,adresse,avatar',
             'categories',
             'prestations.category',
             'portfolioImages',

@@ -3,8 +3,6 @@ import { type FormEvent } from 'react';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type SharedData, type BreadcrumbItem } from '@/types';
 
@@ -42,16 +40,18 @@ export default function ClientLitigesCreate({ reservations }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Ouvrir un litige - ArtisanPro" />
 
-            <div className="flex flex-col gap-8 p-6 bg-gradient-to-br from-slate-50 via-white to-blue-50 min-h-screen">
+            <div className="flex flex-col gap-8 p-6 bg-[hsl(36,33%,97%)] min-h-screen">
                 <div className="flex items-center gap-4">
-                    <Button asChild variant="outline" size="icon">
-                        <Link href={route('client.litiges')}>
-                            <ArrowLeft className="h-4 w-4" />
-                        </Link>
-                    </Button>
+                    <Link
+                        href={route('client.litiges')}
+                        className="inline-flex items-center gap-1.5 text-sm text-[hsl(20,10%,50%)] hover:text-amber-600 transition-colors"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Retour
+                    </Link>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Ouvrir un litige</h1>
-                        <p className="mt-1 text-gray-600">Signalez un problème à propos d'une réservation et notre équipe vous contactera.</p>
+                        <h1 className="text-3xl font-bold tracking-tight text-[hsl(20,14%,12%)]">Ouvrir un litige</h1>
+                        <p className="mt-1 text-[hsl(20,10%,50%)]">Signalez un problème à propos d'une réservation et notre équipe vous contactera.</p>
                     </div>
                 </div>
 
@@ -61,87 +61,88 @@ export default function ClientLitigesCreate({ reservations }: Props) {
                     </Alert>
                 )}
                 {flash?.success && (
-                    <Alert className="border-green-200 bg-green-50 text-green-800">
+                    <Alert className="border-emerald-200 bg-emerald-50 text-emerald-800">
                         <AlertDescription>{flash.success}</AlertDescription>
                     </Alert>
                 )}
 
-                <Card className="border-orange-200 bg-orange-50">
-                    <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                            <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5 shrink-0" />
-                            <div>
-                                <p className="font-medium text-orange-900">Pourquoi ouvrir un litige ?</p>
-                                <p className="text-sm text-orange-700 mt-1">
-                                    Notre équipe de support informe le client et l’administrateur dès qu’un litige est enregistré.
-                                </p>
-                            </div>
+                {/* Info Banner */}
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                    <div className="flex items-start gap-3">
+                        <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                        <div>
+                            <p className="font-medium text-amber-900">Pourquoi ouvrir un litige ?</p>
+                            <p className="text-sm text-amber-700 mt-1">
+                                Notre équipe de support informe le client et l'administrateur dès qu'un litige est enregistré.
+                            </p>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
-                <Card className="border-gray-200 bg-white">
-                    <CardHeader>
-                        <CardTitle>Détails du litige</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={submit} className="space-y-6">
-                            <div>
-                                <label htmlFor="reservation_id" className="block text-sm font-medium text-gray-700">
-                                    Réservation concernée
-                                </label>
-                                <select
-                                    id="reservation_id"
-                                    value={form.data.reservation_id}
-                                    onChange={(e) => form.setData('reservation_id', Number(e.target.value))}
-                                    className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:ring-blue-500/20"
-                                >
-                                    {reservations.map((reservation) => (
-                                        <option key={reservation.id} value={reservation.id}>
-                                            {reservation.reference} — {reservation.artisan_metier} ({reservation.artisan_nom}) — {reservation.date_reservation}
-                                        </option>
-                                    ))}
-                                </select>
-                                {form.errors.reservation_id && (
-                                    <p className="mt-2 text-sm text-red-600">{form.errors.reservation_id}</p>
-                                )}
-                            </div>
+                {/* Form */}
+                <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm p-6">
+                    <h2 className="font-semibold text-[hsl(20,14%,12%)] mb-6">Détails du litige</h2>
+                    <form onSubmit={submit} className="space-y-6">
+                        <div>
+                            <label htmlFor="reservation_id" className="block text-sm font-medium text-[hsl(20,14%,12%)]">
+                                Réservation concernée
+                            </label>
+                            <select
+                                id="reservation_id"
+                                value={form.data.reservation_id}
+                                onChange={(e) => form.setData('reservation_id', Number(e.target.value))}
+                                className="mt-2 w-full rounded-xl border border-[hsl(30,20%,82%)] bg-white px-3 py-2 text-[hsl(20,14%,12%)] focus:border-amber-400 focus:outline-none"
+                            >
+                                {reservations.map((reservation) => (
+                                    <option key={reservation.id} value={reservation.id}>
+                                        {reservation.reference} — {reservation.artisan_metier} ({reservation.artisan_nom}) — {reservation.date_reservation}
+                                    </option>
+                                ))}
+                            </select>
+                            {form.errors.reservation_id && (
+                                <p className="mt-2 text-sm text-red-600">{form.errors.reservation_id}</p>
+                            )}
+                        </div>
 
-                            <div>
-                                <label htmlFor="description_litige" className="block text-sm font-medium text-gray-700">
-                                    Description du litige
-                                </label>
-                                <textarea
-                                    id="description_litige"
-                                    value={form.data.description_litige}
-                                    onChange={(e) => form.setData('description_litige', e.target.value)}
-                                    rows={8}
-                                    placeholder="Expliquez le problème rencontré avec l'artisan..."
-                                    className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:ring-blue-500/20"
-                                />
-                                {form.errors.description_litige && (
-                                    <p className="mt-2 text-sm text-red-600">{form.errors.description_litige}</p>
-                                )}
-                            </div>
+                        <div>
+                            <label htmlFor="description_litige" className="block text-sm font-medium text-[hsl(20,14%,12%)]">
+                                Description du litige
+                            </label>
+                            <textarea
+                                id="description_litige"
+                                value={form.data.description_litige}
+                                onChange={(e) => form.setData('description_litige', e.target.value)}
+                                rows={8}
+                                placeholder="Expliquez le problème rencontré avec l'artisan..."
+                                className="mt-2 w-full rounded-xl border border-[hsl(30,20%,82%)] bg-white px-3 py-2 text-[hsl(20,14%,12%)] placeholder-[hsl(20,10%,60%)] focus:border-amber-400 focus:outline-none"
+                            />
+                            {form.errors.description_litige && (
+                                <p className="mt-2 text-sm text-red-600">{form.errors.description_litige}</p>
+                            )}
+                        </div>
 
-                            <div className="flex items-center justify-between gap-3">
-                                <Button asChild variant="outline">
-                                    <Link href={route('client.litiges')}>Retour aux litiges</Link>
-                                </Button>
-                                <Button type="submit" disabled={form.processing || reservations.length === 0} className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white">
-                                    {form.processing ? 'Ouverture en cours...' : 'Ouvrir le litige'}
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+                        <div className="flex items-center justify-between gap-3">
+                            <Link
+                                href={route('client.litiges')}
+                                className="inline-flex items-center rounded-xl border border-[hsl(30,20%,82%)] bg-white px-4 py-2 text-sm font-medium text-[hsl(20,14%,12%)] hover:border-amber-400 transition-colors"
+                            >
+                                Retour aux litiges
+                            </Link>
+                            <button
+                                type="submit"
+                                disabled={form.processing || reservations.length === 0}
+                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white font-semibold px-6 py-2 text-sm transition-all disabled:opacity-60"
+                            >
+                                {form.processing ? 'Ouverture en cours...' : 'Ouvrir le litige'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
 
                 {reservations.length === 0 && (
-                    <Card className="border-dashed border-2 border-gray-200 bg-white">
-                        <CardContent className="p-8 text-center">
-                            <p className="text-sm text-gray-600">Aucune réservation trouvée pour ouvrir un litige. Vérifiez votre historique ou contactez le support.</p>
-                        </CardContent>
-                    </Card>
+                    <div className="rounded-2xl border-2 border-dashed border-[hsl(30,20%,88%)] bg-white p-8 text-center">
+                        <p className="text-sm text-[hsl(20,10%,50%)]">Aucune réservation trouvée pour ouvrir un litige. Vérifiez votre historique ou contactez le support.</p>
+                    </div>
                 )}
             </div>
         </AppLayout>

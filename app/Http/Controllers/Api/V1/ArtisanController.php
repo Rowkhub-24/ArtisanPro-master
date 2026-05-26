@@ -15,7 +15,7 @@ class ArtisanController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Artisan::query()
-            ->with(['user:id,nom,prenom,email,telephone', 'categories:id,nom'])
+            ->with(['user:id,nom,prenom,email,telephone,avatar', 'categories:id,nom'])
             ->whereHas('user', fn ($q) => $q->where('statut', 'actif'));
 
         if ($request->filled('category_id')) {
@@ -61,7 +61,7 @@ class ArtisanController extends Controller
     public function show(Artisan $artisan): JsonResponse
     {
         $artisan->load([
-            'user:id,nom,prenom,email,telephone,adresse',
+            'user:id,nom,prenom,email,telephone,adresse,avatar',
             'categories',
             'prestations.category',
             'portfolioImages',

@@ -14,7 +14,7 @@ class ArtisanAnnuaireController extends Controller
     public function __invoke(Request $request): Response
     {
         $query = Artisan::query()
-            ->with(['user:id,nom,prenom,telephone', 'categories:id,nom'])
+            ->with(['user:id,nom,prenom,telephone,avatar', 'categories:id,nom'])
             ->whereHas('user', fn ($q) => $q->where('statut', 'actif'));
 
         if ($request->filled('category_id')) {
@@ -39,11 +39,15 @@ class ArtisanAnnuaireController extends Controller
                 'q'           => $request->string('q')->toString(),
                 'category_id' => $request->input('category_id'),
             ],
+            // Limites géographiques de Porto-Novo — 5 arrondissements officiels
             'mapArtisans' => Artisan::query()
-                ->with(['user:id,nom,prenom'])
+                ->with(['user:id,nom,prenom,avatar'])
                 ->whereHas('user', fn ($q) => $q->where('statut', 'actif'))
                 ->whereNotNull('latitude')
                 ->whereNotNull('longitude')
+                // Filtrer uniquement les artisans dans les 5 arrondissements de Porto-Novo
+                ->whereBetween('latitude',  [6.47, 6.52])
+                ->whereBetween('longitude', [2.60, 2.68])
                 ->get()
                 ->map(fn (Artisan $a) => [
                     'id'               => $a->id,

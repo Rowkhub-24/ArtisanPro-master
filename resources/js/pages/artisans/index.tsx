@@ -1,8 +1,11 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { MapPin, Star, Search, Home, User, Wrench, ChevronRight, SlidersHorizontal, Hammer, Map } from 'lucide-react';
+import { MapPin, Star, Search, Home, User, Wrench, ChevronRight, SlidersHorizontal, Hammer, Map, Sparkles } from 'lucide-react';
 import { useMemo, useState, lazy, Suspense } from 'react';
 import type { FormEventHandler } from 'react';
 import { type SharedData } from '@/types';
+import LanguageSwitcher from '@/components/language-switcher';
+import DiagnosticIAModal from '@/components/diagnostic-ia-modal';
+import { useLocale } from '@/i18n/use-locale';
 
 const ArtisansMap = lazy(() => import('@/components/artisans-map'));
 
@@ -11,7 +14,7 @@ interface ArtisanRow {
     id: number; metier: string; description: string | null;
     zone_intervention: string | null; tarifs_horaire: string | number | null;
     note_moyenne: string | number; badge: string;
-    user: { prenom: string; nom: string; telephone: string | null } | null;
+    user: { prenom: string; nom: string; telephone: string | null; avatar_url?: string | null } | null;
     categories: { id: number; nom: string }[];
 }
 interface Paginated<T> {
@@ -29,6 +32,8 @@ interface Props {
 export default function ArtisansIndex({ artisans, categories, filters, mapArtisans = [] }: Props) {
     const { auth } = usePage<SharedData>().props;
     const [showMap, setShowMap] = useState(false);
+    const [showDiagnostic, setShowDiagnostic] = useState(false);
+    const { locale, setLocale, t } = useLocale();
 
     const safeArtisans: Paginated<ArtisanRow> = (() => {
         if (!artisans) return { data: [], links: [], meta: { current_page: 1, last_page: 1, per_page: 12, total: 0 } };
@@ -62,6 +67,14 @@ export default function ArtisansIndex({ artisans, categories, filters, mapArtisa
                         <Link href={route('home')} className="flex items-center gap-1.5 text-sm text-[hsl(20,10%,45%)] hover:text-amber-600 transition-colors">
                             <Home className="h-4 w-4" /><span className="hidden sm:block">Accueil</span>
                         </Link>
+                        <button
+                            onClick={() => setShowDiagnostic(true)}
+                            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-medium text-violet-700 hover:bg-violet-100 transition-all"
+                        >
+                            <Sparkles className="h-3.5 w-3.5" />
+                            Diagnostic IA
+                        </button>
+                        <LanguageSwitcher locale={locale} onLocaleChange={setLocale} variant="light" />
                         {auth.user ? (
                             <Link href={route('dashboard')} className="inline-flex items-center gap-2 rounded-xl bg-[hsl(20,14%,12%)] hover:bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition-all">
                                 <User className="h-4 w-4" /> Mon espace
@@ -74,6 +87,8 @@ export default function ArtisansIndex({ artisans, categories, filters, mapArtisa
                     </div>
                 </div>
             </header>
+
+            {showDiagnostic && <DiagnosticIAModal onClose={() => setShowDiagnostic(false)} />}
 
             {/* Hero band */}
             <div className="relative overflow-hidden py-14">
@@ -162,8 +177,14 @@ export default function ArtisansIndex({ artisans, categories, filters, mapArtisa
                                 <div className="h-1 w-full bg-gradient-to-r from-amber-400 to-orange-500" />
                                 <div className="flex flex-col flex-1 p-5 gap-3.5">
                                     <div className="flex items-start justify-between">
-                                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 text-amber-700 font-bold text-base border border-amber-200">
-                                            {(a.user?.prenom?.[0] ?? '?')}{(a.user?.nom?.[0] ?? '')}
+                                        <div className="flex h-11 w-11 items-center justify-center rounded-xl overflow-hidden border border-amber-200 shrink-0">
+                                            {a.user?.avatar_url ? (
+                                                <img src={a.user.avatar_url} alt={`${a.user.prenom} ${a.user.nom}`} className="h-full w-full object-cover" />
+                                            ) : (
+                                                <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-100 text-amber-700 font-bold text-base">
+                                                    {(a.user?.prenom?.[0] ?? '?')}{(a.user?.nom?.[0] ?? '')}
+                                                </div>
+                                            )}
                                         </div>
                                         <span className="rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs font-semibold text-amber-700">{a.badge}</span>
                                     </div>

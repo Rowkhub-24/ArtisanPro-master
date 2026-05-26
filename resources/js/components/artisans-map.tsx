@@ -1,4 +1,10 @@
 import { useEffect, useRef } from 'react';
+import {
+    PORTO_NOVO_CENTER,
+    PORTO_NOVO_BOUNDS,
+    ARRONDISSEMENT_COLORS,
+    nearestQuartier,
+} from '@/data/porto-novo-quartiers';
 
 interface ArtisanMarker {
     id: number;
@@ -19,9 +25,9 @@ interface Props {
 }
 
 const BADGE_COLORS: Record<string, string> = {
-    elite: '#d97706',
-    certifie: '#2563eb',
-    aucun: '#6b7280',
+    elite:    '#d97706', // amber
+    certifie: '#10b981', // emerald
+    aucun:    '#6b7280', // gray
 };
 
 export default function ArtisansMap({ artisans, onSelect }: Props) {
@@ -31,20 +37,29 @@ export default function ArtisansMap({ artisans, onSelect }: Props) {
     useEffect(() => {
         if (!mapRef.current || mapInstanceRef.current) return;
 
-        // Dynamically import Leaflet to avoid SSR issues
         import('leaflet').then((L) => {
             // Fix default icon paths
             delete (L.Icon.Default.prototype as any)._getIconUrl;
             L.Icon.Default.mergeOptions({
                 iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-                iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-                shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
             });
 
+            // Bounds stricts des 5 arrondissements de Porto-Novo
+            const bounds = L.latLngBounds(
+                L.latLng(PORTO_NOVO_BOUNDS.sw[0], PORTO_NOVO_BOUNDS.sw[1]),
+                L.latLng(PORTO_NOVO_BOUNDS.ne[0], PORTO_NOVO_BOUNDS.ne[1]),
+            );
+
             const map = L.map(mapRef.current!, {
-                center: [6.4969, 2.6289], // Porto-Novo
-                zoom: 12,
+                center: PORTO_NOVO_CENTER,
+                zoom: 13,
+                minZoom: 12,              // Reste sur Porto-Novo
+                maxZoom: 18,
                 zoomControl: true,
+                maxBounds: bounds,
+                maxBoundsViscosity: 1.0,  // Bloque tout déplacement hors zone
             });
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -52,26 +67,32 @@ export default function ArtisansMap({ artisans, onSelect }: Props) {
                 maxZoom: 19,
             }).addTo(map);
 
+            // Placer les marqueurs artisans
             artisans.forEach((a) => {
-                const color = BADGE_COLORS[a.badge] ?? BADGE_COLORS.aucun;
+                const badgeColor = BADGE_COLORS[a.badge] ?? BADGE_COLORS.aucun;
+
+                // Couleur de l'arrondissement basée sur la position
+                const quartier = nearestQuartier(a.lat, a.lng);
+                const arrColor = ARRONDISSEMENT_COLORS[quartier.arrondissement] ?? '#6b7280';
+
                 const icon = L.divIcon({
                     className: '',
                     html: `<div style="
-                        background:${color};
+                        background:${badgeColor};
                         color:white;
                         border-radius:50% 50% 50% 0;
                         transform:rotate(-45deg);
                         width:36px;height:36px;
                         display:flex;align-items:center;justify-content:center;
                         box-shadow:0 2px 8px rgba(0,0,0,0.3);
-                        border:2px solid white;
+                        border:3px solid ${arrColor};
                         font-size:14px;font-weight:bold;
                     ">
                         <span style="transform:rotate(45deg)">🔨</span>
                     </div>`,
                     iconSize: [36, 36],
                     iconAnchor: [18, 36],
-                    popupAnchor: [0, -36],
+                    popupAnchor: [0, -40],
                 });
 
                 const tarif = a.tarifs_horaire
@@ -79,7 +100,10 @@ export default function ArtisansMap({ artisans, onSelect }: Props) {
                     : '';
 
                 const popup = `
-                    <div style="min-width:180px;font-family:sans-serif">
+                    <div style="min-width:190px;font-family:sans-serif">
+                        <div style="background:${arrColor};color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px 4px 0 0;margin:-8px -8px 8px -8px;letter-spacing:0.05em">
+                            ${quartier.arrondissement}e Arrondissement · ${quartier.nom}
+                        </div>
                         <div style="font-weight:700;font-size:14px;color:#1c1917;margin-bottom:2px">${a.metier}</div>
                         <div style="font-size:12px;color:#78716c;margin-bottom:4px">${a.prenom ?? ''} ${a.nom ?? ''}</div>
                         <div style="display:flex;align-items:center;gap:4px;font-size:12px">
@@ -96,9 +120,18 @@ export default function ArtisansMap({ artisans, onSelect }: Props) {
 
                 L.marker([a.lat, a.lng], { icon })
                     .addTo(map)
-                    .bindPopup(popup, { maxWidth: 220 })
+                    .bindPopup(popup, { maxWidth: 230 })
                     .on('click', () => onSelect?.(a.id));
             });
+
+            // Ajuster le zoom pour englober tous les marqueurs valides
+            if (artisans.length > 0) {
+                const valid = artisans.filter((a) => bounds.contains(L.latLng(a.lat, a.lng)));
+                if (valid.length > 1) {
+                    const group = L.featureGroup(valid.map((a) => L.marker([a.lat, a.lng])));
+                    map.fitBounds(group.getBounds().pad(0.15), { maxZoom: 15 });
+                }
+            }
 
             mapInstanceRef.current = map;
         });

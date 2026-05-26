@@ -70,18 +70,41 @@ class DatabaseSeeder extends Seeder
             'type_utilisateur'=>'admin','statut'=>'actif',
             'date_inscription'=>Carbon::now()->subYear(),
             'email_verified_at'=>now(),
-            'avatar'=>'https://api.dicebear.com/7.x/initials/svg?seed=RA',
+            'avatar'=>'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=200&h=200&fit=crop&crop=face',
         ]);
     }
 
     private function seedClients(): array
     {
         $list = [
-            ['prenom'=>'Marie','nom'=>'Akpovi','email'=>'marie.akpovi@gmail.com','telephone'=>'+22997220001','avatar'=>'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop&crop=face'],
-            ['prenom'=>'Jean-Baptiste','nom'=>'Soglo','email'=>'jb.soglo@gmail.com','telephone'=>'+22997220002','avatar'=>'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=face'],
-            ['prenom'=>'Fatou','nom'=>'Diallo','email'=>'fatou.diallo@gmail.com','telephone'=>'+22997220003','avatar'=>'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop&crop=face'],
-            ['prenom'=>'Christophe','nom'=>'Hounsa','email'=>'c.hounsa@gmail.com','telephone'=>'+22997220004','avatar'=>'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face'],
-            ['prenom'=>'Aminata','nom'=>'Bello','email'=>'aminata.bello@gmail.com','telephone'=>'+22997220005','avatar'=>'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=face'],
+            // Clients existants — photos de personnes africaines
+            ['prenom'=>'Marie','nom'=>'Akpovi','email'=>'marie.akpovi@gmail.com','telephone'=>'+22997220001',
+             'avatar'=>'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&h=200&fit=crop&crop=face'],
+            ['prenom'=>'Jean-Baptiste','nom'=>'Soglo','email'=>'jb.soglo@gmail.com','telephone'=>'+22997220002',
+             'avatar'=>'https://images.unsplash.com/photo-1539701938214-0d9736e1c16b?w=200&h=200&fit=crop&crop=face'],
+            ['prenom'=>'Fatou','nom'=>'Diallo','email'=>'fatou.diallo@gmail.com','telephone'=>'+22997220003',
+             'avatar'=>'https://images.unsplash.com/photo-1589156280159-27698a70f29e?w=200&h=200&fit=crop&crop=face'],
+            ['prenom'=>'Christophe','nom'=>'Hounsa','email'=>'c.hounsa@gmail.com','telephone'=>'+22997220004',
+             'avatar'=>'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=200&h=200&fit=crop&crop=face'],
+            ['prenom'=>'Aminata','nom'=>'Bello','email'=>'aminata.bello@gmail.com','telephone'=>'+22997220005',
+             'avatar'=>'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=200&h=200&fit=crop&crop=face'],
+            // Nouveaux clients — photos de personnes africaines
+            ['prenom'=>'Rodrigue','nom'=>'Fagnon','email'=>'rodrigue.fagnon@gmail.com','telephone'=>'+22997220006',
+             'avatar'=>'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=200&h=200&fit=crop&crop=face'],
+            ['prenom'=>'Cécile','nom'=>'Amoussou','email'=>'cecile.amoussou@gmail.com','telephone'=>'+22997220007',
+             'avatar'=>'https://images.unsplash.com/photo-1523824921871-d6f1a15151f1?w=200&h=200&fit=crop&crop=face'],
+            ['prenom'=>'Hervé','nom'=>'Dossou-Yovo','email'=>'herve.dossou@gmail.com','telephone'=>'+22997220008',
+             'avatar'=>'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=200&h=200&fit=crop&crop=face'],
+            ['prenom'=>'Nadège','nom'=>'Hounkpè','email'=>'nadege.hounkpe@gmail.com','telephone'=>'+22997220009',
+             'avatar'=>'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop&crop=face'],
+            ['prenom'=>'Sylvain','nom'=>'Gbèdo','email'=>'sylvain.gbedo@gmail.com','telephone'=>'+22997220010',
+             'avatar'=>'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=200&fit=crop&crop=face'],
+            ['prenom'=>'Prudence','nom'=>'Azonhiho','email'=>'prudence.azonhiho@gmail.com','telephone'=>'+22997220011',
+             'avatar'=>'https://images.unsplash.com/photo-1614644147798-f8c0fc9da7f6?w=200&h=200&fit=crop&crop=face'],
+            ['prenom'=>'Léonce','nom'=>'Kpèdékpo','email'=>'leonce.kpedekpo@gmail.com','telephone'=>'+22997220012',
+             'avatar'=>'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face'],
+            ['prenom'=>'Victorine','nom'=>'Adanlin','email'=>'victorine.adanlin@gmail.com','telephone'=>'+22997220013',
+             'avatar'=>'https://images.unsplash.com/photo-1596815064285-45ed8a9c0463?w=200&h=200&fit=crop&crop=face'],
         ];
         $result = [];
         foreach ($list as $cd) {
@@ -137,27 +160,53 @@ class DatabaseSeeder extends Seeder
     private function seedAvis(array $clients, array $artisans): void
     {
         $comments = [
-            5=>["Travail impeccable, je recommande vivement !","Excellent artisan, très professionnel et ponctuel.","Résultat parfait, au-delà de mes attentes.","Très satisfait du travail réalisé. Propre et soigné.","Artisan sérieux et compétent. Je referai appel à lui."],
-            4=>["Bon travail dans l'ensemble, quelques petits détails.","Professionnel et efficace. Légèrement en retard mais bon résultat.","Bonne prestation, rapport qualité-prix correct.","Travail bien fait, communication agréable."],
-            3=>["Travail correct mais délai non respecté.","Résultat moyen, quelques finitions à améliorer."],
+            5 => [
+                "Travail impeccable, je recommande vivement !",
+                "Excellent artisan, très professionnel et ponctuel.",
+                "Résultat parfait, au-delà de mes attentes. Merci !",
+                "Très satisfait du travail réalisé. Propre et soigné.",
+                "Artisan sérieux et compétent. Je referai appel à lui sans hésiter.",
+                "Intervention rapide et efficace. Prix raisonnable. Parfait !",
+                "Qualité de travail exceptionnelle. Délais respectés à la lettre.",
+                "Je suis bluffé par le résultat. Vraiment du grand travail.",
+            ],
+            4 => [
+                "Bon travail dans l'ensemble, quelques petits détails à revoir.",
+                "Professionnel et efficace. Légèrement en retard mais bon résultat.",
+                "Bonne prestation, rapport qualité-prix correct.",
+                "Travail bien fait, communication agréable tout au long du chantier.",
+                "Satisfait du résultat. Je recommande pour ce type de travaux.",
+                "Artisan sérieux, travail soigné. Reviendra pour d'autres travaux.",
+            ],
+            3 => [
+                "Travail correct mais délai non respecté. À améliorer.",
+                "Résultat moyen, quelques finitions à améliorer.",
+                "Prestation correcte mais communication difficile.",
+            ],
         ];
+
         foreach ($artisans as $au) {
-            $shuffled = $clients; shuffle($shuffled);
-            $n = min(rand(3,5), count($shuffled));
-            for ($i=0; $i<$n; $i++) {
-                $note = $i===0 ? 5 : (rand(0,10)>2 ? rand(4,5) : rand(3,4));
+            $shuffled = $clients;
+            shuffle($shuffled);
+            $n = min(rand(4, 8), count($shuffled));
+            for ($i = 0; $i < $n; $i++) {
+                $note = $i === 0 ? 5 : (rand(0, 10) > 2 ? rand(4, 5) : rand(3, 4));
                 $cl = $comments[$note] ?? $comments[4];
-                Avis::create(['id_client'=>$shuffled[$i]['client']->id,'id_artisan'=>$au['artisan']->id,
-                    'id_reservation'=>null,
-                    'note'=>$note,'commentaire'=>$cl[array_rand($cl)],
-                    'date_avis'=>Carbon::now()->subDays(rand(5,180))]);
+                Avis::create([
+                    'id_client'      => $shuffled[$i]['client']->id,
+                    'id_artisan'     => $au['artisan']->id,
+                    'id_reservation' => null,
+                    'note'           => $note,
+                    'commentaire'    => $cl[array_rand($cl)],
+                    'date_avis'      => Carbon::now()->subDays(rand(5, 365)),
+                ]);
             }
         }
     }
 
     private function artisansData(): array { return [
         ['prenom'=>'Kofi','nom'=>'Hounsou','email'=>'kofi.hounsou@artisanpro.bj','telephone'=>'+22997110001',
-         'avatar'=>'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=200&h=200&fit=crop&crop=face',
+         'avatar'=>'https://images.unsplash.com/photo-1539701938214-0d9736e1c16b?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Plombier certifié',
          'description'=>'Spécialiste en plomberie résidentielle et tertiaire à Porto-Novo. Interventions rapides 7j/7 pour fuites, installations sanitaires, chauffe-eau et débouchage. Devis gratuit sous 2h.',
          'bio'=>"Titulaire d'un CAP Plomberie obtenu à l'École des Métiers de Cotonou, j'exerce depuis 12 ans dans la région de Porto-Novo. J'ai réalisé plus de 800 interventions chez des particuliers et des entreprises.",
@@ -182,11 +231,11 @@ class DatabaseSeeder extends Seeder
          ]],
 
         ['prenom'=>'Aïcha','nom'=>'Dossou','email'=>'aicha.dossou@artisanpro.bj','telephone'=>'+22997110002',
-         'avatar'=>'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=face',
+         'avatar'=>'https://images.unsplash.com/photo-1614644147798-f8c0fc9da7f6?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Électricienne diplômée',
          'description'=>'Électricienne certifiée, spécialisée en installation résidentielle et tertiaire. Mise aux normes, dépannage, tableau électrique, éclairage LED, domotique.',
          'bio'=>"Diplômée en Électrotechnique de l'INMES de Cotonou (2015). L'une des rares femmes électriciennes certifiées au Bénin. Installations conformes aux normes NFC 15-100.",
-         'zone'=>'Porto-Novo, Cotonou, Abomey-Calavi, Ouidah','tarif'=>12000,'note'=>4.9,'badge'=>'elite','lat'=>6.3703,'lng'=>2.3912,
+         'zone'=>'Porto-Novo, Cotonou, Abomey-Calavi, Ouidah','tarif'=>12000,'note'=>4.9,'badge'=>'elite','lat'=>6.4970,'lng'=>2.6300,
          'categories'=>['Électricité','Climatisation'],
          'prestations'=>[
              ['titre'=>'Mise aux normes tableau électrique','desc'=>'Remplacement ou mise à niveau du tableau électrique selon normes NFC 15-100.','min'=>45000,'max'=>150000,'duree'=>960,'cat'=>'Électricité'],
@@ -207,11 +256,11 @@ class DatabaseSeeder extends Seeder
          ]],
 
         ['prenom'=>'Théodore','nom'=>'Agossou','email'=>'theodore.agossou@artisanpro.bj','telephone'=>'+22997110003',
-         'avatar'=>'https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=200&h=200&fit=crop&crop=face',
+         'avatar'=>'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Maçon & Carreleur expert',
          'description'=>'Construction, rénovation et pose de carrelage haut de gamme. Spécialiste des finitions soignées pour villas, immeubles et locaux commerciaux.',
          'bio'=>"Artisan polyvalent avec 15 ans d'expérience dans le BTP béninois. J'ai participé à la construction de plus de 50 villas et 10 immeubles dans la région.",
-         'zone'=>'Porto-Novo, Adjarra, Avrankou, Dangbo, Bonou','tarif'=>10000,'note'=>4.6,'badge'=>'certifie','lat'=>6.5000,'lng'=>2.6500,
+         'zone'=>'Porto-Novo, Adjarra, Avrankou, Dangbo, Bonou','tarif'=>10000,'note'=>4.6,'badge'=>'certifie','lat'=>6.5025,'lng'=>2.6390,
          'categories'=>['Maçonnerie','Carrelage'],
          'prestations'=>[
              ['titre'=>'Construction mur en parpaing','desc'=>'Élévation de murs, cloisons, clôtures. Fourniture matériaux possible.','min'=>50000,'max'=>500000,'duree'=>5760,'cat'=>'Maçonnerie'],
@@ -231,11 +280,11 @@ class DatabaseSeeder extends Seeder
          ]],
 
         ['prenom'=>'Rosine','nom'=>'Kpossou','email'=>'rosine.kpossou@artisanpro.bj','telephone'=>'+22997110004',
-         'avatar'=>'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop&crop=face',
+         'avatar'=>'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Menuisière ébéniste',
          'description'=>'Fabrication sur mesure de portes, fenêtres, meubles et parquets en bois massif. Travail artisanal de qualité, bois locaux et importés.',
          'bio'=>"Passionnée de bois depuis l'enfance, formée à l'École des Arts et Métiers de Cotonou. Je travaille principalement le teck, l'iroko et le fraké. Chaque pièce est unique.",
-         'zone'=>'Porto-Novo, Ouidah, Cotonou, Abomey-Calavi','tarif'=>18000,'note'=>4.7,'badge'=>'certifie','lat'=>6.4800,'lng'=>2.6100,
+         'zone'=>'Porto-Novo, Ouidah, Cotonou, Abomey-Calavi','tarif'=>18000,'note'=>4.7,'badge'=>'certifie','lat'=>6.4910,'lng'=>2.6190,
          'categories'=>['Menuiserie'],
          'prestations'=>[
              ['titre'=>"Porte d'entrée sur mesure",'desc'=>'Fabrication porte en bois massif (teck, iroko). Serrure multipoints, finition vernis ou laqué.','min'=>80000,'max'=>250000,'duree'=>5040,'cat'=>'Menuiserie'],
@@ -245,7 +294,7 @@ class DatabaseSeeder extends Seeder
          ],
          'portfolio'=>[
              ['titre'=>'Cuisine teck massif — Villa Cotonou','desc'=>'Cuisine complète en teck massif avec îlot central. 12m² de plan de travail en granit.','url'=>'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
-             ['titre'=>'Bibliothèque murale — Bureau Porto-Novo','desc'=>'Bibliothèque sur mesure du sol au plafond en iroko verni. 8 mètres linéaires.','url'=>'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face'],
+             ['titre'=>'Bibliothèque murale — Bureau Porto-Novo','desc'=>'Bibliothèque sur mesure du sol au plafond en iroko verni. 8 mètres linéaires.','url'=>'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=600&fit=crop'],
              ['titre'=>'Parquet fraké — Salon 60m²','desc'=>'Pose parquet fraké huilé dans un salon de 60m². Finition naturelle, joints serrés.','url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
              ['titre'=>"Portes intérieures — Résidence Ouidah",'desc'=>'Fabrication et pose de 12 portes intérieures en bois massif pour une villa.','url'=>'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=600&fit=crop'],
          ],
@@ -255,11 +304,11 @@ class DatabaseSeeder extends Seeder
          ]],
 
         ['prenom'=>'Patrice','nom'=>'Zinsou','email'=>'patrice.zinsou@artisanpro.bj','telephone'=>'+22997110005',
-         'avatar'=>'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face',
+         'avatar'=>'https://images.unsplash.com/photo-1589156280159-27698a70f29e?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Peintre décorateur',
          'description'=>'Peinture intérieure et extérieure, enduits décoratifs, ravalement de façade. Conseil en couleurs et décoration inclus.',
          'bio'=>"Artiste et artisan depuis 10 ans. Formé à la peinture décorative à Cotonou. Je propose aussi des fresques murales personnalisées pour hôtels et restaurants.",
-         'zone'=>'Porto-Novo, Grand Nokoué, Cotonou, Abomey-Calavi','tarif'=>8000,'note'=>4.5,'badge'=>'aucun','lat'=>6.4900,'lng'=>2.6200,
+         'zone'=>'Porto-Novo, Grand Nokoué, Cotonou, Abomey-Calavi','tarif'=>8000,'note'=>4.5,'badge'=>'aucun','lat'=>6.4930,'lng'=>2.6210,
          'categories'=>['Peinture'],
          'prestations'=>[
              ['titre'=>'Peinture intérieure','desc'=>'Préparation murs, sous-couche, 2 couches finition. Peintures lessivables ou mate.','min'=>1500,'max'=>4000,'duree'=>60,'cat'=>'Peinture'],
@@ -279,11 +328,11 @@ class DatabaseSeeder extends Seeder
          ]],
 
         ['prenom'=>'Serge','nom'=>'Gbaguidi','email'=>'serge.gbaguidi@artisanpro.bj','telephone'=>'+22997110006',
-         'avatar'=>'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=200&fit=crop&crop=face',
+         'avatar'=>'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Technicien Climatisation & Froid',
          'description'=>'Installation, entretien et réparation de tous types de climatiseurs. Certifié Daikin, Samsung et LG. Contrats de maintenance disponibles.',
          'bio'=>"Technicien frigoriste depuis 8 ans, certifié par les principales marques. J'interviens pour les particuliers, hôtels, restaurants et entreprises.",
-         'zone'=>'Porto-Novo, Cotonou, Abomey-Calavi, Sèmè-Podji','tarif'=>20000,'note'=>4.9,'badge'=>'elite','lat'=>6.4750,'lng'=>2.6050,
+         'zone'=>'Porto-Novo, Cotonou, Abomey-Calavi, Sèmè-Podji','tarif'=>20000,'note'=>4.9,'badge'=>'elite','lat'=>6.4955,'lng'=>2.6260,
          'categories'=>['Climatisation','Électricité'],
          'prestations'=>[
              ['titre'=>'Installation climatiseur split','desc'=>'Pose et raccordement climatiseur split mural. Toutes puissances. Garantie 2 ans sur la pose.','min'=>30000,'max'=>80000,'duree'=>270,'cat'=>'Climatisation'],
@@ -303,11 +352,11 @@ class DatabaseSeeder extends Seeder
              ['nom'=>'Certification Samsung HVAC','org'=>'Samsung Electronics','date'=>'2020-11-10'],
          ]],
         ['prenom'=>'Gilles','nom'=>'Akpovi','email'=>'gilles.akpovi@artisanpro.bj','telephone'=>'+22997110007',
-         'avatar'=>'https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=200&h=200&fit=crop&crop=face',
+         'avatar'=>'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Soudeur-Ferronnier',
          'description'=>'Fabrication et pose de portails, grilles, escaliers, garde-corps et structures métalliques sur mesure. Soudure MIG/TIG/électrode.',
          'bio'=>"Ferronnier de métier depuis 14 ans, j'ai créé mon atelier à Porto-Novo en 2015. Je réalise des pièces uniques alliant solidité et esthétique.",
-         'zone'=>'Porto-Novo, Adjarra, Akpro-Missérété, Avrankou','tarif'=>12000,'note'=>4.6,'badge'=>'certifie','lat'=>6.5100,'lng'=>2.6400,
+         'zone'=>'Porto-Novo, Adjarra, Akpro-Missérété, Avrankou','tarif'=>12000,'note'=>4.6,'badge'=>'certifie','lat'=>6.5070,'lng'=>2.6480,
          'categories'=>['Soudure'],
          'prestations'=>[
              ['titre'=>'Portail coulissant sur mesure','desc'=>'Fabrication portail acier ou aluminium. Motorisation possible. Finition peinture ou galvanisation.','min'=>150000,'max'=>600000,'duree'=>7200,'cat'=>'Soudure'],
@@ -326,11 +375,11 @@ class DatabaseSeeder extends Seeder
              ['nom'=>'Qualification Soudeur TIG Inox','org'=>'CODINORM Bénin','date'=>'2017-08-22'],
          ]],
         ['prenom'=>'Éric','nom'=>'Toviho','email'=>'eric.toviho@artisanpro.bj','telephone'=>'+22997110008',
-         'avatar'=>'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&h=200&fit=crop&crop=face',
+         'avatar'=>'https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Technicien Informatique & Réseaux',
          'description'=>'Réparation PC et Mac, installation réseaux WiFi et filaires, maintenance informatique pour entreprises. Récupération de données, antivirus, formation utilisateurs.',
          'bio'=>"Technicien informatique certifié depuis 7 ans. J'interviens chez les particuliers et les entreprises. Contrats de maintenance mensuelle pour les PME de Porto-Novo.",
-         'zone'=>'Porto-Novo, Cotonou, Abomey-Calavi','tarif'=>10000,'note'=>4.7,'badge'=>'certifie','lat'=>6.4850,'lng'=>2.6150,
+         'zone'=>'Porto-Novo, Cotonou, Abomey-Calavi','tarif'=>10000,'note'=>4.7,'badge'=>'certifie','lat'=>6.4850,'lng'=>2.6180,
          'categories'=>['Informatique'],
          'prestations'=>[
              ['titre'=>'Réparation PC/Mac','desc'=>'Diagnostic et réparation ordinateurs. Remplacement pièces, réinstallation OS, nettoyage.','min'=>10000,'max'=>80000,'duree'=>1440,'cat'=>'Informatique'],
@@ -348,6 +397,177 @@ class DatabaseSeeder extends Seeder
              ['nom'=>'CompTIA A+ Certified','org'=>'CompTIA','date'=>'2017-04-10'],
              ['nom'=>'Cisco CCNA','org'=>'Cisco Systems','date'=>'2019-09-25'],
              ['nom'=>'Microsoft Certified: Azure Fundamentals','org'=>'Microsoft','date'=>'2022-06-15'],
+         ]],
+
+        // ── Nouveaux artisans ────────────────────────────────────────────────
+
+        ['prenom'=>'Brice','nom'=>'Dèdèhou','email'=>'brice.dededhou@artisanpro.bj','telephone'=>'+22997110009',
+         'avatar'=>'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face',
+         'metier'=>'Jardinier paysagiste',
+         'description'=>'Création et entretien d\'espaces verts, jardins tropicaux, pelouses et haies. Spécialiste des plantes locales du Bénin. Devis gratuit à domicile.',
+         'bio'=>"Passionné de nature depuis l'enfance, j'ai suivi une formation en horticulture à l'INRAB de Cotonou. Je crée des jardins qui respectent l'écosystème local tout en apportant fraîcheur et beauté.",
+         'zone'=>'Porto-Novo, Adjarra, Avrankou, Akpro-Missérété','tarif'=>8000,'note'=>4.7,'badge'=>'certifie','lat'=>6.5060,'lng'=>2.6460,
+         'categories'=>['Jardinage'],
+         'prestations'=>[
+             ['titre'=>'Création jardin tropical','desc'=>'Conception et plantation jardin avec espèces locales. Plan personnalisé inclus.','min'=>80000,'max'=>500000,'duree'=>4320,'cat'=>'Jardinage'],
+             ['titre'=>'Entretien mensuel espaces verts','desc'=>'Tonte, taille, désherbage, arrosage. Contrat mensuel ou trimestriel.','min'=>15000,'max'=>60000,'duree'=>240,'cat'=>'Jardinage'],
+             ['titre'=>'Élagage et abattage arbres','desc'=>'Élagage sécurisé, abattage contrôlé, broyage des déchets verts.','min'=>20000,'max'=>150000,'duree'=>480,'cat'=>'Jardinage'],
+             ['titre'=>'Pose gazon naturel ou synthétique','desc'=>'Fourniture et pose gazon. Préparation sol, drainage, arrosage automatique.','min'=>5000,'max'=>15000,'duree'=>60,'cat'=>'Jardinage'],
+         ],
+         'portfolio'=>[
+             ['titre'=>'Jardin tropical — Villa Anavié','desc'=>'Création d\'un jardin de 300m² avec palmiers, bananiers, hibiscus et allée en latérite.','url'=>'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&h=600&fit=crop'],
+             ['titre'=>'Haie décorative — Résidence Ouando','desc'=>'Plantation et taille d\'une haie de 50m en bougainvilliers multicolores.','url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
+             ['titre'=>'Pelouse gazon — Terrain de sport','desc'=>'Pose de 800m² de gazon naturel pour un terrain de football d\'école.','url'=>'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=600&fit=crop'],
+             ['titre'=>'Jardin zen — Hôtel Porto-Novo','desc'=>'Aménagement d\'un espace de détente avec bambous, pierres et bassin.','url'=>'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&h=600&fit=crop'],
+         ],
+         'certifications'=>[
+             ['nom'=>'BTS Horticulture','org'=>'INRAB Cotonou','date'=>'2013-07-10'],
+             ['nom'=>'Certification Phytosanitaire','org'=>'MAEP Bénin','date'=>'2018-04-15'],
+         ]],
+
+        ['prenom'=>'Célestine','nom'=>'Vodounou','email'=>'celestine.vodounou@artisanpro.bj','telephone'=>'+22997110010',
+         'avatar'=>'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=face',
+         'metier'=>'Carreleur & Faïencier',
+         'description'=>'Pose de carrelage haut de gamme, faïence, mosaïque et pierre naturelle. Spécialiste des salles de bain et cuisines modernes. Finitions impeccables garanties.',
+         'bio'=>"Artisane depuis 11 ans, formée à l'École des Métiers de Porto-Novo. Je suis l'une des rares femmes carreleurs certifiées au Bénin. Mon travail est reconnu pour sa précision et ses finitions soignées.",
+         'zone'=>'Porto-Novo, Sèmè-Podji, Cotonou','tarif'=>6000,'note'=>4.8,'badge'=>'certifie','lat'=>6.4940,'lng'=>2.6240,
+         'categories'=>['Carrelage','Maçonnerie'],
+         'prestations'=>[
+             ['titre'=>'Pose carrelage grand format','desc'=>'Carrelage 60x60, 80x80, 120x60. Rectifié, joints fins. Résultat haut de gamme.','min'=>5000,'max'=>12000,'duree'=>60,'cat'=>'Carrelage'],
+             ['titre'=>'Salle de bain complète','desc'=>'Carrelage sol et mur, faïence, niche de douche, tablette. Clé en main.','min'=>150000,'max'=>600000,'duree'=>5760,'cat'=>'Carrelage'],
+             ['titre'=>'Mosaïque décorative','desc'=>'Création mosaïque sur mesure : piscine, fontaine, tableau mural.','min'=>20000,'max'=>200000,'duree'=>2880,'cat'=>'Carrelage'],
+             ['titre'=>'Rénovation cuisine','desc'=>'Dépose ancien carrelage, ragréage, pose nouveau carrelage et crédence.','min'=>80000,'max'=>300000,'duree'=>2880,'cat'=>'Carrelage'],
+         ],
+         'portfolio'=>[
+             ['titre'=>'Salle de bain marbre — Villa Hinkoudé','desc'=>'Salle de bain 12m² entièrement en marbre blanc de Carrare. Douche à l\'italienne.','url'=>'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=800&h=600&fit=crop'],
+             ['titre'=>'Cuisine moderne — Appartement Agbokou','desc'=>'Carrelage grès cérame 60x60 gris anthracite + crédence en mosaïque dorée.','url'=>'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
+             ['titre'=>'Piscine mosaïque — Résidence Djègan','desc'=>'Revêtement piscine en mosaïque bleu turquoise. 45m² de surface.','url'=>'https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?w=800&h=600&fit=crop'],
+             ['titre'=>'Hall d\'entrée — Immeuble Attakè','desc'=>'Carrelage marbre noir et blanc en damier pour hall d\'entrée de 30m².','url'=>'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&h=600&fit=crop'],
+         ],
+         'certifications'=>[
+             ['nom'=>'CAP Carrelage-Mosaïque','org'=>'École des Métiers de Porto-Novo','date'=>'2013-06-20'],
+             ['nom'=>'Formation Pose Grands Formats','org'=>'Mapei Bénin','date'=>'2020-03-10'],
+         ]],
+
+        ['prenom'=>'Narcisse','nom'=>'Agbangla','email'=>'narcisse.agbangla@artisanpro.bj','telephone'=>'+22997110011',
+         'avatar'=>'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=200&fit=crop&crop=face',
+         'metier'=>'Électricien bâtiment & solaire',
+         'description'=>'Installation électrique, énergie solaire photovoltaïque, onduleurs et batteries. Spécialiste des systèmes hybrides pour particuliers et entreprises.',
+         'bio'=>"Électricien depuis 9 ans, reconverti dans le solaire en 2019. J'ai installé plus de 120 systèmes solaires dans la région de Porto-Novo. Formé par SolarEdge et Victron Energy.",
+         'zone'=>'Porto-Novo, Adjarra, Avrankou, Dangbo','tarif'=>14000,'note'=>4.9,'badge'=>'elite','lat'=>6.5000,'lng'=>2.6350,
+         'categories'=>['Électricité'],
+         'prestations'=>[
+             ['titre'=>'Installation solaire résidentielle','desc'=>'Système solaire complet : panneaux, onduleur, batteries, tableau. Autonomie 24h.','min'=>500000,'max'=>3000000,'duree'=>14400,'cat'=>'Électricité'],
+             ['titre'=>'Dépannage électrique urgent','desc'=>'Intervention rapide toutes pannes. Disponible 7j/7 de 7h à 22h.','min'=>10000,'max'=>50000,'duree'=>120,'cat'=>'Électricité'],
+             ['titre'=>'Installation tableau électrique','desc'=>'Tableau neuf ou remplacement. Disjoncteurs différentiels, protection parafoudre.','min'=>60000,'max'=>200000,'duree'=>720,'cat'=>'Électricité'],
+             ['titre'=>'Éclairage solaire extérieur','desc'=>'Lampadaires solaires, spots de jardin, éclairage parking. Autonome et économique.','min'=>30000,'max'=>200000,'duree'=>480,'cat'=>'Électricité'],
+         ],
+         'portfolio'=>[
+             ['titre'=>'Système solaire 5kWc — Villa Adjina','desc'=>'Installation 12 panneaux 450W + onduleur Victron + 4 batteries lithium 200Ah.','url'=>'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&h=600&fit=crop'],
+             ['titre'=>'Éclairage solaire — Quartier Ouando','desc'=>'Installation de 15 lampadaires solaires pour l\'éclairage d\'une rue résidentielle.','url'=>'https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?w=800&h=600&fit=crop'],
+             ['titre'=>'Centrale solaire — École primaire','desc'=>'Système 3kWc pour alimenter 6 salles de classe. Économie 80% sur la facture SBEE.','url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
+             ['titre'=>'Tableau électrique neuf — Immeuble R+3','desc'=>'Remplacement tableau vétuste par tableau 4 rangées avec protection différentielle.','url'=>'https://images.unsplash.com/photo-1558002038-1055907df827?w=800&h=600&fit=crop'],
+         ],
+         'certifications'=>[
+             ['nom'=>'BTS Électrotechnique','org'=>'INMES Cotonou','date'=>'2015-07-15'],
+             ['nom'=>'Certification SolarEdge Installateur','org'=>'SolarEdge Technologies','date'=>'2020-02-20'],
+             ['nom'=>'Victron Energy Certified Installer','org'=>'Victron Energy','date'=>'2021-11-08'],
+         ]],
+
+        ['prenom'=>'Yvette','nom'=>'Kossou','email'=>'yvette.kossou@artisanpro.bj','telephone'=>'+22997110012',
+         'avatar'=>'https://images.unsplash.com/photo-1523824921871-d6f1a15151f1?w=200&h=200&fit=crop&crop=face',
+         'metier'=>'Peintre en bâtiment',
+         'description'=>'Peinture intérieure et extérieure, enduits, ravalement. Travail soigné, délais respectés. Devis gratuit sous 24h.',
+         'bio'=>"Artisane peintre depuis 8 ans à Porto-Novo. Formée à l'CFPA de Cotonou, je travaille aussi bien pour les particuliers que pour les promoteurs immobiliers.",
+         'zone'=>'Porto-Novo, Sèmè-Podji, Akpro-Missérété','tarif'=>7000,'note'=>4.5,'badge'=>'aucun','lat'=>6.4985,'lng'=>2.6330,
+         'categories'=>['Peinture'],
+         'prestations'=>[
+             ['titre'=>'Peinture intérieure complète','desc'=>'Préparation, sous-couche, 2 couches finition. Peinture lessivable ou velours.','min'=>2000,'max'=>5000,'duree'=>60,'cat'=>'Peinture'],
+             ['titre'=>'Peinture façade','desc'=>'Nettoyage, traitement fissures, peinture hydrofuge. Garantie 5 ans.','min'=>3500,'max'=>8000,'duree'=>60,'cat'=>'Peinture'],
+             ['titre'=>'Enduit de lissage','desc'=>'Enduit de finition pour murs neufs ou rénovation. Résultat lisse et uniforme.','min'=>2500,'max'=>6000,'duree'=>60,'cat'=>'Peinture'],
+             ['titre'=>'Peinture plafond','desc'=>'Peinture plafond blanc mat ou satiné. Traitement taches et auréoles.','min'=>1500,'max'=>3500,'duree'=>60,'cat'=>'Peinture'],
+         ],
+         'portfolio'=>[
+             ['titre'=>'Appartement neuf — Résidence Koutongbé','desc'=>'Peinture complète d\'un appartement T4 de 90m². Couleurs personnalisées par pièce.','url'=>'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&h=600&fit=crop'],
+             ['titre'=>'Façade villa — Quartier Djègan Daho','desc'=>'Ravalement façade villa R+1. Enduit projeté + peinture siloxane blanc cassé.','url'=>'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&h=600&fit=crop'],
+             ['titre'=>'Bureau moderne — Immeuble Hinkoudé','desc'=>'Peinture bureaux 200m². Couleurs corporate, finition satiné lavable.','url'=>'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=600&fit=crop'],
+             ['titre'=>'Chambre enfant — Villa Attakè','desc'=>'Décoration chambre enfant avec frise murale et peinture thématique jungle.','url'=>'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=600&fit=crop'],
+         ],
+         'certifications'=>[
+             ['nom'=>'CAP Peinture Bâtiment','org'=>'CFPA Cotonou','date'=>'2016-06-15'],
+         ]],
+
+        ['prenom'=>'Damien','nom'=>'Hounkpatin','email'=>'damien.hounkpatin@artisanpro.bj','telephone'=>'+22997110013',
+         'avatar'=>'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&h=200&fit=crop&crop=face',
+         'metier'=>'Plombier & Sanitaire',
+         'description'=>'Plomberie générale, installation sanitaire, chauffe-eau, fosse septique. Intervention rapide sur Porto-Novo et environs. Disponible week-end.',
+         'bio'=>"Plombier depuis 10 ans, j'ai travaillé sur des chantiers de construction à Cotonou avant de m'installer à Porto-Novo. Je maîtrise les installations en PVC, PPR et cuivre.",
+         'zone'=>'Porto-Novo, Adjarra, Avrankou','tarif'=>12000,'note'=>4.6,'badge'=>'certifie','lat'=>6.4960,'lng'=>2.6280,
+         'categories'=>['Plomberie'],
+         'prestations'=>[
+             ['titre'=>'Installation fosse septique','desc'=>'Fosse septique toutes eaux. Terrassement, pose, raccordement. Conforme normes.','min'=>200000,'max'=>800000,'duree'=>5760,'cat'=>'Plomberie'],
+             ['titre'=>'Réparation fuite urgente','desc'=>'Intervention urgence 7j/7. Fuite canalisation, robinet, chasse d\'eau.','min'=>8000,'max'=>30000,'duree'=>90,'cat'=>'Plomberie'],
+             ['titre'=>'Installation salle de bain','desc'=>'Pose WC, lavabo, douche, baignoire. Raccordement eau froide/chaude et évacuation.','min'=>50000,'max'=>200000,'duree'=>2880,'cat'=>'Plomberie'],
+             ['titre'=>'Chauffe-eau solaire','desc'=>'Installation chauffe-eau solaire 200L. Économie 70% sur la facture d\'eau chaude.','min'=>150000,'max'=>400000,'duree'=>480,'cat'=>'Plomberie'],
+         ],
+         'portfolio'=>[
+             ['titre'=>'Fosse septique — Villa Avakpa','desc'=>'Installation fosse septique 5000L pour villa de 6 personnes. Conforme normes SONEB.','url'=>'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&h=600&fit=crop'],
+             ['titre'=>'Salle de bain moderne — Appartement Agbokou','desc'=>'Installation complète : douche à l\'italienne, WC suspendu, double vasque.','url'=>'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=800&h=600&fit=crop'],
+             ['titre'=>'Réseau eau — Immeuble R+4','desc'=>'Installation réseau eau froide et chaude pour immeuble de 8 appartements.','url'=>'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&h=600&fit=crop'],
+             ['titre'=>'Chauffe-eau solaire — Résidence Sèdjèko','desc'=>'Installation 2 chauffe-eaux solaires 300L pour résidence de 4 appartements.','url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
+         ],
+         'certifications'=>[
+             ['nom'=>'CAP Plomberie','org'=>'CFPA Porto-Novo','date'=>'2014-06-10'],
+             ['nom'=>'Habilitation Assainissement','org'=>'SONEB Bénin','date'=>'2019-05-20'],
+         ]],
+
+        ['prenom'=>'Fidèle','nom'=>'Azonhiho','email'=>'fidele.azonhiho@artisanpro.bj','telephone'=>'+22997110014',
+         'avatar'=>'https://images.unsplash.com/photo-1596815064285-45ed8a9c0463?w=200&h=200&fit=crop&crop=face',
+         'metier'=>'Menuisier aluminium & PVC',
+         'description'=>'Fabrication et pose de menuiseries aluminium et PVC : fenêtres, portes, vérandas, garde-corps, pergolas. Isolation thermique et phonique garantie.',
+         'bio'=>"Spécialiste de la menuiserie aluminium depuis 12 ans. J'ai équipé plus de 200 villas et immeubles à Porto-Novo. Mes réalisations allient esthétique moderne et performance thermique.",
+         'zone'=>'Porto-Novo, Cotonou, Abomey-Calavi, Sèmè-Podji','tarif'=>16000,'note'=>4.7,'badge'=>'certifie','lat'=>6.5080,'lng'=>2.6500,
+         'categories'=>['Menuiserie'],
+         'prestations'=>[
+             ['titre'=>'Fenêtres aluminium double vitrage','desc'=>'Fabrication et pose fenêtres aluminium. Double vitrage 4/16/4. Isolation optimale.','min'=>80000,'max'=>300000,'duree'=>2880,'cat'=>'Menuiserie'],
+             ['titre'=>'Porte d\'entrée aluminium','desc'=>'Porte blindée aluminium avec serrure multipoints. Finition laquée ou anodisée.','min'=>150000,'max'=>500000,'duree'=>1440,'cat'=>'Menuiserie'],
+             ['titre'=>'Véranda aluminium','desc'=>'Conception et pose véranda sur mesure. Toit polycarbonate ou verre feuilleté.','min'=>500000,'max'=>3000000,'duree'=>14400,'cat'=>'Menuiserie'],
+             ['titre'=>'Garde-corps aluminium','desc'=>'Garde-corps balcon, escalier, terrasse. Barreaux, câbles ou verre. Sur mesure.','min'=>40000,'max'=>200000,'duree'=>1440,'cat'=>'Menuiserie'],
+         ],
+         'portfolio'=>[
+             ['titre'=>'Véranda moderne — Villa Gbèdjromèdé','desc'=>'Véranda 25m² en aluminium blanc avec toit en verre feuilleté. Vue jardin.','url'=>'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&h=600&fit=crop'],
+             ['titre'=>'Fenêtres double vitrage — Immeuble Dodji','desc'=>'Remplacement 24 fenêtres par menuiseries aluminium double vitrage. Économie 40% climatisation.','url'=>'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=600&fit=crop'],
+             ['titre'=>'Garde-corps verre — Duplex Anavié','desc'=>'Garde-corps en verre feuilleté 10mm pour terrasse de 15m linéaires.','url'=>'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&h=600&fit=crop'],
+             ['titre'=>'Porte coulissante — Salon Gbodjè','desc'=>'Grande baie vitrée coulissante 4m en aluminium thermolaqué gris anthracite.','url'=>'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
+         ],
+         'certifications'=>[
+             ['nom'=>'CAP Menuiserie Aluminium','org'=>'CFPA Cotonou','date'=>'2012-06-20'],
+             ['nom'=>'Certification Technal Installateur','org'=>'Technal France','date'=>'2018-09-15'],
+         ]],
+
+        ['prenom'=>'Sandrine','nom'=>'Dossevi','email'=>'sandrine.dossevi@artisanpro.bj','telephone'=>'+22997110015',
+         'avatar'=>'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop&crop=face',
+         'metier'=>'Technicienne en climatisation',
+         'description'=>'Installation, entretien et dépannage de climatiseurs résidentiels et commerciaux. Certifiée Mitsubishi et Gree. Contrats de maintenance annuelle disponibles.',
+         'bio'=>"Technicienne frigoriste depuis 6 ans, je suis l'une des rares femmes dans ce métier au Bénin. Formée à l'INMES de Cotonou, je maîtrise tous les types de climatiseurs du marché.",
+         'zone'=>'Porto-Novo, Sèmè-Podji, Adjarra','tarif'=>18000,'note'=>4.8,'badge'=>'certifie','lat'=>6.5090,'lng'=>2.6520,
+         'categories'=>['Climatisation','Électricité'],
+         'prestations'=>[
+             ['titre'=>'Installation climatiseur résidentiel','desc'=>'Pose climatiseur split 9000 à 24000 BTU. Câblage électrique inclus. Garantie 2 ans.','min'=>35000,'max'=>90000,'duree'=>300,'cat'=>'Climatisation'],
+             ['titre'=>'Maintenance préventive','desc'=>'Nettoyage complet, vérification gaz, contrôle électrique. Rapport d\'intervention.','min'=>15000,'max'=>40000,'duree'=>120,'cat'=>'Climatisation'],
+             ['titre'=>'Recharge gaz climatiseur','desc'=>'Détection fuite, réparation, recharge gaz R32 ou R410A. Garantie 6 mois.','min'=>25000,'max'=>60000,'duree'=>180,'cat'=>'Climatisation'],
+             ['titre'=>'Climatisation commerciale','desc'=>'Systèmes multi-split pour boutiques, restaurants, bureaux. Étude et devis gratuits.','min'=>200000,'max'=>2000000,'duree'=>7200,'cat'=>'Climatisation'],
+         ],
+         'portfolio'=>[
+             ['titre'=>'Boutique climatisée — Centre commercial Ouando','desc'=>'Installation 4 climatiseurs Mitsubishi 18000 BTU dans une boutique de 80m².','url'=>'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&h=600&fit=crop'],
+             ['titre'=>'Villa 5 pièces — Quartier Akonaboè','desc'=>'Équipement complet villa : 5 climatiseurs Gree avec télécommande WiFi.','url'=>'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=600&fit=crop'],
+             ['titre'=>'Salle de conférence — Hôtel Djlado','desc'=>'Climatisation salle 100 personnes avec système VRF Daikin. Contrôle centralisé.','url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
+             ['titre'=>'Maintenance annuelle — Résidence Houinvié','desc'=>'Contrat maintenance 12 climatiseurs pour résidence de 6 appartements.','url'=>'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=600&fit=crop'],
+         ],
+         'certifications'=>[
+             ['nom'=>'BTS Génie Climatique','org'=>'INMES Cotonou','date'=>'2018-07-20'],
+             ['nom'=>'Certification Mitsubishi Electric','org'=>'Mitsubishi Electric','date'=>'2020-06-10'],
+             ['nom'=>'Certification Gree Installateur','org'=>'Gree Electric','date'=>'2022-03-15'],
          ]],
     ]; }
 }

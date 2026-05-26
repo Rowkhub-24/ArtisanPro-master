@@ -1,11 +1,9 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { ArrowLeft, CreditCard, AlertCircle } from 'lucide-react';
+import { ArrowLeft, CreditCard, AlertCircle, ShieldCheck } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type SharedData, type BreadcrumbItem } from '@/types';
 
@@ -33,18 +31,9 @@ interface Props {
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Tableau de bord',
-        href: '/client/dashboard',
-    },
-    {
-        title: 'Mes Réservations',
-        href: '/client/reservations',
-    },
-    {
-        title: 'Paiement',
-        href: '#',
-    },
+    { title: 'Tableau de bord', href: '/client/dashboard' },
+    { title: 'Mes Réservations', href: '/client/reservations' },
+    { title: 'Paiement', href: '#' },
 ];
 
 export default function ClientPaiementCreate({ reservation }: Props) {
@@ -65,14 +54,14 @@ export default function ClientPaiementCreate({ reservation }: Props) {
         e.preventDefault();
 
         if (!reservation.artisan?.payment_method) {
-            alert('L’artisan n’a pas configuré de mode de paiement.');
+            alert('L'artisan n'a pas configuré de mode de paiement.');
             return;
         }
 
         const shouldUseProvider = ['card', 'mobile_money'].includes(paymentForm.data.method);
         if (shouldUseProvider) {
             if (!reservation.artisan?.payment_provider) {
-                alert('Le prestataire de paiement de l’artisan n’est pas configuré.');
+                alert('Le prestataire de paiement de l'artisan n'est pas configuré.');
                 return;
             }
             const formData = new FormData();
@@ -121,22 +110,25 @@ export default function ClientPaiementCreate({ reservation }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Paiement de réservation - ArtisanPro" />
-            <div className="flex flex-col gap-8 p-6 bg-gradient-to-br from-slate-50 via-white to-blue-50 min-h-screen">
+            <div className="flex flex-col gap-8 p-6 bg-[hsl(36,33%,97%)] min-h-screen">
+
                 {/* Header */}
                 <div className="flex items-center gap-4">
-                    <Button asChild variant="outline" size="icon">
-                        <Link href={route('client.reservations')}>
-                            <ArrowLeft className="h-4 w-4" />
-                        </Link>
-                    </Button>
+                    <Link
+                        href={route('client.reservations')}
+                        className="inline-flex items-center gap-1.5 text-sm text-[hsl(20,10%,50%)] hover:text-amber-600 transition-colors"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Retour
+                    </Link>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Finaliser le paiement</h1>
-                        <p className="mt-1 text-gray-600">Réservation #{reservation.id}</p>
+                        <h1 className="text-3xl font-bold tracking-tight text-[hsl(20,14%,12%)]">Finaliser le paiement</h1>
+                        <p className="mt-1 text-[hsl(20,10%,50%)]">Réservation #{reservation.id}</p>
                     </div>
                 </div>
 
                 {flash?.success && (
-                    <Alert className="border-green-200 bg-green-50 text-green-800">
+                    <Alert className="border-emerald-200 bg-emerald-50 text-emerald-800">
                         <AlertDescription>{flash.success}</AlertDescription>
                     </Alert>
                 )}
@@ -148,233 +140,223 @@ export default function ClientPaiementCreate({ reservation }: Props) {
                 )}
 
                 <div className="grid gap-6 lg:grid-cols-3">
-                    {/* Reservation Summary */}
+                    {/* Reservation Summary — sticky */}
                     <div className="lg:col-span-1">
-                        <Card className="border-gray-200 bg-white sticky top-6">
-                            <CardHeader>
-                                <CardTitle className="text-lg">Récapitulatif</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="border-t border-gray-200 pt-4">
-                                    <h3 className="font-semibold text-gray-900">
-                                        {reservation.artisan?.metier}
-                                    </h3>
-                                    <p className="text-sm text-gray-600 mt-1">
-                                        {reservation.artisan?.user.prenom} {reservation.artisan?.user.nom}
-                                    </p>
-                                </div>
+                        <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm sticky top-6 p-6">
+                            <h2 className="font-semibold text-[hsl(20,14%,12%)] mb-4">Récapitulatif</h2>
 
-                                <div className="border-t border-gray-200 pt-4">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-sm text-gray-600">Date</span>
-                                        <span className="text-sm font-medium text-gray-900">
-                                            {new Date(reservation.date_reservation ?? reservation.date).toLocaleDateString('fr-FR', {
-                                                day: 'numeric',
-                                                month: 'long',
-                                                year: 'numeric',
-                                            })}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-gray-600">Statut</span>
-                                        <Badge className="bg-green-100 text-green-800">Confirmée</Badge>
-                                    </div>
-                                </div>
+                            <div className="border-t border-[hsl(30,20%,88%)] pt-4">
+                                <h3 className="font-semibold text-[hsl(20,14%,12%)]">
+                                    {reservation.artisan?.metier}
+                                </h3>
+                                <p className="text-sm text-[hsl(20,10%,50%)] mt-1">
+                                    {reservation.artisan?.user.prenom} {reservation.artisan?.user.nom}
+                                </p>
+                            </div>
 
-                                <div className="border-t border-gray-200 pt-4">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-900">Montant à payer</span>
-                                        <span className="text-2xl font-bold text-blue-600">
-                                            {Number(reservation.montant_total).toLocaleString('fr-FR')} FCFA
-                                        </span>
-                                    </div>
+                            <div className="border-t border-[hsl(30,20%,88%)] pt-4 mt-4 space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-[hsl(20,10%,50%)]">Date</span>
+                                    <span className="text-sm font-medium text-[hsl(20,14%,12%)]">
+                                        {new Date(reservation.date_reservation ?? reservation.date).toLocaleDateString('fr-FR', {
+                                            day: 'numeric',
+                                            month: 'long',
+                                            year: 'numeric',
+                                        })}
+                                    </span>
                                 </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-[hsl(20,10%,50%)]">Statut</span>
+                                    <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200">Confirmée</Badge>
+                                </div>
+                            </div>
 
-                                <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
-                                    <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                                    <p className="text-xs text-blue-700">
-                                        Vos paiements sont sécurisés par chiffrement SSL. Aucune donnée de paiement n'est stockée sur nos serveurs.
-                                    </p>
+                            <div className="border-t border-[hsl(30,20%,88%)] pt-4 mt-4">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[hsl(20,14%,12%)] font-medium">Montant à payer</span>
+                                    <span className="text-2xl font-bold text-amber-600">
+                                        {Number(reservation.montant_total).toLocaleString('fr-FR')} FCFA
+                                    </span>
                                 </div>
-                            </CardContent>
-                        </Card>
+                            </div>
+
+                            {/* Security notice */}
+                            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 mt-4">
+                                <ShieldCheck className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                                <p className="text-xs text-amber-700">
+                                    Vos paiements sont sécurisés par chiffrement SSL. Aucune donnée de paiement n'est stockée sur nos serveurs.
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Payment Form */}
                     <div className="lg:col-span-2">
-                        <Card className="border-gray-200 bg-white">
-                            <CardHeader>
-                                <CardTitle>Méthode de paiement</CardTitle>
-                                <CardDescription>
-                                    Paiement via le mode configuré par l’artisan :
-                                    <span className="font-semibold"> {artisanMethod === 'card' ? 'Carte bancaire' : artisanMethod === 'mobile_money' ? 'Mobile Money' : 'Virement bancaire'}</span>
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <form onSubmit={submitPayment} className="space-y-6">
-                                    {/* Payment Methods */}
-                                    <input type="hidden" name="method" value={paymentForm.data.method} />
+                        <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm p-6">
+                            <h2 className="font-semibold text-[hsl(20,14%,12%)] mb-1">Méthode de paiement</h2>
+                            <p className="text-sm text-[hsl(20,10%,50%)] mb-6">
+                                Paiement via le mode configuré par l'artisan :
+                                <span className="font-semibold text-[hsl(20,14%,12%)]"> {artisanMethod === 'card' ? 'Carte bancaire' : artisanMethod === 'mobile_money' ? 'Mobile Money' : 'Virement bancaire'}</span>
+                            </p>
 
-                                    {reservation.artisan?.payment_method ? (
-                                        <div className="space-y-3">
-                                            <div className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg bg-blue-50">
-                                                <div>
-                                                    <p className="font-medium text-gray-900">
-                                                        {reservation.artisan.payment_method === 'card'
-                                                            ? 'Carte bancaire'
-                                                            : reservation.artisan.payment_method === 'mobile_money'
-                                                                ? 'Portefeuille Mobile'
-                                                                : 'Virement bancaire'}
-                                                    </p>
-                                                    <p className="text-sm text-gray-600">
-                                                        Mode de paiement configuré par l’artisan.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-                                            <p className="text-sm font-semibold text-red-700">Ce prestataire n’a pas encore configuré de mode de paiement.</p>
-                                            <p className="text-sm text-red-600">Veuillez contacter l’artisan avant de continuer.</p>
-                                        </div>
-                                    )}
+                            <form onSubmit={submitPayment} className="space-y-6">
+                                <input type="hidden" name="method" value={paymentForm.data.method} />
 
-                                    {(paymentForm.data.method === 'card' || paymentForm.data.method === 'mobile_money') && (
-                                        <div className="space-y-3 border-t border-gray-200 pt-6">
-                                            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                                                <p className="text-sm font-medium text-blue-900">Prestataire de paiement</p>
-                                                <p className="mt-2 text-sm text-blue-700">
-                                                    {reservation.artisan?.payment_provider_name
-                                                        ? `Le paiement sera traité via ${reservation.artisan.payment_provider_name}.`
-                                                        : 'Le prestataire de paiement de l’artisan n’est pas encore configuré.'}
+                                {reservation.artisan?.payment_method ? (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-3 p-4 border border-[hsl(30,20%,82%)] rounded-xl bg-amber-50">
+                                            <div>
+                                                <p className="font-medium text-[hsl(20,14%,12%)]">
+                                                    {reservation.artisan.payment_method === 'card'
+                                                        ? 'Carte bancaire'
+                                                        : reservation.artisan.payment_method === 'mobile_money'
+                                                            ? 'Portefeuille Mobile'
+                                                            : 'Virement bancaire'}
+                                                </p>
+                                                <p className="text-sm text-[hsl(20,10%,50%)]">
+                                                    Mode de paiement configuré par l'artisan.
                                                 </p>
                                             </div>
                                         </div>
-                                    )}
-
-                                    {/* Card Payment Fields */}
-                                    {paymentForm.data.method === 'card' && (
-                                        <div className="space-y-4 border-t border-gray-200 pt-6">
-                                            <div>
-                                                <label htmlFor="cardholder" className="block text-sm font-medium text-gray-700">
-                                                    Titulaire de la carte
-                                                </label>
-                                                <input
-                                                    id="cardholder"
-                                                    type="text"
-                                                    value={paymentForm.data.cardholder_name}
-                                                    onChange={(e) => paymentForm.setData('cardholder_name', e.target.value)}
-                                                    required={paymentForm.data.method === 'card'}
-                                                    placeholder="JOHN DOE"
-                                                    className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500/20 focus:outline-none"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label htmlFor="cardnumber" className="block text-sm font-medium text-gray-700">
-                                                    Numéro de carte
-                                                </label>
-                                                <input
-                                                    id="cardnumber"
-                                                    type="text"
-                                                    value={paymentForm.data.card_number}
-                                                    onChange={(e) => paymentForm.setData('card_number', e.target.value.replace(/\s/g, ''))}
-                                                    required={paymentForm.data.method === 'card'}
-                                                    placeholder="4242 4242 4242 4242"
-                                                    maxLength={19}
-                                                    className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500/20 focus:outline-none"
-                                                />
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label htmlFor="expiry" className="block text-sm font-medium text-gray-700">
-                                                        Expiration
-                                                    </label>
-                                                    <input
-                                                        id="expiry"
-                                                        type="text"
-                                                        value={paymentForm.data.card_expiry}
-                                                        onChange={(e) => paymentForm.setData('card_expiry', e.target.value)}
-                                                        required={paymentForm.data.method === 'card'}
-                                                        placeholder="MM/YY"
-                                                        maxLength={5}
-                                                        className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500/20 focus:outline-none"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label htmlFor="cvc" className="block text-sm font-medium text-gray-700">
-                                                        CVC
-                                                    </label>
-                                                    <input
-                                                        id="cvc"
-                                                        type="text"
-                                                        value={paymentForm.data.card_cvc}
-                                                        onChange={(e) => paymentForm.setData('card_cvc', e.target.value)}
-                                                        required={paymentForm.data.method === 'card'}
-                                                        placeholder="123"
-                                                        maxLength={4}
-                                                        className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500/20 focus:outline-none"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Mobile Money Fields */}
-                                    {paymentForm.data.method === 'mobile_money' && (
-                                        <div className="space-y-4 border-t border-gray-200 pt-6 bg-blue-50 p-4 rounded-lg">
-                                            <p className="text-sm text-gray-700">
-                                                Vous recevrez un code de confirmation par SMS. Veuillez entrer ce code dans l'application de votre opérateur mobile.
-                                            </p>
-                                            <Alert className="border-blue-200 bg-white">
-                                                <AlertCircle className="h-4 w-4" />
-                                                <AlertDescription>
-                                                    Assurez-vous d'avoir suffisamment de fonds dans votre portefeuille.
-                                                </AlertDescription>
-                                            </Alert>
-                                        </div>
-                                    )}
-
-                                    {/* Virement Fields */}
-                                    {paymentForm.data.method === 'virement' && (
-                                        <div className="space-y-4 border-t border-gray-200 pt-6 bg-amber-50 p-4 rounded-lg">
-                                            <p className="text-sm text-gray-700">
-                                                Détails du virement vous seront envoyés par email après validation.
-                                            </p>
-                                            <Alert className="border-amber-200 bg-white">
-                                                <AlertCircle className="h-4 w-4" />
-                                                <AlertDescription>
-                                                    Veuillez mentionner le numéro de réservation (#<strong>{reservation.id}</strong>) comme référence.
-                                                </AlertDescription>
-                                            </Alert>
-                                        </div>
-                                    )}
-
-                                    {/* Action Buttons */}
-                                    <div className="flex gap-3 border-t border-gray-200 pt-6">
-                                        <Button 
-                                            asChild
-                                            type="button" 
-                                            variant="outline"
-                                            className="flex-1"
-                                        >
-                                            <Link href={route('client.reservations')}>
-                                                Annuler
-                                            </Link>
-                                        </Button>
-                                        <Button 
-                                            type="submit" 
-                                            disabled={paymentForm.processing || !reservation.artisan?.payment_method}
-                                            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                                        >
-                                            <CreditCard className="mr-2 h-4 w-4" />
-                                            {paymentForm.processing ? 'Traitement...' : `Payer ${Number(reservation.montant_total).toLocaleString('fr-FR')} FCFA`}
-                                        </Button>
                                     </div>
-                                </form>
-                            </CardContent>
-                        </Card>
+                                ) : (
+                                    <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                                        <p className="text-sm font-semibold text-red-700">Ce prestataire n'a pas encore configuré de mode de paiement.</p>
+                                        <p className="text-sm text-red-600">Veuillez contacter l'artisan avant de continuer.</p>
+                                    </div>
+                                )}
+
+                                {(paymentForm.data.method === 'card' || paymentForm.data.method === 'mobile_money') && (
+                                    <div className="space-y-3 border-t border-[hsl(30,20%,88%)] pt-6">
+                                        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                                            <p className="text-sm font-medium text-amber-900">Prestataire de paiement</p>
+                                            <p className="mt-2 text-sm text-amber-700">
+                                                {reservation.artisan?.payment_provider_name
+                                                    ? `Le paiement sera traité via ${reservation.artisan.payment_provider_name}.`
+                                                    : 'Le prestataire de paiement de l'artisan n'est pas encore configuré.'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Card Payment Fields */}
+                                {paymentForm.data.method === 'card' && (
+                                    <div className="space-y-4 border-t border-[hsl(30,20%,88%)] pt-6">
+                                        <div>
+                                            <label htmlFor="cardholder" className="block text-sm font-medium text-[hsl(20,14%,12%)]">
+                                                Titulaire de la carte
+                                            </label>
+                                            <input
+                                                id="cardholder"
+                                                type="text"
+                                                value={paymentForm.data.cardholder_name}
+                                                onChange={(e) => paymentForm.setData('cardholder_name', e.target.value)}
+                                                required={paymentForm.data.method === 'card'}
+                                                placeholder="JOHN DOE"
+                                                className="mt-1 w-full rounded-xl border border-[hsl(30,20%,82%)] bg-white px-3 py-2 text-[hsl(20,14%,12%)] placeholder-[hsl(20,10%,60%)] focus:border-amber-400 focus:outline-none"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label htmlFor="cardnumber" className="block text-sm font-medium text-[hsl(20,14%,12%)]">
+                                                Numéro de carte
+                                            </label>
+                                            <input
+                                                id="cardnumber"
+                                                type="text"
+                                                value={paymentForm.data.card_number}
+                                                onChange={(e) => paymentForm.setData('card_number', e.target.value.replace(/\s/g, ''))}
+                                                required={paymentForm.data.method === 'card'}
+                                                placeholder="4242 4242 4242 4242"
+                                                maxLength={19}
+                                                className="mt-1 w-full rounded-xl border border-[hsl(30,20%,82%)] bg-white px-3 py-2 text-[hsl(20,14%,12%)] placeholder-[hsl(20,10%,60%)] focus:border-amber-400 focus:outline-none"
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label htmlFor="expiry" className="block text-sm font-medium text-[hsl(20,14%,12%)]">
+                                                    Expiration
+                                                </label>
+                                                <input
+                                                    id="expiry"
+                                                    type="text"
+                                                    value={paymentForm.data.card_expiry}
+                                                    onChange={(e) => paymentForm.setData('card_expiry', e.target.value)}
+                                                    required={paymentForm.data.method === 'card'}
+                                                    placeholder="MM/YY"
+                                                    maxLength={5}
+                                                    className="mt-1 w-full rounded-xl border border-[hsl(30,20%,82%)] bg-white px-3 py-2 text-[hsl(20,14%,12%)] placeholder-[hsl(20,10%,60%)] focus:border-amber-400 focus:outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label htmlFor="cvc" className="block text-sm font-medium text-[hsl(20,14%,12%)]">
+                                                    CVC
+                                                </label>
+                                                <input
+                                                    id="cvc"
+                                                    type="text"
+                                                    value={paymentForm.data.card_cvc}
+                                                    onChange={(e) => paymentForm.setData('card_cvc', e.target.value)}
+                                                    required={paymentForm.data.method === 'card'}
+                                                    placeholder="123"
+                                                    maxLength={4}
+                                                    className="mt-1 w-full rounded-xl border border-[hsl(30,20%,82%)] bg-white px-3 py-2 text-[hsl(20,14%,12%)] placeholder-[hsl(20,10%,60%)] focus:border-amber-400 focus:outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Mobile Money Fields */}
+                                {paymentForm.data.method === 'mobile_money' && (
+                                    <div className="space-y-4 border-t border-[hsl(30,20%,88%)] pt-6 bg-amber-50 border border-amber-100 rounded-xl p-4">
+                                        <p className="text-sm text-[hsl(20,14%,12%)]">
+                                            Vous recevrez un code de confirmation par SMS. Veuillez entrer ce code dans l'application de votre opérateur mobile.
+                                        </p>
+                                        <Alert className="border-amber-200 bg-white">
+                                            <AlertCircle className="h-4 w-4" />
+                                            <AlertDescription>
+                                                Assurez-vous d'avoir suffisamment de fonds dans votre portefeuille.
+                                            </AlertDescription>
+                                        </Alert>
+                                    </div>
+                                )}
+
+                                {/* Virement Fields */}
+                                {paymentForm.data.method === 'virement' && (
+                                    <div className="space-y-4 border-t border-[hsl(30,20%,88%)] pt-6 bg-amber-50 border border-amber-100 rounded-xl p-4">
+                                        <p className="text-sm text-[hsl(20,14%,12%)]">
+                                            Détails du virement vous seront envoyés par email après validation.
+                                        </p>
+                                        <Alert className="border-amber-200 bg-white">
+                                            <AlertCircle className="h-4 w-4" />
+                                            <AlertDescription>
+                                                Veuillez mentionner le numéro de réservation (#<strong>{reservation.id}</strong>) comme référence.
+                                            </AlertDescription>
+                                        </Alert>
+                                    </div>
+                                )}
+
+                                {/* Action Buttons */}
+                                <div className="flex gap-3 border-t border-[hsl(30,20%,88%)] pt-6">
+                                    <Link
+                                        href={route('client.reservations')}
+                                        className="flex-1 inline-flex items-center justify-center rounded-xl border border-[hsl(30,20%,82%)] bg-white px-4 py-2 text-sm font-medium text-[hsl(20,14%,12%)] hover:border-amber-400 transition-colors"
+                                    >
+                                        Annuler
+                                    </Link>
+                                    <button
+                                        type="submit"
+                                        disabled={paymentForm.processing || !reservation.artisan?.payment_method}
+                                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold px-4 py-2 text-sm transition-all disabled:opacity-60"
+                                    >
+                                        <CreditCard className="h-4 w-4" />
+                                        {paymentForm.processing ? 'Traitement...' : `Payer ${Number(reservation.montant_total).toLocaleString('fr-FR')} FCFA`}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -3,7 +3,6 @@ import { CreditCard, ArrowLeft, TrendingUp, CheckCircle, Clock, Download, Filter
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
@@ -29,129 +28,124 @@ interface Props {
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-    en_attente: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800' },
-    complete: { label: 'Complété', color: 'bg-green-100 text-green-800' },
-    echoue: { label: 'Échoué', color: 'bg-red-100 text-red-800' },
-    rembourse: { label: 'Remboursé', color: 'bg-blue-100 text-blue-800' },
+    en_attente: { label: 'En attente', color: 'bg-amber-100 text-amber-800 border border-amber-200' },
+    complete:   { label: 'Complété',   color: 'bg-emerald-100 text-emerald-800 border border-emerald-200' },
+    echoue:     { label: 'Échoué',     color: 'bg-red-100 text-red-800 border border-red-200' },
+    rembourse:  { label: 'Remboursé',  color: 'bg-blue-100 text-blue-800 border border-blue-200' },
 };
 
 export default function ClientPaiements({ paiements = [], total_depense = 0 }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Mes Paiements - ArtisanPro" />
-            <div className="flex flex-col gap-8 p-6 bg-gradient-to-br from-slate-50 via-white to-blue-50 min-h-screen">
+            <div className="flex flex-col gap-8 p-6 bg-[hsl(36,33%,97%)] min-h-screen">
 
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-4">
                     <div className="flex items-center gap-4">
-                        <Button asChild variant="outline" size="icon">
-                            <Link href={route('client.dashboard')}><ArrowLeft className="h-4 w-4" /></Link>
-                        </Button>
+                        <Link
+                            href={route('client.dashboard')}
+                            className="inline-flex items-center gap-1.5 text-sm text-[hsl(20,10%,50%)] hover:text-amber-600 transition-colors"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                            Retour
+                        </Link>
                         <div>
-                            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Historique des paiements</h1>
-                            <p className="mt-1 text-gray-600">Consultez toutes vos transactions</p>
+                            <h1 className="text-3xl font-bold tracking-tight text-[hsl(20,14%,12%)]">Historique des paiements</h1>
+                            <p className="mt-1 text-[hsl(20,10%,50%)]">Consultez toutes vos transactions</p>
                         </div>
                     </div>
-                    <Button variant="outline" className="border-gray-300">
-                        <Download className="mr-2 h-4 w-4" />
+                    <button className="inline-flex items-center gap-2 rounded-xl border border-[hsl(30,20%,82%)] bg-white px-4 py-2 text-sm font-medium text-[hsl(20,14%,12%)] hover:border-amber-400 transition-colors">
+                        <Download className="h-4 w-4" />
                         Exporter
-                    </Button>
+                    </button>
                 </div>
 
                 {/* Stats */}
                 <div className="grid gap-4 md:grid-cols-3">
-                    <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-blue-200 text-sm">Total dépensé</p>
-                                    <p className="text-3xl font-bold mt-1">{total_depense.toLocaleString('fr-FR')}</p>
-                                    <p className="text-blue-200 text-sm">FCFA</p>
-                                </div>
-                                <TrendingUp className="h-10 w-10 text-blue-200" />
+                    {/* Dark total card */}
+                    <div className="rounded-2xl bg-[hsl(20,14%,10%)] p-6 text-white shadow-sm">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-amber-400 text-sm font-medium">Total dépensé</p>
+                                <p className="text-3xl font-bold mt-1">{total_depense.toLocaleString('fr-FR')}</p>
+                                <p className="text-[hsl(20,10%,60%)] text-sm">FCFA</p>
                             </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="border-0 shadow-lg bg-white">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-gray-500">Paiements complétés</p>
-                                    <p className="text-3xl font-bold text-green-600 mt-1">
-                                        {paiements.filter(p => p.statut === 'complete').length}
-                                    </p>
-                                </div>
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100">
-                                    <CheckCircle className="h-6 w-6 text-green-600" />
-                                </div>
+                            <TrendingUp className="h-10 w-10 text-amber-400" />
+                        </div>
+                    </div>
+                    <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-[hsl(20,10%,50%)]">Paiements complétés</p>
+                                <p className="text-3xl font-bold text-emerald-600 mt-1">
+                                    {paiements.filter(p => p.statut === 'complete').length}
+                                </p>
                             </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="border-0 shadow-lg bg-white">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-gray-500">En attente</p>
-                                    <p className="text-3xl font-bold text-yellow-600 mt-1">
-                                        {paiements.filter(p => p.statut === 'en_attente').length}
-                                    </p>
-                                </div>
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-yellow-100">
-                                    <Clock className="h-6 w-6 text-yellow-600" />
-                                </div>
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">
+                                <CheckCircle className="h-6 w-6 text-emerald-600" />
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
+                    <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-[hsl(20,10%,50%)]">En attente</p>
+                                <p className="text-3xl font-bold text-amber-600 mt-1">
+                                    {paiements.filter(p => p.statut === 'en_attente').length}
+                                </p>
+                            </div>
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100">
+                                <Clock className="h-6 w-6 text-amber-600" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Transactions List */}
-                <Card className="border-0 shadow-lg bg-white">
-                    <CardHeader className="border-b border-gray-100 pb-4">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-gray-900">Transactions</CardTitle>
-                            <Button variant="outline" size="sm" className="border-gray-300">
-                                <Filter className="mr-2 h-4 w-4" />
-                                Filtrer
-                            </Button>
+                <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm overflow-hidden">
+                    <div className="border-b border-[hsl(30,20%,88%)] px-6 py-4 flex items-center justify-between">
+                        <h2 className="font-semibold text-[hsl(20,14%,12%)]">Transactions</h2>
+                        <button className="inline-flex items-center gap-2 rounded-xl border border-[hsl(30,20%,82%)] bg-white px-3 py-1.5 text-sm font-medium text-[hsl(20,14%,12%)] hover:border-amber-400 transition-colors">
+                            <Filter className="h-4 w-4" />
+                            Filtrer
+                        </button>
+                    </div>
+                    {paiements.length === 0 ? (
+                        <div className="p-12 text-center">
+                            <CreditCard className="h-14 w-14 text-[hsl(20,10%,50%)] mx-auto mb-4" />
+                            <h3 className="text-lg font-semibold text-[hsl(20,14%,12%)] mb-2">Aucun paiement</h3>
+                            <p className="text-[hsl(20,10%,50%)]">Vos transactions apparaîtront ici après vos réservations</p>
                         </div>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        {paiements.length === 0 ? (
-                            <div className="p-12 text-center">
-                                <CreditCard className="h-14 w-14 text-gray-300 mx-auto mb-4" />
-                                <h3 className="text-lg font-semibold text-gray-700 mb-2">Aucun paiement</h3>
-                                <p className="text-gray-500">Vos transactions apparaîtront ici après vos réservations</p>
-                            </div>
-                        ) : (
-                            <div className="divide-y divide-gray-100">
-                                {paiements.map((p) => {
-                                    const sc = statusConfig[p.statut] ?? statusConfig.en_attente;
-                                    return (
-                                        <div key={p.id} className="flex items-center justify-between p-5 hover:bg-gray-50 transition-colors">
-                                            <div className="flex items-center gap-4">
-                                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
-                                                    <CreditCard className="h-6 w-6 text-blue-600" />
-                                                </div>
-                                                <div>
-                                                    <p className="font-semibold text-gray-900">{p.artisan_metier}</p>
-                                                    <p className="text-sm text-gray-500">{p.artisan_nom} · {p.methode}</p>
-                                                    <p className="text-xs text-gray-400 mt-0.5">Réf: {p.reference}</p>
-                                                </div>
+                    ) : (
+                        <div className="divide-y divide-[hsl(30,20%,92%)]">
+                            {paiements.map((p) => {
+                                const sc = statusConfig[p.statut] ?? statusConfig.en_attente;
+                                return (
+                                    <div key={p.id} className="flex items-center justify-between p-5 hover:bg-[hsl(36,33%,97%)] transition-colors">
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100">
+                                                <CreditCard className="h-6 w-6 text-amber-600" />
                                             </div>
-                                            <div className="flex items-center gap-4">
-                                                <div className="text-right">
-                                                    <p className="font-bold text-gray-900">{Number(p.montant).toLocaleString('fr-FR')} FCFA</p>
-                                                    <p className="text-xs text-gray-400">{new Date(p.date).toLocaleDateString('fr-FR')}</p>
-                                                </div>
-                                                <Badge className={sc.color}>{sc.label}</Badge>
+                                            <div>
+                                                <p className="font-semibold text-[hsl(20,14%,12%)]">{p.artisan_metier}</p>
+                                                <p className="text-sm text-[hsl(20,10%,50%)]">{p.artisan_nom} · {p.methode}</p>
+                                                <p className="text-xs text-[hsl(20,10%,50%)] mt-0.5">Réf: {p.reference}</p>
                                             </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-right">
+                                                <p className="font-bold text-[hsl(20,14%,12%)]">{Number(p.montant).toLocaleString('fr-FR')} FCFA</p>
+                                                <p className="text-xs text-[hsl(20,10%,50%)]">{new Date(p.date).toLocaleDateString('fr-FR')}</p>
+                                            </div>
+                                            <Badge className={sc.color}>{sc.label}</Badge>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
             </div>
         </AppLayout>
     );

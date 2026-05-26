@@ -10,6 +10,11 @@ use Inertia\Inertia;
 
 // ── Public ───────────────────────────────────────────────────────────────────
 Route::get('/', HomeController::class)->name('home');
+
+// ── Diagnostic IA ─────────────────────────────────────────────────────────────
+Route::post('/diagnostic-ia', [\App\Http\Controllers\Portal\DiagnosticIAController::class, 'analyser'])
+    ->name('diagnostic.ia')
+    ->middleware('throttle:10,1'); // max 10 requêtes par minute
 Route::get('a-propos', function () {
     return Inertia::render('portal/a-propos');
 })->name('about');
@@ -803,7 +808,7 @@ Route::middleware(['auth'])->group(function () {
             }
 
             $favoris = $client->favoris()
-                ->with(['user:id,prenom,nom', 'categories:id,nom'])
+                ->with(['user:id,prenom,nom,avatar', 'categories:id,nom'])
                 ->get()
                 ->map(fn ($artisan) => [
                     'id' => $artisan->pivot->id,
@@ -815,6 +820,7 @@ Route::middleware(['auth'])->group(function () {
                     'tarifs_horaire' => $artisan->tarifs_horaire,
                     'prenom' => $artisan->user?->prenom,
                     'nom' => $artisan->user?->nom,
+                    'avatar_url' => $artisan->user?->avatar_url,
                     'categories' => $artisan->categories->pluck('nom')->toArray(),
                 ])
                 ->toArray();
@@ -1624,6 +1630,8 @@ Route::middleware(['auth'])->group(function () {
                 'payment_provider' => $artisan->payment_provider,
                 'payment_account_id' => $artisan->payment_account_id,
                 'payment_method' => $artisan->payment_method,
+                'latitude' => $artisan->latitude ? (float) $artisan->latitude : null,
+                'longitude' => $artisan->longitude ? (float) $artisan->longitude : null,
             ] : null]);
         })->name('profil');
 
@@ -1645,6 +1653,9 @@ Route::middleware(['auth'])->group(function () {
                 'payment_account_key' => ['nullable', 'string', 'max:255'],
                 'payment_method' => ['nullable', 'in:card,mobile_money,virement'],
                 'avatar'          => ['nullable', 'image', 'max:2048'],
+                // Coordonnées GPS — restreintes aux 5 arrondissements de Porto-Novo
+                'latitude'        => ['nullable', 'numeric', 'between:6.47,6.52'],
+                'longitude'       => ['nullable', 'numeric', 'between:2.60,2.68'],
             ]);
 
             /** @var \App\Models\User|null $user */
@@ -1682,6 +1693,8 @@ Route::middleware(['auth'])->group(function () {
                 'payment_account_id'=> $validated['payment_account_id'] ?? null,
                 'payment_account_key'=> $validated['payment_account_key'] ?? null,
                 'payment_method'   => $validated['payment_method'] ?? null,
+                'latitude'          => $validated['latitude'] ?? null,
+                'longitude'         => $validated['longitude'] ?? null,
             ]);
 
             return redirect()->route('artisan.profil')->with('success', 'Profil mis à jour.');

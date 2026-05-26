@@ -10,8 +10,10 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutGrid, Search, Hammer, Calendar, FileText,
     MessageSquare, CreditCard, Star, Heart, AlertTriangle,
-    User, Award, Image, Users, Tag,
+    User, Award, Image, Users, Tag, Sparkles,
 } from 'lucide-react';
+import { useState } from 'react';
+import DiagnosticIAModal from '@/components/diagnostic-ia-modal';
 
 // ── Navigation par rôle ──────────────────────────────────────────────────────
 
@@ -62,6 +64,7 @@ const homeNavItem: NavItem[] = [
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
     const role = auth?.user?.type_utilisateur;
+    const [showDiagnostic, setShowDiagnostic] = useState(false);
 
     const navItems =
         role === 'client'  ? clientNavItems  :
@@ -72,54 +75,64 @@ export function AppSidebar() {
     const logoHref = role === 'admin' ? '/admin' : route('home');
 
     return (
-        <Sidebar
-            collapsible="icon"
-            variant="inset"
-            className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm"
-        >
-            <SidebarHeader className="flex flex-col gap-3 p-4">
-                <div className="flex items-center gap-3 px-2 py-2">
-                    <Link href={logoHref} prefetch className="flex items-center gap-2.5">
-                        <img src="/images/ArtisanPro.jpg" alt="ArtisanPro" className="h-12 w-12 object-contain" />
-                    </Link>
-                </div>
-
-                {auth?.user && (
-                    <div className="rounded-xl bg-[hsl(36,30%,93%)] p-3">
-                        <Link
-                            href={role === 'client' ? '/client/profil' : role === 'artisan' ? '/artisan/profil' : '/settings/profile'}
-                            className="flex items-center gap-3 rounded-lg bg-white p-2.5 shadow-sm hover:shadow-md transition-all"
-                        >
-                            {(auth.user.avatar_url ?? auth.user.avatar) ? (
-                                <img
-                                    src={auth.user.avatar_url ?? auth.user.avatar ?? ''}
-                                    alt={auth.user.name}
-                                    className="h-10 w-10 rounded-full object-cover ring-2 ring-amber-200 shrink-0"
-                                />
-                            ) : (
-                                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-amber-100 to-orange-100 text-amber-700 font-bold text-sm ring-2 ring-amber-200">
-                                    {auth.user.prenom?.[0]}{auth.user.nom?.[0]}
-                                </div>
-                            )}
-                            <div className="hidden md:flex flex-col min-w-0">
-                                <span className="text-sm font-semibold text-[hsl(20,14%,12%)] truncate">{auth.user.prenom} {auth.user.nom}</span>
-                                <span className="text-xs text-[hsl(20,10%,50%)] truncate">{auth.user.email}</span>
-                            </div>
+        <>
+            <Sidebar collapsible="icon" variant="inset" className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm">
+                <SidebarHeader className="flex flex-col gap-3 p-4">
+                    <div className="flex items-center gap-3 px-2 py-2">
+                        <Link href={logoHref} prefetch className="flex items-center gap-2.5">
+                            <img src="/images/ArtisanPro.jpg" alt="ArtisanPro" className="h-12 w-12 object-contain" />
                         </Link>
                     </div>
-                )}
-            </SidebarHeader>
 
-            <SidebarContent className="px-4 pb-4">
-                <NavMain items={navItems} />
-            </SidebarContent>
+                    {auth?.user && (
+                        <div className="rounded-xl bg-[hsl(36,30%,93%)] p-3">
+                            <Link
+                                href={role === 'client' ? '/client/profil' : role === 'artisan' ? '/artisan/profil' : '/settings/profile'}
+                                className="flex items-center gap-3 rounded-lg bg-white p-2.5 shadow-sm hover:shadow-md transition-all"
+                            >
+                                {(auth.user.avatar_url ?? auth.user.avatar) ? (
+                                    <img src={auth.user.avatar_url ?? auth.user.avatar ?? ''} alt={auth.user.name}
+                                        className="h-10 w-10 rounded-full object-cover ring-2 ring-amber-200 shrink-0" />
+                                ) : (
+                                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-amber-100 to-orange-100 text-amber-700 font-bold text-sm ring-2 ring-amber-200">
+                                        {auth.user.prenom?.[0]}{auth.user.nom?.[0]}
+                                    </div>
+                                )}
+                                <div className="hidden md:flex flex-col min-w-0">
+                                    <span className="text-sm font-semibold text-[hsl(20,14%,12%)] truncate">{auth.user.prenom} {auth.user.nom}</span>
+                                    <span className="text-xs text-[hsl(20,10%,50%)] truncate">{auth.user.email}</span>
+                                </div>
+                            </Link>
+                        </div>
+                    )}
 
-            <SidebarFooter className="px-4 pb-4">
-                {(role === 'client' || role === 'artisan') && (
-                    <NavFooter items={homeNavItem} className="mt-auto" />
-                )}
-                <NavUser />
-            </SidebarFooter>
-        </Sidebar>
+                    {/* Bouton Diagnostic IA */}
+                    {(role === 'client' || !role) && (
+                        <button
+                            onClick={() => setShowDiagnostic(true)}
+                            className="flex items-center gap-2.5 rounded-xl border border-violet-200 bg-gradient-to-r from-violet-50 to-purple-50 px-3 py-2.5 text-sm font-semibold text-violet-700 hover:from-violet-100 hover:to-purple-100 transition-all shadow-sm"
+                        >
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white shrink-0">
+                                <Sparkles className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="hidden md:block">Diagnostic IA</span>
+                        </button>
+                    )}
+                </SidebarHeader>
+
+                <SidebarContent className="px-4 pb-4">
+                    <NavMain items={navItems} />
+                </SidebarContent>
+
+                <SidebarFooter className="px-4 pb-4">
+                    {(role === 'client' || role === 'artisan') && (
+                        <NavFooter items={homeNavItem} className="mt-auto" />
+                    )}
+                    <NavUser />
+                </SidebarFooter>
+            </Sidebar>
+
+            {showDiagnostic && <DiagnosticIAModal onClose={() => setShowDiagnostic(false)} />}
+        </>
     );
 }

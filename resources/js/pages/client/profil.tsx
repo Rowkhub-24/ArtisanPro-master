@@ -1,10 +1,8 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { User, ArrowLeft, Mail, Phone, MapPin, Edit, Save, Camera } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Edit, Save, Camera } from 'lucide-react';
 import { type ChangeEvent, type FormEventHandler, useEffect, useState } from 'react';
 
 import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
@@ -84,96 +82,98 @@ export default function ClientProfil() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Mon Profil - ArtisanPro" />
-            <div className="flex flex-col gap-8 p-6 bg-gradient-to-br from-slate-50 via-white to-blue-50 min-h-screen">
+            <div className="flex flex-col gap-8 p-6 bg-[hsl(36,33%,97%)] min-h-screen">
 
                 {/* Header */}
                 <div className="flex items-center gap-4">
-                    <Button asChild variant="outline" size="icon">
-                        <Link href={route('client.dashboard')}><ArrowLeft className="h-4 w-4" /></Link>
-                    </Button>
+                    <Link
+                        href={route('client.dashboard')}
+                        className="inline-flex items-center gap-1.5 text-sm text-[hsl(20,10%,50%)] hover:text-amber-600 transition-colors"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Retour
+                    </Link>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Mon Profil</h1>
-                        <p className="mt-1 text-gray-600">Gérez vos informations personnelles</p>
+                        <h1 className="text-3xl font-bold tracking-tight text-[hsl(20,14%,12%)]">Mon Profil</h1>
+                        <p className="mt-1 text-[hsl(20,10%,50%)]">Gérez vos informations personnelles</p>
                     </div>
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-3">
                     {/* Avatar Card */}
-                    <Card className="border-0 shadow-lg bg-white">
-                        <CardContent className="p-8 text-center">
-                            <div className="relative inline-block mb-6">
-                                <div className="overflow-hidden rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-4xl font-bold mx-auto h-28 w-28 flex items-center justify-center">
-                                    {(avatarPreview || user?.avatar) ? (
-                                        <img src={avatarPreview ?? user?.avatar ?? ''} alt="Avatar" className="h-full w-full object-cover" />
-                                    ) : (
-                                        <>{user?.prenom?.charAt(0)}{user?.nom?.charAt(0)}</>
-                                    )}
-                                </div>
-                                <input
-                                    id="avatar"
-                                    name="avatar"
-                                    type="file"
-                                    accept="image/*"
-                                    aria-label="Sélectionner une photo de profil"
-                                    className="sr-only"
-                                    onChange={handleAvatarChange}
-                                />
-                                <label
-                                    htmlFor="avatar"
-                                    className="absolute bottom-0 right-0 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-colors"
-                                    title="Modifier la photo de profil"
-                                >
-                                    <Camera className="h-4 w-4" />
-                                </label>
+                    <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm p-8 text-center">
+                        <div className="relative inline-block mb-6">
+                            <div className="overflow-hidden rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white text-4xl font-bold mx-auto h-28 w-28 flex items-center justify-center">
+                                {(avatarPreview || user?.avatar_url) ? (
+                                    <img src={avatarPreview ?? user?.avatar_url ?? ''} alt="Avatar" className="h-full w-full object-cover" />
+                                ) : (
+                                    <>{user?.prenom?.charAt(0)}{user?.nom?.charAt(0)}</>
+                                )}
                             </div>
-                            <h2 className="text-xl font-bold text-gray-900">{user?.prenom} {user?.nom}</h2>
-                            <p className="text-gray-500 mt-1">{user?.email}</p>
-                            <div className="mt-4 inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
-                                Compte Client
-                            </div>
-                        </CardContent>
-                    </Card>
+                            <input
+                                id="avatar"
+                                name="avatar"
+                                type="file"
+                                accept="image/*"
+                                aria-label="Sélectionner une photo de profil"
+                                className="sr-only"
+                                onChange={handleAvatarChange}
+                            />
+                            <label
+                                htmlFor="avatar"
+                                className="absolute bottom-0 right-0 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-amber-500 text-white shadow-lg hover:bg-amber-600 transition-colors"
+                                title="Modifier la photo de profil"
+                            >
+                                <Camera className="h-4 w-4" />
+                            </label>
+                        </div>
+                        <h2 className="text-xl font-bold text-[hsl(20,14%,12%)]">{user?.prenom} {user?.nom}</h2>
+                        <p className="text-[hsl(20,10%,50%)] mt-1">{user?.email}</p>
+                        <div className="mt-4 inline-flex items-center rounded-full bg-amber-100 border border-amber-200 px-4 py-1.5">
+                            <span className="text-xs font-bold uppercase tracking-widest text-amber-700">Compte Client</span>
+                        </div>
+                    </div>
 
                     {/* Edit Form */}
                     <div className="lg:col-span-2">
-                        <Card className="border-0 shadow-lg bg-white">
-                            <CardHeader className="border-b border-gray-100">
-                                <CardTitle className="flex items-center gap-2 text-gray-900">
-                                    <Edit className="h-5 w-5 text-blue-600" />
-                                    Modifier mes informations
-                                </CardTitle>
-                                <CardDescription>Mettez à jour vos données personnelles</CardDescription>
-                            </CardHeader>
-                            <CardContent className="p-6">
+                        <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm">
+                            <div className="border-b border-[hsl(30,20%,88%)] px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                    <Edit className="h-5 w-5 text-amber-600" />
+                                    <h2 className="font-semibold text-[hsl(20,14%,12%)]">Modifier mes informations</h2>
+                                </div>
+                                <p className="text-sm text-[hsl(20,10%,50%)] mt-1">Mettez à jour vos données personnelles</p>
+                            </div>
+                            <div className="p-6">
                                 <form id="client-profil-form" onSubmit={submit} className="space-y-6">
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label htmlFor="prenom" className="text-sm font-medium text-gray-700">Prénom</Label>
-                                            <input
+                                            <Label htmlFor="prenom" className="text-sm font-medium text-[hsl(20,14%,12%)]">Prénom</Label>
+                                            <Input
                                                 form="client-profil-form"
                                                 id="prenom"
                                                 name="prenom"
                                                 value={data.prenom}
                                                 onChange={handleFieldChange('prenom')}
-                                                className="border-gray-300 focus:border-blue-500"
+                                                className="rounded-xl border-[hsl(30,20%,82%)] focus:border-amber-400 focus:outline-none focus:ring-0"
                                             />
                                             <InputError message={errors.prenom} />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="nom" className="text-sm font-medium text-gray-700">Nom</Label>
+                                            <Label htmlFor="nom" className="text-sm font-medium text-[hsl(20,14%,12%)]">Nom</Label>
                                             <Input
                                                 id="nom"
                                                 name="nom"
                                                 value={data.nom}
                                                 onChange={handleFieldChange('nom')}
-                                                className="border-gray-300 focus:border-blue-500"
+                                                className="rounded-xl border-[hsl(30,20%,82%)] focus:border-amber-400 focus:outline-none focus:ring-0"
                                             />
                                             <InputError message={errors.nom} />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                                        <Label htmlFor="email" className="text-sm font-medium text-[hsl(20,14%,12%)]">
                                             <Mail className="inline h-4 w-4 mr-1" />
                                             Email
                                         </Label>
@@ -183,13 +183,13 @@ export default function ClientProfil() {
                                             type="email"
                                             value={data.email}
                                             onChange={handleFieldChange('email')}
-                                            className="border-gray-300 focus:border-blue-500"
+                                            className="rounded-xl border-[hsl(30,20%,82%)] focus:border-amber-400 focus:outline-none focus:ring-0"
                                         />
                                         <InputError message={errors.email} />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="telephone" className="text-sm font-medium text-gray-700">
+                                        <Label htmlFor="telephone" className="text-sm font-medium text-[hsl(20,14%,12%)]">
                                             <Phone className="inline h-4 w-4 mr-1" />
                                             Téléphone
                                         </Label>
@@ -199,13 +199,13 @@ export default function ClientProfil() {
                                             value={data.telephone}
                                             onChange={handleFieldChange('telephone')}
                                             placeholder="+229 XX XX XX XX"
-                                            className="border-gray-300 focus:border-blue-500"
+                                            className="rounded-xl border-[hsl(30,20%,82%)] focus:border-amber-400 focus:outline-none focus:ring-0"
                                         />
                                         <InputError message={errors.telephone} />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="adresse" className="text-sm font-medium text-gray-700">
+                                        <Label htmlFor="adresse" className="text-sm font-medium text-[hsl(20,14%,12%)]">
                                             <MapPin className="inline h-4 w-4 mr-1" />
                                             Adresse
                                         </Label>
@@ -215,24 +215,24 @@ export default function ClientProfil() {
                                             value={data.adresse}
                                             onChange={handleFieldChange('adresse')}
                                             placeholder="Quartier, Porto-Novo"
-                                            className="border-gray-300 focus:border-blue-500"
+                                            className="rounded-xl border-[hsl(30,20%,82%)] focus:border-amber-400 focus:outline-none focus:ring-0"
                                         />
                                         <InputError message={errors.adresse} />
                                     </div>
 
                                     <div className="flex justify-end pt-2">
-                                        <Button
+                                        <button
                                             type="submit"
                                             disabled={processing}
-                                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-8"
+                                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold px-8 py-2 text-sm transition-all disabled:opacity-60"
                                         >
-                                            <Save className="mr-2 h-4 w-4" />
+                                            <Save className="h-4 w-4" />
                                             {processing ? 'Enregistrement...' : 'Enregistrer'}
-                                        </Button>
+                                        </button>
                                     </div>
                                 </form>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

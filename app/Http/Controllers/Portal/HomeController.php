@@ -18,7 +18,7 @@ class HomeController extends Controller
             ->get(['id', 'nom', 'icone', 'description', 'nombre_artisans']);
 
         $artisans = Artisan::query()
-            ->with(['user:id,nom,prenom', 'categories:id,nom'])
+            ->with(['user:id,nom,prenom,avatar', 'categories:id,nom'])
             ->whereHas('user', fn ($q) => $q->where('statut', 'actif'))
             ->orderByDesc('note_moyenne')
             ->limit(8)
@@ -32,6 +32,7 @@ class HomeController extends Controller
                 'zone_intervention' => $a->zone_intervention,
                 'prenom' => $a->user?->prenom,
                 'nom' => $a->user?->nom,
+                'avatar_url' => $a->user?->avatar_url,
                 'categories' => $a->categories->pluck('nom')->all(),
             ]);
 

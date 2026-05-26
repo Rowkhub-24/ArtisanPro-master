@@ -14,7 +14,7 @@ class ArtisanController extends Controller
 {
     public function index(Request $request): Response
     {
-        $artisans = Artisan::with(['user:id,nom,prenom,email,statut,date_inscription', 'categories:id,nom'])
+        $artisans = Artisan::with(['user:id,nom,prenom,email,statut,date_inscription,avatar', 'categories:id,nom'])
             ->when($request->q, fn ($q, $s) =>
                 $q->where('metier', 'like', "%{$s}%")
                   ->orWhereHas('user', fn ($u) => $u->where('nom', 'like', "%{$s}%")->orWhere('prenom', 'like', "%{$s}%"))
