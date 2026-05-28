@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Models\Artisan;
 use App\Models\Reservation;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,7 +51,7 @@ class ClientReservationStoreController extends Controller
         $artisan = Artisan::find($data['id_artisan']);
         $montantTotal = $artisan?->tarifs_horaire ?? null;
 
-        Reservation::query()->create([
+        $reservation = Reservation::query()->create([
             'id_client' => $user->client->id,
             'id_artisan' => $data['id_artisan'],
             'date_debut' => $dateDebut,
@@ -61,6 +62,13 @@ class ClientReservationStoreController extends Controller
             'date_creation' => now(),
             'statut' => 'en_cours',
         ]);
+
+        // Notifier l'artisan de la nouvelle réservation
+        try {
+            (new NotificationService())->reservationCreee($reservation->load('artisan.user'));
+        } catch (\Throwable) {}
+
+        return back()->with('success', 'Votre réservation a été créée. L\'artisan sera informé.');
 
         return back()->with('success', 'Votre réservation a été créée. L’artisan sera informé.');
     }

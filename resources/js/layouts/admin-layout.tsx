@@ -1,8 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutGrid, Users, Wrench, Tag, Calendar,
-    CreditCard, Settings, Home, ChevronRight,
-    Menu, X, ShieldCheck, LogOut, Bell,
+    CreditCard, Home, ChevronRight,
+    Menu, LogOut, Bell, MessageSquare, AlertTriangle, Building2, BarChart3,
 } from 'lucide-react';
 import { useState } from 'react';
 import { type SharedData } from '@/types';
@@ -15,12 +15,16 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-    { label: 'Tableau de bord', href: '/admin',              icon: LayoutGrid, routePrefix: '/admin' },
-    { label: 'Utilisateurs',    href: '/admin/users',        icon: Users,      routePrefix: '/admin/users' },
-    { label: 'Artisans',        href: '/admin/artisans',     icon: Wrench,     routePrefix: '/admin/artisans' },
-    { label: 'Catégories',      href: '/admin/categories',   icon: Tag,        routePrefix: '/admin/categories' },
-    { label: 'Réservations',    href: '/admin/reservations', icon: Calendar,   routePrefix: '/admin/reservations' },
-    { label: 'Paiements',       href: '/admin/paiements',    icon: CreditCard, routePrefix: '/admin/paiements' },
+    { label: 'Tableau de bord', href: '/admin',              icon: LayoutGrid,    routePrefix: '/admin' },
+    { label: 'Utilisateurs',    href: '/admin/users',        icon: Users,         routePrefix: '/admin/users' },
+    { label: 'Artisans',        href: '/admin/artisans',     icon: Wrench,        routePrefix: '/admin/artisans' },
+    { label: 'Catégories',      href: '/admin/categories',   icon: Tag,           routePrefix: '/admin/categories' },
+    { label: 'Réservations',    href: '/admin/reservations', icon: Calendar,      routePrefix: '/admin/reservations' },
+    { label: 'Paiements',       href: '/admin/paiements',    icon: CreditCard,    routePrefix: '/admin/paiements' },
+    { label: 'Avis',            href: '/admin/avis',         icon: MessageSquare, routePrefix: '/admin/avis' },
+    { label: 'Litiges',         href: '/admin/litiges',      icon: AlertTriangle, routePrefix: '/admin/litiges' },
+    { label: 'Partenaires',     href: '/admin/partenaires',  icon: Building2,     routePrefix: '/admin/partenaires' },
+    { label: 'Rapports',        href: '/admin/reports',      icon: BarChart3,     routePrefix: '/admin/reports' },
 ];
 
 interface Props {

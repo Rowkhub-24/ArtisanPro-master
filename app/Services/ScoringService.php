@@ -72,12 +72,15 @@ class ScoringService
                 $score = $this->calculer($artisan);
                 $badge = $this->badgeDepuisScore($score);
 
-                // Recalcule aussi la note moyenne
-                $noteMoyenne = Avis::where('id_artisan', $artisan->id)->avg('note') ?? 0;
+                // Recalcule aussi la note moyenne (avis non masqués uniquement)
+                $noteMoyenne = Avis::where('id_artisan', $artisan->id)
+                    ->where('masque', false)
+                    ->avg('note') ?? 0;
 
                 $artisan->update([
-                    'note_moyenne' => round($noteMoyenne, 2),
-                    'badge'        => $badge,
+                    'score_confiance' => $score,
+                    'note_moyenne'    => round($noteMoyenne, 2),
+                    'badge'           => $badge,
                 ]);
             });
     }

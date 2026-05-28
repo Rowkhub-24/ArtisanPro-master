@@ -2,14 +2,17 @@
 
 namespace Database\Seeders;
 
+use App\Models\AcademieFormation;
 use App\Models\Artisan;
 use App\Models\Avis;
 use App\Models\Category;
 use App\Models\Certification;
 use App\Models\Client;
+use App\Models\FournisseurPartenaire;
 use App\Models\PortfolioImage;
 use App\Models\Prestation;
 use App\Models\User;
+use App\Services\ScoringService;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +23,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
-        foreach (['avis','certifications','portfolio_images','prestations','artisan_specialites','client_favoris','reservations','devis','messages','paiements','artisans','clients','utilisateurs','categories'] as $t) {
+        foreach ([
+            'avis','certifications','portfolio_images','prestations',
+            'artisan_specialites','client_favoris','reservations','devis',
+            'messages','paiements','artisans','clients','utilisateurs','categories',
+            'academie_formations','artisan_formation','fournisseur_partenaires',
+        ] as $t) {
             DB::table($t)->truncate();
         }
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
@@ -30,13 +38,22 @@ class DatabaseSeeder extends Seeder
         $clientUsers  = $this->seedClients();
         $this->seedAdmin();
         $this->seedAvis($clientUsers, $artisanUsers);
+        $this->seedFormations($artisanUsers);
+        $this->seedPartenaires();
 
         foreach (Category::all() as $cat) {
             $cat->update(['nombre_artisans' => $cat->artisans()->count()]);
         }
+
+        // Recalcul scores de confiance
+        $scoring = new ScoringService();
         foreach ($artisanUsers as $au) {
-            $avg = Avis::where('id_artisan', $au['artisan']->id)->avg('note');
-            $au['artisan']->update(['note_moyenne' => round($avg ?? $au['artisan']->note_moyenne, 2)]);
+            $artisan = $au['artisan']->fresh();
+            $avg = Avis::where('id_artisan', $artisan->id)->where('masque', false)->avg('note') ?? 0;
+            $artisan->update(['note_moyenne' => round($avg, 2)]);
+            $score = $scoring->calculer($artisan->fresh());
+            $badge = $scoring->badgeDepuisScore($score);
+            $artisan->update(['score_confiance' => $score, 'badge' => $badge]);
         }
 
         $this->command->info('Seeder OK — admin@artisanpro.bj / Admin@2025 | clients & artisans: password');
@@ -570,4 +587,123 @@ class DatabaseSeeder extends Seeder
              ['nom'=>'Certification Gree Installateur','org'=>'Gree Electric','date'=>'2022-03-15'],
          ]],
     ]; }
+
+    private function seedFormations(array $artisanUsers): void
+    {
+        $formations = [
+            AcademieFormation::create([
+                'titre'       => 'Sécurité sur les chantiers',
+                'description' => 'Règles de sécurité essentielles pour travailler en toute sécurité sur les chantiers de construction et de rénovation.',
+                'url_contenu' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            ]),
+            AcademieFormation::create([
+                'titre'       => 'Relation client et communication professionnelle',
+                'description' => 'Comment accueillir, conseiller et fidéliser vos clients. Techniques de communication et gestion des conflits.',
+                'url_contenu' => null,
+            ]),
+            AcademieFormation::create([
+                'titre'       => 'Gestion financière pour artisans',
+                'description' => 'Établir un devis, facturer, gérer sa trésorerie et comprendre les bases de la comptabilité artisanale.',
+                'url_contenu' => null,
+            ]),
+            AcademieFormation::create([
+                'titre'       => 'Utilisation de la plateforme ArtisanPro',
+                'description' => 'Guide complet pour optimiser votre profil, gérer vos réservations et maximiser votre visibilité sur ArtisanPro.',
+                'url_contenu' => null,
+            ]),
+            AcademieFormation::create([
+                'titre'       => 'Normes et réglementations du bâtiment au Bénin',
+                'description' => 'Les normes de construction, les obligations légales et les certifications requises pour exercer au Bénin.',
+                'url_contenu' => null,
+            ]),
+            AcademieFormation::create([
+                'titre'       => 'Développement durable et éco-construction',
+                'description' => 'Matériaux écologiques, techniques d\'isolation thermique et pratiques durables pour les artisans du bâtiment.',
+                'url_contenu' => null,
+            ]),
+        ];
+
+        // Associer quelques formations aux artisans (simulation de complétion)
+        foreach ($artisanUsers as $i => $au) {
+            $artisan = $au['artisan'];
+            // Les premiers artisans ont complété plus de formations
+            $nbFormations = max(1, 4 - $i);
+            $selected = array_slice($formations, 0, min($nbFormations, count($formations)));
+            foreach ($selected as $formation) {
+                $artisan->formations()->syncWithoutDetaching([
+                    $formation->id => ['date_achevement' => Carbon::now()->subDays(rand(10, 180))],
+                ]);
+            }
+        }
+    }
+
+    private function seedPartenaires(): void
+    {
+        $partenaires = [
+            [
+                'nom_fournisseur'   => 'SBEE Bénin',
+                'description'       => 'Société Béninoise d\'Énergie Électrique — Partenaire officiel pour les habilitations électriques et raccordements réseau.',
+                'contact_email'     => 'partenariat@sbee.bj',
+                'contact_telephone' => '+229 21 31 22 45',
+                'logo_url'          => null,
+                'site_web'          => 'https://www.sbee.bj',
+                'type'              => 'partenaire',
+                'actif'             => true,
+            ],
+            [
+                'nom_fournisseur'   => 'SONEB',
+                'description'       => 'Société Nationale des Eaux du Bénin — Partenaire pour les raccordements eau potable et certifications plomberie.',
+                'contact_email'     => 'contact@soneb.bj',
+                'contact_telephone' => '+229 21 30 08 08',
+                'logo_url'          => null,
+                'site_web'          => 'https://www.soneb.bj',
+                'type'              => 'partenaire',
+                'actif'             => true,
+            ],
+            [
+                'nom_fournisseur'   => 'CFPA Porto-Novo',
+                'description'       => 'Centre de Formation Professionnelle des Artisans — Partenaire formation et certification des artisans du Bénin.',
+                'contact_email'     => 'formation@cfpa-portonovo.bj',
+                'contact_telephone' => '+229 20 21 45 67',
+                'logo_url'          => null,
+                'site_web'          => null,
+                'type'              => 'formation',
+                'actif'             => true,
+            ],
+            [
+                'nom_fournisseur'   => 'Assurances NSIA Bénin',
+                'description'       => 'Assureur partenaire pour la responsabilité civile professionnelle des artisans inscrits sur ArtisanPro.',
+                'contact_email'     => 'artisans@nsia.bj',
+                'contact_telephone' => '+229 21 31 50 00',
+                'logo_url'          => null,
+                'site_web'          => 'https://www.nsia.bj',
+                'type'              => 'assureur',
+                'actif'             => true,
+            ],
+            [
+                'nom_fournisseur'   => 'Quincaillerie Centrale Porto-Novo',
+                'description'       => 'Fournisseur de matériaux de construction, outillage et équipements pour artisans. Tarifs préférentiels pour les membres ArtisanPro.',
+                'contact_email'     => 'pro@quincaillerie-centrale.bj',
+                'contact_telephone' => '+229 20 22 33 44',
+                'logo_url'          => null,
+                'site_web'          => null,
+                'type'              => 'fournisseur',
+                'actif'             => true,
+            ],
+            [
+                'nom_fournisseur'   => 'MTN Bénin Business',
+                'description'       => 'Solutions Mobile Money et paiement digital pour artisans. Intégration MoMo Pay sur ArtisanPro.',
+                'contact_email'     => 'business@mtn.bj',
+                'contact_telephone' => '+229 97 00 00 00',
+                'logo_url'          => null,
+                'site_web'          => 'https://www.mtn.bj',
+                'type'              => 'partenaire',
+                'actif'             => true,
+            ],
+        ];
+
+        foreach ($partenaires as $p) {
+            FournisseurPartenaire::create($p);
+        }
+    }
 }

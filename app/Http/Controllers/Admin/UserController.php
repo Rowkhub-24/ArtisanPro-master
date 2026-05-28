@@ -37,7 +37,14 @@ class UserController extends Controller
 
     public function show(User $user): Response
     {
-        $user->load(['artisan.categories', 'client']);
+        $user->load([
+            'artisan.categories:id,nom',
+            'artisan.certifications:id,id_artisan,nom_certification,organisme_delivrance',
+            'artisan.portfolioImages:id,id_artisan,titre,url_media',
+            'artisan.avis' => fn ($q) => $q->with('client.user:id,nom,prenom')->latest()->limit(5),
+            'artisan.reservations' => fn ($q) => $q->latest()->limit(10),
+            'client',
+        ]);
 
         return Inertia::render('admin/users/show', [
             'user' => $user,

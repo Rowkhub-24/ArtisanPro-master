@@ -39,9 +39,12 @@ export default function AdminPaiementsIndex({ paiements, stats, filters }: Props
                         <h1 className="text-2xl font-bold text-[hsl(20,14%,12%)]">Paiements & Transactions</h1>
                         <p className="text-sm text-[hsl(20,10%,50%)] mt-1">{paiements.meta.total} transactions</p>
                     </div>
-                    <button className="inline-flex items-center gap-2 rounded-xl border border-[hsl(30,20%,82%)] bg-white px-4 py-2 text-sm font-medium text-[hsl(20,14%,35%)] hover:bg-[hsl(36,33%,97%)] transition-colors">
-                        <Download className="h-4 w-4" /> Exporter
-                    </button>
+                    <a
+                        href={route('admin.paiements.export')}
+                        className="inline-flex items-center gap-2 rounded-xl border border-[hsl(30,20%,82%)] bg-white px-4 py-2 text-sm font-medium text-[hsl(20,14%,35%)] hover:bg-[hsl(36,33%,97%)] transition-colors"
+                    >
+                        <Download className="h-4 w-4" /> Exporter CSV
+                    </a>
                 </div>
 
                 {/* KPIs */}

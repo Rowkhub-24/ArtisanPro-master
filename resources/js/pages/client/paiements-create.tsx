@@ -54,14 +54,14 @@ export default function ClientPaiementCreate({ reservation }: Props) {
         e.preventDefault();
 
         if (!reservation.artisan?.payment_method) {
-            alert('L'artisan n'a pas configuré de mode de paiement.');
+            alert("L'artisan n'a pas configuré de mode de paiement.");
             return;
         }
 
         const shouldUseProvider = ['card', 'mobile_money'].includes(paymentForm.data.method);
         if (shouldUseProvider) {
             if (!reservation.artisan?.payment_provider) {
-                alert('Le prestataire de paiement de l'artisan n'est pas configuré.');
+                alert("Le prestataire de paiement de l'artisan n'est pas configuré.");
                 return;
             }
             const formData = new FormData();
@@ -233,7 +233,7 @@ export default function ClientPaiementCreate({ reservation }: Props) {
                                             <p className="mt-2 text-sm text-amber-700">
                                                 {reservation.artisan?.payment_provider_name
                                                     ? `Le paiement sera traité via ${reservation.artisan.payment_provider_name}.`
-                                                    : 'Le prestataire de paiement de l'artisan n'est pas encore configuré.'}
+                                                    : "Le prestataire de paiement de l'artisan n'est pas encore configuré."}
                                             </p>
                                         </div>
                                     </div>

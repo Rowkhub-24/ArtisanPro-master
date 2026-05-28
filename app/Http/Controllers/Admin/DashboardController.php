@@ -24,8 +24,8 @@ class DashboardController extends Controller
             'total_devis'        => Devis::count(),
             'total_reservations' => Reservation::count(),
             'total_paiements'    => Paiement::count(),
-            'revenus_total'      => (float) Paiement::where('statut', 'complete')->sum('montant'),
-            'commission_total'   => (float) Paiement::where('statut', 'complete')->sum('commission'),
+            'revenus_total'      => (float) Paiement::whereIn('statut', ['reussi', 'complete'])->sum('montant'),
+            'commission_total'   => (float) Paiement::whereIn('statut', ['reussi', 'complete'])->sum('commission'),
             'users_actifs'       => User::where('statut', 'actif')->count(),
             'users_suspendus'    => User::where('statut', 'suspendu')->count(),
         ];

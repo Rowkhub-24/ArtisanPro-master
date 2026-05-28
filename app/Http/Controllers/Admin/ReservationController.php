@@ -30,8 +30,8 @@ class ReservationController extends Controller
             'total'      => Reservation::count(),
             'en_attente' => Reservation::where('statut', 'en_attente')->count(),
             'en_cours'   => Reservation::where('statut', 'en_cours')->count(),
-            'termine'    => Reservation::where('statut', 'termine')->count(),
-            'annule'     => Reservation::where('statut', 'annule')->count(),
+            'termine'    => Reservation::whereIn('statut', ['terminee', 'termine'])->count(),
+            'annule'     => Reservation::whereIn('statut', ['annulee', 'annule'])->count(),
         ];
 
         return Inertia::render('admin/reservations/index', [

@@ -25,6 +25,7 @@ class Artisan extends Model
         'payment_method',
         'note_moyenne',
         'badge',
+        'score_confiance',
         'latitude',
         'longitude',
     ];
@@ -37,6 +38,7 @@ class Artisan extends Model
         return [
             'tarifs_horaire' => 'decimal:2',
             'note_moyenne' => 'decimal:2',
+            'score_confiance' => 'integer',
             'latitude' => 'decimal:8',
             'longitude' => 'decimal:8',
             'payment_provider' => 'string',

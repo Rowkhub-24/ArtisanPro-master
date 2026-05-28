@@ -3,9 +3,12 @@
 use App\Http\Controllers\Admin\ArtisanController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\LitigeController;
 use App\Http\Controllers\Admin\PaiementController;
+use App\Http\Controllers\Admin\PartenaireController;
 use App\Http\Controllers\Admin\ReservationController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\AvisController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -35,6 +38,25 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Paiements
     Route::get('paiements', [PaiementController::class, 'index'])->name('paiements.index');
+    Route::get('paiements/export', [PaiementController::class, 'export'])->name('paiements.export');
+
+    // Avis — modération
+    Route::get('avis',                        [AvisController::class, 'index'])->name('avis.index');
+    Route::patch('avis/{avis}/masquer',       [AvisController::class, 'masquer'])->name('avis.masquer');
+    Route::patch('avis/{avis}/restaurer',     [AvisController::class, 'restaurer'])->name('avis.restaurer');
+    Route::delete('avis/{avis}',              [AvisController::class, 'supprimer'])->name('avis.supprimer');
+
+    // Litiges
+    Route::get('litiges',                          [LitigeController::class, 'index'])->name('litiges.index');
+    Route::get('litiges/{litige}',                 [LitigeController::class, 'show'])->name('litiges.show');
+    Route::patch('litiges/{litige}/statut',        [LitigeController::class, 'updateStatut'])->name('litiges.statut');
+
+    // Partenaires
+    Route::get('partenaires',                      [PartenaireController::class, 'index'])->name('partenaires.index');
+    Route::post('partenaires',                     [PartenaireController::class, 'store'])->name('partenaires.store');
+    Route::patch('partenaires/{partenaire}',       [PartenaireController::class, 'update'])->name('partenaires.update');
+    Route::delete('partenaires/{partenaire}',      [PartenaireController::class, 'destroy'])->name('partenaires.destroy');
+    Route::patch('partenaires/{partenaire}/actif', [PartenaireController::class, 'toggleActif'])->name('partenaires.actif');
 
     // Rapports / analytics
     Route::get('reports', \App\Http\Controllers\Portal\AdminReportsController::class)->name('reports');

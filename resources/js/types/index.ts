@@ -41,6 +41,7 @@ export interface User {
     type_utilisateur?: string;
     avatar?: string | null;
     avatar_url?: string | null;
+    smtp_username?: string | null;
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;

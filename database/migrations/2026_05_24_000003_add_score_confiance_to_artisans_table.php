@@ -1,0 +1,24 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('artisans', function (Blueprint $table) {
+            if (! Schema::hasColumn('artisans', 'score_confiance')) {
+                $table->unsignedTinyInteger('score_confiance')->default(0)->after('badge');
+            }
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('artisans', function (Blueprint $table) {
+            $table->dropColumn('score_confiance');
+        });
+    }
+};

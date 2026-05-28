@@ -34,6 +34,7 @@ Route::get('contact', function () {
 Route::get('cgv', fn () => Inertia::render('portal/cgv'))->name('terms');
 Route::get('artisans', ArtisanAnnuaireController::class)->name('artisans.index');
 Route::get('artisans/{artisan}', ArtisanFicheController::class)->name('artisans.show');
+Route::get('partenaires', \App\Http\Controllers\Portal\PartenairesController::class)->name('partenaires');
 
 // ── Authenticated ─────────────────────────────────────────────────────────────
 Route::middleware(['auth'])->group(function () {
@@ -674,6 +675,15 @@ Route::middleware(['auth'])->group(function () {
                 'date_paiement' => now(),
             ]);
 
+            // Notifier client et artisan du paiement
+            if (! $useExternalGateway) {
+                try {
+                    (new \App\Services\NotificationService())->paiementRecu(
+                        $paiement->load('reservation.client.user', 'reservation.artisan.user')
+                    );
+                } catch (\Throwable) {}
+            }
+
             if ($useExternalGateway) {
                 $gateway = new \App\Services\PaymentGatewayService();
                 $checkoutUrl = $gateway->createCheckoutUrl($artisanProvider, [
@@ -798,6 +808,14 @@ Route::middleware(['auth'])->group(function () {
                 'date_avis' => now(),
             ]);
 
+            // Notifier l'artisan du nouvel avis
+            try {
+                $avis = \App\Models\Avis::where('id_reservation', $reservation->id)->with('artisan.user')->first();
+                if ($avis) {
+                    (new \App\Services\NotificationService())->avisDepose($avis);
+                }
+            } catch (\Throwable) {}
+
             return redirect()->route('client.avis')->with('success', 'Votre avis a bien été enregistré.');
         })->name('avis.store');
 
@@ -900,6 +918,11 @@ Route::middleware(['auth'])->group(function () {
                 'statut' => 'ouvert',
             ]);
 
+            // Notifier l'artisan via la table notifications
+            try {
+                (new \App\Services\NotificationService())->litigeOuvert($litige->load('artisan.user'));
+            } catch (\Throwable) {}
+
             $clientEmail = $client->user?->email;
             $adminEmails = \App\Models\User::where('type_utilisateur', 'admin')
                 ->pluck('email')
@@ -983,6 +1006,9 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::get('notifications', \App\Http\Controllers\Portal\NotificationsController::class)->name('notifications');
+    Route::patch('notifications/{id}/lue', [\App\Http\Controllers\Portal\NotificationsController::class, 'marquerLue'])->name('notifications.lue');
+    Route::patch('notifications/toutes-lues', [\App\Http\Controllers\Portal\NotificationsController::class, 'marquerToutesLues'])->name('notifications.toutes-lues');
+    Route::get('notifications/compteur', [\App\Http\Controllers\Portal\NotificationsController::class, 'compteur'])->name('notifications.compteur');
     Route::get('conversations', \App\Http\Controllers\Portal\ConversationController::class)->name('conversations');
 
     // ── Artisan ───────────────────────────────────────────────────────────────
@@ -1104,6 +1130,18 @@ Route::middleware(['auth'])->group(function () {
 
             $dbStatut = $allowed[$input];
             $reservation->update(['statut' => $dbStatut]);
+
+            // Alimenter la table notifications selon le statut
+            try {
+                $notifService = new \App\Services\NotificationService();
+                $reservation->load(['client.user', 'artisan.user']);
+                match ($dbStatut) {
+                    'confirmee' => $notifService->reservationConfirmee($reservation),
+                    'annulee'   => $notifService->reservationAnnulee($reservation),
+                    'terminee'  => $notifService->reservationTerminee($reservation),
+                    default     => null,
+                };
+            } catch (\Throwable) {}
 
             // Send notifications to client based on status change
             $clientEmail = $reservation->client->user->email;
@@ -1617,7 +1655,12 @@ Route::middleware(['auth'])->group(function () {
         })->name('portfolio');
 
         Route::get('profil', function () {
-            $artisan = auth()->user()->artisan;
+            $user = auth()->user();
+            if (! $user || $user->type_utilisateur !== 'artisan') {
+                abort(403, 'Accès réservé aux artisans.');
+            }
+
+            $artisan = $user->artisan;
 
             return Inertia::render('artisan/profil', ['artisan' => $artisan ? [
                 'metier' => $artisan->metier,
@@ -1699,6 +1742,14 @@ Route::middleware(['auth'])->group(function () {
 
             return redirect()->route('artisan.profil')->with('success', 'Profil mis à jour.');
         })->name('profil.update');
+
+        // ── Géolocalisation ───────────────────────────────────────────────────
+        Route::get('geolocalisation', [\App\Http\Controllers\Portal\ArtisanGeolocalisationController::class, 'index'])->name('geolocalisation');
+        Route::post('geolocalisation', [\App\Http\Controllers\Portal\ArtisanGeolocalisationController::class, 'enregistrer'])->name('geolocalisation.enregistrer');
+        Route::delete('geolocalisation', [\App\Http\Controllers\Portal\ArtisanGeolocalisationController::class, 'effacer'])->name('geolocalisation.effacer');
+
+        // ── Academy ───────────────────────────────────────────────────────────
+        Route::post('academy/{id}/completer', [\App\Http\Controllers\Portal\ArtisanAcademyController::class, 'completer'])->name('academy.completer');
     });
 });
 

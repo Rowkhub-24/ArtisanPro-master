@@ -16,6 +16,8 @@ class Avis extends Model
         'note',
         'commentaire',
         'date_avis',
+        'signale',
+        'masque',
     ];
 
     /**
@@ -25,6 +27,8 @@ class Avis extends Model
     {
         return [
             'date_avis' => 'datetime',
+            'signale'   => 'boolean',
+            'masque'    => 'boolean',
         ];
     }
 

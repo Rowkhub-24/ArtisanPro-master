@@ -10,7 +10,8 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutGrid, Search, Hammer, Calendar, FileText,
     MessageSquare, CreditCard, Star, Heart, AlertTriangle,
-    User, Award, Image, Users, Tag, Sparkles,
+    User, Award, Image, Users, Tag, Sparkles, GraduationCap,
+    MapPin, Building2, Bell,
 } from 'lucide-react';
 import { useState } from 'react';
 import DiagnosticIAModal from '@/components/diagnostic-ia-modal';
@@ -26,18 +27,21 @@ const clientNavItems: NavItem[] = [
     { title: 'Mes Avis',         url: '/client/avis',         icon: Star },
     { title: 'Favoris',          url: '/client/favoris',      icon: Heart },
     { title: 'Litiges',          url: '/client/litiges',      icon: AlertTriangle },
+    { title: 'Notifications',    url: '/notifications',       icon: Bell },
     { title: 'Mon Profil',       url: '/client/profil',       icon: User },
 ];
 
 const artisanNavItems: NavItem[] = [
-    { title: 'Tableau de bord',  url: '/artisan/dashboard',    icon: LayoutGrid },
-    { title: 'Réservations',     url: '/artisan/reservations', icon: Calendar },
-    { title: 'Mes Devis',        url: '/artisan/devis',        icon: FileText },
-    { title: 'Messages',         url: '/artisan/messages',     icon: MessageSquare },
-    { title: 'Mes Revenus',      url: '/artisan/paiements',    icon: CreditCard },
-    { title: 'Mes Avis',         url: '/artisan/avis',         icon: Star },
-    { title: 'Portfolio',        url: '/artisan/portfolio',    icon: Image },
-    { title: 'Mon Profil',       url: '/artisan/profil',       icon: User },
+    { title: 'Tableau de bord',  url: '/artisan/dashboard',        icon: LayoutGrid },
+    { title: 'Réservations',     url: '/artisan/reservations',     icon: Calendar },
+    { title: 'Mes Devis',        url: '/artisan/devis',            icon: FileText },
+    { title: 'Messages',         url: '/artisan/messages',         icon: MessageSquare },
+    { title: 'Mes Revenus',      url: '/artisan/paiements',        icon: CreditCard },
+    { title: 'Mes Avis',         url: '/artisan/avis',             icon: Star },
+    { title: 'Portfolio',        url: '/artisan/portfolio',        icon: Image },
+    { title: 'Académie',         url: '/artisan/academy',          icon: GraduationCap },
+    { title: 'Géolocalisation',  url: '/artisan/geolocalisation',  icon: MapPin },
+    { title: 'Mon Profil',       url: '/artisan/profil',           icon: User },
 ];
 
 const adminNavItems: NavItem[] = [
