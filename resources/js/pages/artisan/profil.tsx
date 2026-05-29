@@ -177,7 +177,7 @@ function LocationPicker({ lat, lng, onChange }: {
 }
 
 export default function ArtisanProfil({ artisan }: Props) {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, flash } = usePage<SharedData>().props;
     const user = auth.user;
 
     const { data, setData, patch, processing, errors, clearErrors } = useForm<ArtisanProfilForm>({
@@ -201,6 +201,26 @@ export default function ArtisanProfil({ artisan }: Props) {
         avatar:             null,
     });
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+    // Verrouillage des champs déjà remplis (empêche modification)
+    const lockedFields: Record<string, boolean> = {
+        prenom: Boolean(user?.prenom),
+        nom: Boolean(user?.nom),
+        email: Boolean(user?.email),
+        telephone: Boolean(user?.telephone),
+        smtp_username: Boolean(user?.smtp_username),
+        metier: Boolean(artisan?.metier),
+        description: Boolean(artisan?.description),
+        bio: Boolean(artisan?.bio),
+        zone_intervention: Boolean(artisan?.zone_intervention),
+        tarifs_horaire: Boolean(artisan?.tarifs_horaire),
+        payment_provider: Boolean(artisan?.payment_provider),
+        payment_account_id: Boolean(artisan?.payment_account_id),
+        payment_account_key: Boolean(artisan?.payment_account_key),
+        payment_method: Boolean(artisan?.payment_method),
+        latitude: Boolean(artisan?.latitude),
+        longitude: Boolean(artisan?.longitude),
+    };
 
     const handleFieldChange = (field: Exclude<keyof ArtisanProfilForm, 'avatar'>) => (
         e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -275,6 +295,12 @@ export default function ArtisanProfil({ artisan }: Props) {
                     </div>
                 </div>
 
+                {flash?.success && (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4 text-emerald-900 shadow-sm">
+                        {flash.success}
+                    </div>
+                )}
+
                 <div className="grid gap-6 lg:grid-cols-3">
                     {/* Avatar & Stats */}
                     <div className="space-y-4">
@@ -290,6 +316,7 @@ export default function ArtisanProfil({ artisan }: Props) {
                                 <input
                                     id="avatar"
                                     name="avatar"
+                                    form="artisan-profil-form"
                                     type="file"
                                     accept="image/*"
                                     aria-label="Sélectionner une photo de profil"
@@ -322,7 +349,7 @@ export default function ArtisanProfil({ artisan }: Props) {
                                         <Star className="h-4 w-4 text-amber-600" />
                                         <span className="text-sm text-[hsl(20,14%,12%)]">Note moyenne</span>
                                     </div>
-                                    <span className="font-bold text-amber-700">{artisan?.note_moyenne?.toFixed(1) ?? '0.0'}/5</span>
+                                    <span className="font-bold text-amber-700">{Number(artisan?.note_moyenne ?? 0).toFixed(1)}/5</span>
                                 </div>
                                 <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-100">
                                     <div className="flex items-center gap-2">
@@ -355,7 +382,7 @@ export default function ArtisanProfil({ artisan }: Props) {
                                         <div className="grid gap-4 md:grid-cols-2">
                                             <div className="space-y-2">
                                                 <Label htmlFor="prenom" className="text-sm font-medium text-[hsl(20,14%,12%)]">Prénom</Label>
-                                                <Input id="prenom" name="prenom" value={data.prenom} onChange={handleFieldChange('prenom')} className={inputClass} />
+                                                <Input id="prenom" name="prenom" value={data.prenom} onChange={handleFieldChange('prenom')} className={inputClass} readOnly={lockedFields.prenom} />
                                                 <InputError message={errors.prenom} />
                                             </div>
                                             <div className="space-y-2">
@@ -370,27 +397,28 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                         if (errors.nom) clearErrors('nom');
                                                     }}
                                                     className={inputClass}
+                                                    readOnly={lockedFields.nom}
                                                 />
                                                 <InputError message={errors.nom} />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="email" className="text-sm font-medium text-[hsl(20,14%,12%)]">Email</Label>
-                                                <Input id="email" name="email" type="email" value={data.email} onChange={handleFieldChange('email')} className={inputClass} />
+                                                <Input id="email" name="email" type="email" value={data.email} onChange={handleFieldChange('email')} className={inputClass} readOnly={lockedFields.email} />
                                                 <InputError message={errors.email} />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="telephone" className="text-sm font-medium text-[hsl(20,14%,12%)]">Téléphone</Label>
-                                                <Input id="telephone" name="telephone" value={data.telephone} onChange={handleFieldChange('telephone')} placeholder="+229 XX XX XX XX" className={inputClass} />
+                                                <Input id="telephone" name="telephone" value={data.telephone} onChange={handleFieldChange('telephone')} placeholder="+229 XX XX XX XX" className={inputClass} readOnly={lockedFields.telephone} />
                                                 <InputError message={errors.telephone} />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="smtp_username" className="text-sm font-medium text-[hsl(20,14%,12%)]">Adresse SMTP Gmail</Label>
-                                                <Input id="smtp_username" name="smtp_username" type="email" value={data.smtp_username} onChange={handleFieldChange('smtp_username')} placeholder="artisan@gmail.com" className={inputClass} />
+                                                <Input id="smtp_username" name="smtp_username" type="email" value={data.smtp_username} onChange={handleFieldChange('smtp_username')} placeholder="artisan@gmail.com" className={inputClass} readOnly={lockedFields.smtp_username} />
                                                 <InputError message={errors.smtp_username} />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="smtp_password" className="text-sm font-medium text-[hsl(20,14%,12%)]">Mot de passe d'application</Label>
-                                                <Input id="smtp_password" name="smtp_password" type="password" value={data.smtp_password} onChange={handleFieldChange('smtp_password')} placeholder="Mot de passe d'application Gmail" className={inputClass} />
+                                                <Input id="smtp_password" name="smtp_password" type="password" value={data.smtp_password} onChange={handleFieldChange('smtp_password')} placeholder="Mot de passe d'application Gmail" className={inputClass} disabled={false} />
                                                 <p className="text-sm text-[hsl(20,10%,50%)]">Utilisez un mot de passe d'application Gmail. Laissez vide pour conserver le mot de passe SMTP actuel.</p>
                                                 <InputError message={errors.smtp_password} />
                                             </div>
@@ -408,7 +436,7 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                     <Wrench className="inline h-4 w-4 mr-1" />
                                                     Métier / Spécialité
                                                 </Label>
-                                                <Input id="metier" name="metier" value={data.metier} onChange={handleFieldChange('metier')} placeholder="Ex: Plombier, Électricien..." className={inputClass} />
+                                                <Input id="metier" name="metier" value={data.metier} onChange={handleFieldChange('metier')} placeholder="Ex: Plombier, Électricien..." className={inputClass} readOnly={lockedFields.metier} />
                                                 <InputError message={errors.metier} />
                                             </div>
                                             <div className="space-y-2">
@@ -416,7 +444,7 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                     <MapPin className="inline h-4 w-4 mr-1" />
                                                     Zone d'intervention
                                                 </Label>
-                                                <Input id="zone_intervention" name="zone_intervention" value={data.zone_intervention} onChange={handleFieldChange('zone_intervention')} placeholder="Ex: Porto-Novo, Cotonou..." className={inputClass} />
+                                                <Input id="zone_intervention" name="zone_intervention" value={data.zone_intervention} onChange={handleFieldChange('zone_intervention')} placeholder="Ex: Porto-Novo, Cotonou..." className={inputClass} readOnly={lockedFields.zone_intervention} />
                                                 <InputError message={errors.zone_intervention} />
                                             </div>
                                             <div className="space-y-2">
@@ -424,7 +452,7 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                     <DollarSign className="inline h-4 w-4 mr-1" />
                                                     Tarif horaire (FCFA)
                                                 </Label>
-                                                <Input id="tarifs_horaire" name="tarifs_horaire" type="number" value={data.tarifs_horaire} onChange={handleFieldChange('tarifs_horaire')} placeholder="Ex: 15000" className={inputClass} />
+                                                <Input id="tarifs_horaire" name="tarifs_horaire" type="number" value={data.tarifs_horaire} onChange={handleFieldChange('tarifs_horaire')} placeholder="Ex: 15000" className={inputClass} readOnly={lockedFields.tarifs_horaire} />
                                                 <InputError message={errors.tarifs_horaire} />
                                             </div>
                                             <div className="space-y-2">
@@ -436,11 +464,15 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                     value={data.payment_method}
                                                     onChange={handleFieldChange('payment_method')}
                                                     className={selectClass}
+                                                    disabled={false}
                                                 >
                                                     <option value="card">Carte bancaire</option>
                                                     <option value="mobile_money">Mobile Money</option>
                                                     <option value="virement">Virement bancaire</option>
                                                 </select>
+                                                {lockedFields.payment_method && (
+                                                    <input type="hidden" name="payment_method" value={data.payment_method} />
+                                                )}
                                                 <InputError message={errors.payment_method} />
                                             </div>
                                             <div className="space-y-2">
@@ -452,10 +484,14 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                     value={data.payment_provider}
                                                     onChange={handleFieldChange('payment_provider')}
                                                     className={selectClass}
+                                                    disabled={false}
                                                 >
                                                     <option value="kkiapay">Kkiapay</option>
                                                     <option value="fedapay">Fedapay</option>
                                                 </select>
+                                                {lockedFields.payment_provider && (
+                                                    <input type="hidden" name="payment_provider" value={data.payment_provider} />
+                                                )}
                                                 <InputError message={errors.payment_provider} />
                                             </div>
                                             <div className="space-y-2">
@@ -467,6 +503,7 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                     onChange={handleFieldChange('payment_account_id')}
                                                     placeholder="ID de compte Kkiapay/Fedapay"
                                                     className={inputClass}
+                                                    readOnly={lockedFields.payment_account_id}
                                                 />
                                                 <InputError message={errors.payment_account_id} />
                                             </div>
@@ -480,6 +517,7 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                     onChange={handleFieldChange('payment_account_key')}
                                                     placeholder="Laissez vide pour conserver la clé actuelle"
                                                     className={inputClass}
+                                                    readOnly={lockedFields.payment_account_key}
                                                 />
                                                 <InputError message={errors.payment_account_key} />
                                             </div>
@@ -496,6 +534,7 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                     rows={3}
                                                     placeholder="Décrivez vos services en quelques mots..."
                                                     className={textareaClass}
+                                                    readOnly={lockedFields.description}
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -508,6 +547,7 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                     rows={4}
                                                     placeholder="Parlez de votre parcours, expérience, formations..."
                                                     className={textareaClass}
+                                                    readOnly={lockedFields.bio}
                                                 />
                                             </div>
                                         </div>
@@ -528,6 +568,7 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                 lat={data.latitude ? parseFloat(data.latitude) : null}
                                                 lng={data.longitude ? parseFloat(data.longitude) : null}
                                                 onChange={(lat, lng) => {
+                                                    if (lockedFields.latitude || lockedFields.longitude) return;
                                                     setData('latitude', lat.toString());
                                                     setData('longitude', lng.toString());
                                                 }}
@@ -545,6 +586,7 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                         onChange={handleFieldChange('latitude')}
                                                         placeholder="6.4969"
                                                         className={inputClass}
+                                                        readOnly={lockedFields.latitude}
                                                     />
                                                     <InputError message={errors.latitude} />
                                                 </div>
@@ -559,6 +601,7 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                         onChange={handleFieldChange('longitude')}
                                                         placeholder="2.6289"
                                                         className={inputClass}
+                                                        readOnly={lockedFields.longitude}
                                                     />
                                                     <InputError message={errors.longitude} />
                                                 </div>
@@ -583,6 +626,7 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                     );
                                                 }}
                                                 className="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 px-4 py-2 text-sm font-medium transition-colors"
+                                                disabled={false}
                                             >
                                                 <Navigation className="h-4 w-4" />
                                                 Utiliser ma position GPS actuelle

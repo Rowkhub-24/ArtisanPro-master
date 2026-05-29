@@ -5,6 +5,7 @@ use App\Http\Controllers\Portal\ArtisanFicheController;
 use App\Http\Controllers\Portal\DevisStoreController;
 use App\Http\Controllers\Portal\HomeController;
 use App\Models\Artisan;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -36,12 +37,69 @@ Route::get('artisans', ArtisanAnnuaireController::class)->name('artisans.index')
 Route::get('artisans/{artisan}', ArtisanFicheController::class)->name('artisans.show');
 Route::get('partenaires', \App\Http\Controllers\Portal\PartenairesController::class)->name('partenaires');
 
+    // Revenus (Artisan)
+    Route::get('revenus', \App\Http\Controllers\Portal\ArtisanEarningsController::class)->name('earnings');
+
+// Route de debug (local) : afficher le profil d'un artisan sans authentification
+if (env('APP_ENV') === 'local') {
+    Route::get('debug/artisan/{id}/profil', function ($id) {
+        $artisanModel = \App\Models\Artisan::with('user')->find($id);
+
+        if (! $artisanModel) {
+            // Exemple statique pour tests UI en local
+            $example = [
+                'metier' => 'Plombier',
+                'description' => "Je répare les fuites et installe des tuyauteries.",
+                'bio' => "Plus de 10 ans d'expérience dans la plomberie domestique.",
+                'zone_intervention' => 'Porto-Novo',
+                'tarifs_horaire' => 15000,
+                'note_moyenne' => 4.3,
+                'badge' => 'certifie',
+                'payment_provider' => 'kkiapay',
+                'payment_account_id' => 'kkiapay_12345',
+                'payment_method' => 'card',
+                'latitude' => 6.4933,
+                'longitude' => 2.6026,
+                'user' => [
+                    'prenom' => 'Jean',
+                    'nom' => 'Dupont',
+                    'telephone' => '+229 90 00 00 00',
+                    'avatar_url' => null,
+                ],
+            ];
+
+            return Inertia::render('artisan/profil', ['artisan' => $example]);
+        }
+
+        return Inertia::render('artisan/profil', ['artisan' => [
+            'metier' => $artisanModel->metier,
+            'description' => $artisanModel->description,
+            'bio' => $artisanModel->bio,
+            'zone_intervention' => $artisanModel->zone_intervention,
+            'tarifs_horaire' => $artisanModel->tarifs_horaire,
+            'note_moyenne' => (float) ($artisanModel->note_moyenne ?? 0),
+            'badge' => $artisanModel->badge ?? 'aucun',
+            'payment_provider' => $artisanModel->payment_provider,
+            'payment_account_id' => $artisanModel->payment_account_id,
+            'payment_method' => $artisanModel->payment_method,
+            'latitude' => $artisanModel->latitude ? (float) $artisanModel->latitude : null,
+            'longitude' => $artisanModel->longitude ? (float) $artisanModel->longitude : null,
+            'user' => $artisanModel->user ? [
+                'prenom' => $artisanModel->user->prenom,
+                'nom' => $artisanModel->user->nom,
+                'telephone' => $artisanModel->user->telephone,
+                'avatar_url' => $artisanModel->user->avatar_url ?? null,
+            ] : null,
+        ]]);
+    });
+}
+
 // ── Authenticated ─────────────────────────────────────────────────────────────
 Route::middleware(['auth'])->group(function () {
 
     // Dashboard générique (redirige selon le rôle)
     Route::get('dashboard', function () {
-        $role = auth()->user()->type_utilisateur;
+        $role = Auth::user()->type_utilisateur;
         if ($role === 'client')  return redirect()->route('client.dashboard');
         if ($role === 'artisan') return redirect()->route('artisan.dashboard');
         if ($role === 'admin')   return redirect()->route('admin.dashboard');
@@ -53,7 +111,7 @@ Route::middleware(['auth'])->group(function () {
     // ── Client ────────────────────────────────────────────────────────────────
     Route::prefix('client')->name('client.')->group(function () {
         Route::get('dashboard', function () {
-            $client = auth()->user()->client;
+            $client = Auth::user()->client;
             if (! $client) {
                 abort(403);
             }
@@ -88,7 +146,7 @@ Route::middleware(['auth'])->group(function () {
         })->name('dashboard');
 
         Route::get('reservations', function () {
-            $client = auth()->user()->client;
+            $client = Auth::user()->client;
             if (! $client) {
                 abort(403);
             }
@@ -141,7 +199,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('devis/nouveau', \App\Http\Controllers\Portal\ClientDevisCreateController::class)->name('devis.create');
 
         Route::delete('reservations/{reservation}', function (\App\Models\Reservation $reservation) {
-            if ($reservation->id_client !== auth()->user()->client?->id) abort(403);
+            if ($reservation->id_client !== Auth::user()->client?->id) abort(403);
             // Accept canonical enums for cancellable states
             if (!in_array($reservation->statut, ['en_cours', 'confirmee', 'en_attente', 'confirme'])) {
                 return back()->with('error', 'Cette réservation ne peut plus être annulée.');
@@ -152,7 +210,7 @@ Route::middleware(['auth'])->group(function () {
         })->name('reservations.cancel');
 
         Route::get('devis', function () {
-            $client = auth()->user()->client;
+            $client = Auth::user()->client;
             if (! $client) {
                 abort(403);
             }
@@ -600,8 +658,9 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('paiements/create/{reservation_id}', function (string $reservation_id) {
             $reservation = \App\Models\Reservation::find($reservation_id);
-            if (!$reservation) {
-                abort(404);
+            $client = Auth::user()->client;
+            if (!$reservation || !$client || $reservation->id_client !== $client->id) {
+                return redirect()->route('client.reservations')->with('error', 'Cette réservation n\'appartient pas à votre compte.');
             }
 
             return Inertia::render('client/paiements-create', [
@@ -628,9 +687,22 @@ Route::middleware(['auth'])->group(function () {
         })->name('paiements.create');
 
         Route::post('paiements', function (\Illuminate\Http\Request $request) {
+            file_put_contents(storage_path('debug-payment.log'), json_encode([
+                'time' => now()->toDateTimeString(),
+                'reservation_id' => $request->reservation_id,
+                'user_id' => Auth::id(),
+                'client_id' => Auth::user()?->client?->id,
+                'reservation_exists' => (bool) \App\Models\Reservation::find($request->reservation_id),
+                'reservation_id_client' => \App\Models\Reservation::find($request->reservation_id)?->id_client,
+            ]) . "\n", FILE_APPEND);
+
             $reservation = \App\Models\Reservation::find($request->reservation_id);
-            if (!$reservation || $reservation->client_id !== auth()->id()) {
-                abort(403);
+            $client = Auth::user()->client;
+            if (!$reservation || !$client || $reservation->id_client !== $client->id) {
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'Cette réservation n\'appartient pas à votre compte.'], 403);
+                }
+                return back()->with('error', 'Cette réservation n\'appartient pas à votre compte.');
             }
 
             $validated = $request->validate([
@@ -648,10 +720,16 @@ Route::middleware(['auth'])->group(function () {
             $artisanMethod = $artisan?->payment_method;
 
             if (! $artisanProvider || ! in_array($artisanProvider, ['kkiapay', 'fedapay'], true)) {
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'Le prestataire de paiement de l’artisan n’est pas configuré.'], 422);
+                }
                 return back()->with('error', 'Le prestataire de paiement de l’artisan n’est pas configuré.');
             }
 
             if (! $artisanAccountId || ! $artisanAccountKey) {
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'Le compte de paiement de l’artisan n’est pas configuré.'], 422);
+                }
                 return back()->with('error', 'Le compte de paiement de l’artisan n’est pas configuré.');
             }
 
@@ -664,7 +742,7 @@ Route::middleware(['auth'])->group(function () {
 
             $paiement = \App\Models\Paiement::create([
                 'id_reservation' => $reservation->id,
-                'id_utilisateur' => auth()->id(),
+                'id_utilisateur' => Auth::id(),
                 'montant' => $reservation->montant_total,
                 'commission' => 0,
                 'type_transaction' => 'acompte',
@@ -691,9 +769,9 @@ Route::middleware(['auth'])->group(function () {
                     'currency' => 'XOF',
                     'reference' => $paiement->reference_transaction,
                     'reservation_id' => $reservation->id,
-                    'customer_name' => trim(auth()->user()->prenom . ' ' . auth()->user()->nom),
-                    'customer_email' => auth()->user()->email,
-                    'customer_phone' => auth()->user()->telephone ?? null,
+                    'customer_name' => trim(Auth::user()->prenom . ' ' . Auth::user()->nom),
+                    'customer_email' => Auth::user()->email,
+                    'customer_phone' => Auth::user()->telephone ?? null,
                     'method' => $method,
                     'account_id' => $artisanAccountId,
                     'account_key' => $artisanAccountKey,
@@ -709,7 +787,7 @@ Route::middleware(['auth'])->group(function () {
         })->name('paiements.store');
 
         Route::get('avis', function () {
-            $client = auth()->user()->client;
+            $client = Auth::user()->client;
             if (! $client) {
                 abort(403);
             }
@@ -735,7 +813,7 @@ Route::middleware(['auth'])->group(function () {
         })->name('avis');
 
         Route::get('avis/create/{reservation_id}', function (string $reservation_id) {
-            $client = auth()->user()->client;
+            $client = Auth::user()->client;
             if (! $client) {
                 abort(403);
             }
@@ -772,7 +850,7 @@ Route::middleware(['auth'])->group(function () {
         })->name('avis.create');
 
         Route::post('avis', function (\Illuminate\Http\Request $request) {
-            $client = auth()->user()->client;
+            $client = Auth::user()->client;
             if (! $client) {
                 abort(403);
             }
@@ -820,7 +898,7 @@ Route::middleware(['auth'])->group(function () {
         })->name('avis.store');
 
         Route::get('favoris', function () {
-            $client = auth()->user()->client;
+            $client = Auth::user()->client;
             if (! $client) {
                 abort(403);
             }
@@ -847,7 +925,7 @@ Route::middleware(['auth'])->group(function () {
         })->name('favoris');
 
         Route::post('favoris/{artisan}', function (Artisan $artisan) {
-            $client = auth()->user()->client;
+            $client = Auth::user()->client;
             if (! $client) {
                 abort(403);
             }
@@ -858,7 +936,7 @@ Route::middleware(['auth'])->group(function () {
         })->name('favoris.store');
 
         Route::delete('favoris/{artisan}', function (Artisan $artisan) {
-            $client = auth()->user()->client;
+            $client = Auth::user()->client;
             if (! $client) {
                 abort(403);
             }
@@ -869,7 +947,7 @@ Route::middleware(['auth'])->group(function () {
         })->name('favoris.destroy');
 
         Route::get('litiges/create', function () {
-            $client = auth()->user()->client;
+            $client = Auth::user()->client;
             if (! $client) {
                 abort(403);
             }
@@ -891,7 +969,7 @@ Route::middleware(['auth'])->group(function () {
         })->name('litiges.create');
 
         Route::post('litiges', function (\Illuminate\Http\Request $request) {
-            $client = auth()->user()->client;
+            $client = Auth::user()->client;
             if (! $client) {
                 abort(403);
             }
@@ -975,14 +1053,14 @@ Route::middleware(['auth'])->group(function () {
             $validated = $request->validate([
                 'prenom'    => ['nullable', 'string', 'max:100'],
                 'nom'       => ['nullable', 'string', 'max:100'],
-                'email'     => ['nullable', 'email', 'max:255', 'unique:utilisateurs,email,' . auth()->id()],
+                'email'     => ['nullable', 'email', 'max:255', 'unique:utilisateurs,email,' . Auth::id()],
                 'telephone' => ['nullable', 'string', 'max:20'],
                 'adresse'   => ['nullable', 'string', 'max:255'],
                 'avatar'    => ['nullable', 'image', 'max:2048'],
             ]);
 
             /** @var \App\Models\User|null $user */
-            $user = auth()->user();
+            $user = Auth::user();
             if (! $user) {
                 abort(403);
             }
@@ -1014,7 +1092,7 @@ Route::middleware(['auth'])->group(function () {
     // ── Artisan ───────────────────────────────────────────────────────────────
     Route::prefix('artisan')->name('artisan.')->group(function () {
         Route::get('dashboard', function () {
-            $artisan = auth()->user()->artisan;
+            $artisan = Auth::user()->artisan;
             if (! $artisan) {
                 abort(403);
             }
@@ -1065,7 +1143,7 @@ Route::middleware(['auth'])->group(function () {
         })->name('call');
 
         Route::get('reservations', function () {
-            $artisan = auth()->user()->artisan;
+            $artisan = Auth::user()->artisan;
             if (! $artisan) {
                 abort(403);
             }
@@ -1102,6 +1180,78 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('revenus', \App\Http\Controllers\Portal\ArtisanEarningsController::class)->name('earnings');
 
+        Route::get('transactions', function () {
+            $artisan = Auth::user()->artisan;
+            if (! $artisan) abort(403);
+
+            $transactions = $artisan->transactions()
+                ->orderByDesc('created_at')
+                ->limit(100)
+                ->get()
+                ->map(fn($t) => [
+                    'id' => $t->id,
+                    'amount' => (float) $t->amount,
+                    'currency' => $t->currency,
+                    'status' => $t->status,
+                    'provider' => $t->provider,
+                    'created_at' => optional($t->created_at)->toDateTimeString(),
+                    'metadata' => $t->metadata,
+                ])->toArray();
+
+            $balance = (float) $artisan->transactions()->where('status', 'succeeded')->sum('amount');
+            $outstanding = (float) $artisan->payouts()->whereIn('status', ['requested','processing','completed'])->sum('amount');
+            $available = $balance - $outstanding;
+
+            $payouts = $artisan->payouts()
+                ->orderByDesc('created_at')
+                ->limit(50)
+                ->get()
+                ->map(fn($p) => [
+                    'id' => $p->id,
+                    'amount' => (float) $p->amount,
+                    'currency' => $p->currency,
+                    'status' => $p->status,
+                    'provider' => $p->provider,
+                    'created_at' => optional($p->created_at)->toDateTimeString(),
+                    'metadata' => $p->metadata,
+                ])->toArray();
+
+            return Inertia::render('artisan/transactions', [
+                'balance' => $balance,
+                'outstanding' => $outstanding,
+                'available' => $available,
+                'transactions' => $transactions,
+                'payouts' => $payouts,
+            ]);
+        })->name('transactions');
+
+        Route::post('payouts/request', function (\Illuminate\Http\Request $request) {
+            $artisan = $request->user()->artisan;
+            if (! $artisan) abort(403);
+
+            $request->validate(['amount' => ['required','numeric','min:1000']]);
+            $amount = (float) $request->input('amount');
+
+            $balance = (float) $artisan->transactions()->where('status', 'succeeded')->sum('amount');
+            $outstanding = (float) $artisan->payouts()->whereIn('status', ['requested','processing','completed'])->sum('amount');
+            $available = $balance - $outstanding;
+
+            if ($amount > $available) {
+                return back()->with('error', 'Montant supérieur au solde disponible.');
+            }
+
+            $payout = \App\Models\Payout::create([
+                'id_artisan' => $artisan->id,
+                'amount' => $amount,
+                'currency' => 'XOF',
+                'provider' => $artisan->payment_provider ?? 'kkiapay',
+                'status' => 'requested',
+                'metadata' => [],
+            ]);
+
+            return back()->with('success', 'Demande de retrait envoyée.');
+        })->name('payouts.request');
+
         Route::patch('reservations/{reservation}/statut', function (
             \Illuminate\Http\Request $request,
             \App\Models\Reservation $reservation
@@ -1126,7 +1276,7 @@ Route::middleware(['auth'])->group(function () {
                 abort(422, 'Statut invalide.');
             }
 
-            if ($reservation->id_artisan !== auth()->user()->artisan?->id) abort(403);
+            if ($reservation->id_artisan !== Auth::user()->artisan?->id) abort(403);
 
             $dbStatut = $allowed[$input];
             $reservation->update(['statut' => $dbStatut]);
@@ -1196,7 +1346,7 @@ Route::middleware(['auth'])->group(function () {
         })->name('reservations.statut');
 
         Route::get('devis', function () {
-            $artisan = auth()->user()->artisan;
+            $artisan = Auth::user()->artisan;
             if (! $artisan) {
                 abort(403);
             }
@@ -1229,7 +1379,7 @@ Route::middleware(['auth'])->group(function () {
             \App\Models\Devis $devis
         ) {
             $request->validate(['statut' => ['required', 'in:accepte,refuse']]);
-            if ($devis->id_artisan !== auth()->user()->artisan?->id) abort(403);
+            if ($devis->id_artisan !== Auth::user()->artisan?->id) abort(403);
             $devis->update(['statut' => $request->statut]);
             return back()->with('success', 'Devis ' . ($request->statut === 'accepte' ? 'accepté' : 'refusé') . '.');
         })->name('devis.statut');
@@ -1626,7 +1776,7 @@ Route::middleware(['auth'])->group(function () {
         })->name('paiements');
 
         Route::get('avis', function () {
-            $artisan = auth()->user()->artisan;
+            $artisan = Auth::user()->artisan;
             if (! $artisan) {
                 abort(403);
             }
@@ -1655,7 +1805,7 @@ Route::middleware(['auth'])->group(function () {
         })->name('portfolio');
 
         Route::get('profil', function () {
-            $user = auth()->user();
+            $user = Auth::user();
             if (! $user || $user->type_utilisateur !== 'artisan') {
                 abort(403, 'Accès réservé aux artisans.');
             }
@@ -1668,7 +1818,7 @@ Route::middleware(['auth'])->group(function () {
                 'bio' => $artisan->bio,
                 'zone_intervention' => $artisan->zone_intervention,
                 'tarifs_horaire' => $artisan->tarifs_horaire,
-                'note_moyenne' => $artisan->avis()->avg('note') ?? 0,
+                'note_moyenne' => $artisan->avis()->avg('note') !== null ? round((float) $artisan->avis()->avg('note'), 1) : 0,
                 'badge' => $artisan->badge ?? 'aucun',
                 'payment_provider' => $artisan->payment_provider,
                 'payment_account_id' => $artisan->payment_account_id,
@@ -1682,7 +1832,7 @@ Route::middleware(['auth'])->group(function () {
             $validated = $request->validate([
                 'prenom'           => ['required', 'string', 'max:100'],
                 'nom'              => ['required', 'string', 'max:100'],
-                'email'            => ['required', 'email', 'max:255', 'unique:utilisateurs,email,' . auth()->id()],
+                'email'            => ['required', 'email', 'max:255', 'unique:utilisateurs,email,' . Auth::id()],
                 'telephone'        => ['nullable', 'string', 'max:20'],
                 'smtp_username'    => ['nullable', 'email', 'max:255'],
                 'smtp_password'    => ['nullable', 'string', 'max:255'],
@@ -1702,7 +1852,7 @@ Route::middleware(['auth'])->group(function () {
             ]);
 
             /** @var \App\Models\User|null $user */
-            $user = auth()->user();
+            $user = Auth::user();
             if (! $user) {
                 abort(403);
             }
@@ -1726,7 +1876,7 @@ Route::middleware(['auth'])->group(function () {
 
             $user->update($userUpdates);
 
-            auth()->user()->artisan?->update([
+            Auth::user()->artisan?->update([
                 'metier'            => $validated['metier'],
                 'description'       => $validated['description'] ?? null,
                 'bio'               => $validated['bio'] ?? null,
@@ -1753,6 +1903,11 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
+// Webhooks pour fournisseurs de paiement
+Route::post('webhook/kkiapay', [\App\Http\Controllers\Payment\WebhookController::class, 'kkiapay'])->name('webhook.kkiapay');
+Route::post('webhook/fedapay', [\App\Http\Controllers\Payment\WebhookController::class, 'fedapay'])->name('webhook.fedapay');
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
+

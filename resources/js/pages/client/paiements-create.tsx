@@ -74,12 +74,25 @@ export default function ClientPaiementCreate({ reservation }: Props) {
             const response = await fetch(route('client.paiements.store'), {
                 method: 'POST',
                 body: formData,
+                credentials: 'same-origin',
                 headers: {
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
                 },
             });
 
-            const payload = await response.json();
+            let payload: any = {};
+            try {
+                payload = await response.json();
+            } catch (error) {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return;
+                }
+                alert('Erreur de paiement : réponse invalide du serveur.');
+                return;
+            }
+
             if (!response.ok) {
                 alert('Erreur de paiement : ' + (payload.message || response.statusText));
                 return;

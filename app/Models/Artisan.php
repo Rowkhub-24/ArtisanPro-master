@@ -115,4 +115,14 @@ class Artisan extends Model
     {
         return $this->hasMany(Reservation::class, 'id_artisan');
     }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'id_artisan');
+    }
+
+    public function payouts(): HasMany
+    {
+        return $this->hasMany(Payout::class, 'id_artisan');
+    }
 }
