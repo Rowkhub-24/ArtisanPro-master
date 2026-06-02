@@ -653,7 +653,40 @@ Route::middleware(['auth'])->group(function () {
         })->name('calls.end');
 
         Route::get('paiements', function () {
-            return Inertia::render('client/paiements', ['paiements' => [], 'total_depense' => 0]);
+            $client = Auth::user()->client;
+            if (! $client) {
+                return Inertia::render('client/paiements', ['paiements' => [], 'total_depense' => 0]);
+            }
+
+            // Charger tous les paiements du client via ses réservations
+            $paiements = \App\Models\Paiement::query()
+                ->whereHas('reservation', fn ($q) => $q->where('id_client', $client->id))
+                ->with(['reservation.artisan.user'])
+                ->orderByDesc('date_paiement')
+                ->get()
+                ->map(fn ($p) => [
+                    'id'             => $p->id,
+                    'montant'        => (float) $p->montant,
+                    'statut'         => $p->statut === 'reussi' ? 'complete' : $p->statut,
+                    'methode'        => $p->methode_paiement ?? $p->payment_provider ?? 'kkiapay',
+                    'date'           => optional($p->date_paiement)->format('Y-m-d H:i:s') ?? optional($p->created_at)->format('Y-m-d H:i:s'),
+                    'reference'      => $p->reference_transaction ?? '—',
+                    'artisan_nom'    => $p->reservation?->artisan?->user
+                        ? trim($p->reservation->artisan->user->prenom . ' ' . $p->reservation->artisan->user->nom)
+                        : 'Artisan inconnu',
+                    'artisan_metier' => $p->reservation?->artisan?->metier ?? '—',
+                ])
+                ->toArray();
+
+            $total_depense = array_sum(array_column(
+                array_filter($paiements, fn ($p) => $p['statut'] === 'complete'),
+                'montant'
+            ));
+
+            return Inertia::render('client/paiements', [
+                'paiements'     => $paiements,
+                'total_depense' => $total_depense,
+            ]);
         })->name('paiements');
 
         Route::get('paiements/create/{reservation_id}', function (string $reservation_id) {
@@ -683,6 +716,8 @@ Route::middleware(['auth'])->group(function () {
                         'payment_method' => $reservation->artisan->payment_method,
                     ] : null,
                 ],
+                'kkiapay_public_key' => config('services.kkiapay.public_key', env('KKIAPAY_PUBLIC_KEY', '2201f9a037d211f09a5c9f72fcc1e14b')),
+                'kkiapay_sandbox'    => (bool) config('services.kkiapay.sandbox', env('KKIAPAY_SANDBOX', false)),
             ]);
         })->name('paiements.create');
 
@@ -744,7 +779,7 @@ Route::middleware(['auth'])->group(function () {
                 'id_reservation' => $reservation->id,
                 'id_utilisateur' => Auth::id(),
                 'montant' => $reservation->montant_total,
-                'commission' => 0,
+                'commission' => round($reservation->montant_total * 0.10, 2), // 10% commission plateforme
                 'type_transaction' => 'acompte',
                 'methode_paiement' => $method,
                 'payment_provider' => $artisanProvider,
@@ -1042,7 +1077,35 @@ Route::middleware(['auth'])->group(function () {
         })->name('litiges.store');
 
         Route::get('litiges', function () {
-            return Inertia::render('client/litiges', ['litiges' => []]);
+            $client = Auth::user()->client;
+            if (! $client) {
+                abort(403);
+            }
+
+            $litiges = \App\Models\Litige::query()
+                ->where('id_client', $client->id)
+                ->with(['artisan.user', 'reservation'])
+                ->orderByDesc('date_ouverture')
+                ->get()
+                ->map(fn ($l) => [
+                    'id'             => $l->id,
+                    'sujet'          => $l->description_litige
+                        ? \Illuminate\Support\Str::limit($l->description_litige, 60)
+                        : "Litige #{$l->id}",
+                    'description'    => $l->description_litige ?? '',
+                    'statut'         => $l->statut,
+                    'date_ouverture' => optional($l->date_ouverture)->format('Y-m-d H:i:s'),
+                    'artisan_nom'    => $l->artisan?->user
+                        ? trim($l->artisan->user->prenom . ' ' . $l->artisan->user->nom)
+                        : 'Artisan inconnu',
+                    'artisan_metier' => $l->artisan?->metier ?? '—',
+                    'fonds_geles'    => (bool) $l->fonds_geles,
+                    'escalade'       => (bool) $l->escalade,
+                    'resolution'     => $l->resolution_details,
+                ])
+                ->toArray();
+
+            return Inertia::render('client/litiges', ['litiges' => $litiges]);
         })->name('litiges');
 
         Route::get('profil', function () {
@@ -1101,7 +1164,7 @@ Route::middleware(['auth'])->group(function () {
                 'reservations_total' => $artisan->reservations()->count(),
                 'reservations_en_cours' => $artisan->reservations()->where('statut', 'en_cours')->count(),
                 'devis_en_attente' => $artisan->devis()->where('statut', 'en_attente')->count(),
-                'note_moyenne' => round((float) $artisan->avis()->avg('note'), 1),
+                'note_moyenne' => round((float) ($artisan->avis()->avg('note') ?? 1.0), 1),
                 'revenus_total' => (float) $artisan->reservations()->where('statut', 'termine')->sum('montant_total'),
                 'avis_total' => $artisan->avis()->count(),
             ];
@@ -1123,6 +1186,8 @@ Route::middleware(['auth'])->group(function () {
             return Inertia::render('artisan/dashboard', [
                 'stats' => $stats,
                 'recent_reservations' => $recent_reservations,
+                'score_confiance' => (int) ($artisan->score_confiance ?? 0),
+                'badge' => $artisan->badge ?? 'aucun',
             ]);
         })->name('dashboard');
 
@@ -1184,44 +1249,82 @@ Route::middleware(['auth'])->group(function () {
             $artisan = Auth::user()->artisan;
             if (! $artisan) abort(403);
 
-            $transactions = $artisan->transactions()
+            // Paiements depuis la table paiements (widget KkiaPay + autres)
+            $paiementRefs = \App\Models\Paiement::query()
+                ->whereHas('reservation', fn ($q) => $q->where('id_artisan', $artisan->id))
+                ->whereIn('statut', ['reussi', 'complete'])
+                ->whereNotNull('reference_transaction')
+                ->pluck('reference_transaction')
+                ->toArray();
+
+            $paiements = \App\Models\Paiement::query()
+                ->whereHas('reservation', fn ($q) => $q->where('id_artisan', $artisan->id))
+                ->whereIn('statut', ['reussi', 'complete'])
+                ->with('reservation')
+                ->orderByDesc('date_paiement')
+                ->limit(100)
+                ->get()
+                ->map(fn ($p) => [
+                    'id'         => 'p-' . $p->id,
+                    'amount'     => (float) $p->montant,
+                    'currency'   => 'XOF',
+                    'status'     => 'succeeded',
+                    'provider'   => $p->payment_provider ?? $p->methode_paiement ?? 'kkiapay',
+                    'created_at' => optional($p->date_paiement ?? $p->created_at)->toDateTimeString(),
+                    'metadata'   => ['reservation_id' => $p->id_reservation, 'reference' => $p->reference_transaction],
+                ])->toArray();
+
+            // Transactions webhook non déjà dans paiements
+            $txWebhook = $artisan->transactions()
+                ->whereNotIn('provider_transaction_id', $paiementRefs)
                 ->orderByDesc('created_at')
                 ->limit(100)
                 ->get()
-                ->map(fn($t) => [
-                    'id' => $t->id,
-                    'amount' => (float) $t->amount,
-                    'currency' => $t->currency,
-                    'status' => $t->status,
-                    'provider' => $t->provider,
+                ->map(fn ($t) => [
+                    'id'         => 't-' . $t->id,
+                    'amount'     => (float) $t->amount,
+                    'currency'   => $t->currency,
+                    'status'     => $t->status,
+                    'provider'   => $t->provider,
                     'created_at' => optional($t->created_at)->toDateTimeString(),
-                    'metadata' => $t->metadata,
+                    'metadata'   => $t->metadata,
                 ])->toArray();
 
-            $balance = (float) $artisan->transactions()->where('status', 'succeeded')->sum('amount');
+            $transactions = collect(array_merge($paiements, $txWebhook))
+                ->sortByDesc('created_at')
+                ->take(100)
+                ->values()
+                ->toArray();
+
+            $balance     = (float) \App\Models\Paiement::query()
+                ->whereHas('reservation', fn ($q) => $q->where('id_artisan', $artisan->id))
+                ->whereIn('statut', ['reussi', 'complete'])
+                ->sum('montant')
+                + (float) $artisan->transactions()->where('status', 'succeeded')->whereNotIn('provider_transaction_id', $paiementRefs)->sum('amount');
+
             $outstanding = (float) $artisan->payouts()->whereIn('status', ['requested','processing','completed'])->sum('amount');
-            $available = $balance - $outstanding;
+            $available   = $balance - $outstanding;
 
             $payouts = $artisan->payouts()
                 ->orderByDesc('created_at')
                 ->limit(50)
                 ->get()
-                ->map(fn($p) => [
-                    'id' => $p->id,
-                    'amount' => (float) $p->amount,
-                    'currency' => $p->currency,
-                    'status' => $p->status,
-                    'provider' => $p->provider,
+                ->map(fn ($p) => [
+                    'id'         => $p->id,
+                    'amount'     => (float) $p->amount,
+                    'currency'   => $p->currency,
+                    'status'     => $p->status,
+                    'provider'   => $p->provider,
                     'created_at' => optional($p->created_at)->toDateTimeString(),
-                    'metadata' => $p->metadata,
+                    'metadata'   => $p->metadata,
                 ])->toArray();
 
             return Inertia::render('artisan/transactions', [
-                'balance' => $balance,
-                'outstanding' => $outstanding,
-                'available' => $available,
+                'balance'      => $balance,
+                'outstanding'  => $outstanding,
+                'available'    => $available,
                 'transactions' => $transactions,
-                'payouts' => $payouts,
+                'payouts'      => $payouts,
             ]);
         })->name('transactions');
 
@@ -1769,9 +1872,60 @@ Route::middleware(['auth'])->group(function () {
         })->name('calls.end');
 
         Route::get('paiements', function () {
+            $artisan = Auth::user()->artisan;
+            if (! $artisan) abort(403);
+
+            // Paiements reçus via les réservations de cet artisan
+            $paiements = \App\Models\Paiement::query()
+                ->whereHas('reservation', fn ($q) => $q->where('id_artisan', $artisan->id))
+                ->with(['reservation.client.user'])
+                ->orderByDesc('date_paiement')
+                ->get()
+                ->map(function ($p) {
+                    $montant    = (float) $p->montant;
+                    $commission = round($montant * 0.10, 2); // 10% commission plateforme
+                    $montantNet = $montant - $commission;
+
+                    $client = $p->reservation?->client?->user;
+                    $clientNom = $client
+                        ? trim($client->prenom . ' ' . $client->nom)
+                        : 'Client inconnu';
+
+                    return [
+                        'id'          => $p->id,
+                        'montant'     => $montant,
+                        'commission'  => $commission,
+                        'montant_net' => $montantNet,
+                        'statut'      => $p->statut === 'reussi' ? 'complete' : $p->statut,
+                        'methode'     => $p->payment_provider ?? $p->methode_paiement ?? 'kkiapay',
+                        'date'        => optional($p->date_paiement ?? $p->created_at)->format('Y-m-d H:i:s'),
+                        'reference'   => $p->reference_transaction ?? '—',
+                        'client_nom'  => $clientNom,
+                    ];
+                })
+                ->toArray();
+
+            $revenus_total = array_sum(array_column(
+                array_filter($paiements, fn ($p) => $p['statut'] === 'complete'),
+                'montant_net'
+            ));
+
+            $debutMois = now()->startOfMonth()->format('Y-m-d');
+            $revenus_mois = array_sum(array_column(
+                array_filter($paiements, fn ($p) => $p['statut'] === 'complete' && $p['date'] >= $debutMois),
+                'montant_net'
+            ));
+
+            $en_attente = array_sum(array_column(
+                array_filter($paiements, fn ($p) => $p['statut'] === 'en_attente'),
+                'montant'
+            ));
+
             return Inertia::render('artisan/paiements', [
-                'paiements' => [], 'revenus_total' => 0,
-                'revenus_mois' => 0, 'en_attente' => 0,
+                'paiements'     => $paiements,
+                'revenus_total' => $revenus_total,
+                'revenus_mois'  => $revenus_mois,
+                'en_attente'    => $en_attente,
             ]);
         })->name('paiements');
 
@@ -1801,8 +1955,72 @@ Route::middleware(['auth'])->group(function () {
         })->name('avis');
 
         Route::get('portfolio', function () {
-            return Inertia::render('artisan/portfolio', ['portfolio' => []]);
+            $artisan = Auth::user()->artisan;
+            if (! $artisan) abort(403);
+
+            $portfolio = $artisan->portfolioImages()
+                ->orderByDesc('created_at')
+                ->get()
+                ->map(fn ($img) => [
+                    'id'          => $img->id,
+                    'titre'       => $img->titre,
+                    'description' => $img->description,
+                    'url_media'   => $img->url_media
+                        ? (\Illuminate\Support\Str::startsWith($img->url_media, 'http')
+                            ? $img->url_media
+                            : asset('storage/' . $img->url_media))
+                        : null,
+                    'type_media'  => $img->type_media ?? 'image',
+                    'created_at'  => optional($img->created_at)->format('Y-m-d'),
+                ])
+                ->toArray();
+
+            return Inertia::render('artisan/portfolio', ['portfolio' => $portfolio]);
         })->name('portfolio');
+
+        Route::post('portfolio', function (\Illuminate\Http\Request $request) {
+            $artisan = Auth::user()->artisan;
+            if (! $artisan) abort(403);
+
+            $validated = $request->validate([
+                'titre'       => ['required', 'string', 'max:150'],
+                'description' => ['nullable', 'string', 'max:500'],
+                'media'       => ['required', 'file', 'mimetypes:image/jpeg,image/png,image/webp,image/gif,video/mp4', 'max:20480'],
+            ]);
+
+            $path = $request->file('media')->store('portfolio', 'public');
+            $mime = $request->file('media')->getMimeType() ?? '';
+            $type = str_starts_with($mime, 'video/') ? 'video' : 'image';
+
+            \App\Models\PortfolioImage::create([
+                'id_artisan'  => $artisan->id,
+                'titre'       => $validated['titre'],
+                'description' => $validated['description'] ?? null,
+                'url_media'   => $path,
+                'type_media'  => $type,
+            ]);
+
+            // Recalculer le score (portfolio complété = +2 pts)
+            try {
+                $score = (new \App\Services\ScoringService())->calculer($artisan);
+                $badge = (new \App\Services\ScoringService())->badgeDepuisScore($score);
+                $artisan->update(['score_confiance' => $score, 'badge' => $badge]);
+            } catch (\Throwable) {}
+
+            return back()->with('success', 'Réalisation ajoutée au portfolio.');
+        })->name('portfolio.store');
+
+        Route::delete('portfolio/{image}', function (\App\Models\PortfolioImage $image) {
+            $artisan = Auth::user()->artisan;
+            if (! $artisan || $image->id_artisan !== $artisan->id) abort(403);
+
+            if ($image->url_media && !\Illuminate\Support\Str::startsWith($image->url_media, 'http')) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($image->url_media);
+            }
+            $image->delete();
+
+            return back()->with('success', 'Réalisation supprimée.');
+        })->name('portfolio.destroy');
 
         Route::get('profil', function () {
             $user = Auth::user();
@@ -1903,9 +2121,14 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-// Webhooks pour fournisseurs de paiement
+// Webhooks pour fournisseurs de paiement (serveur → serveur)
 Route::post('webhook/kkiapay', [\App\Http\Controllers\Payment\WebhookController::class, 'kkiapay'])->name('webhook.kkiapay');
 Route::post('webhook/fedapay', [\App\Http\Controllers\Payment\WebhookController::class, 'fedapay'])->name('webhook.fedapay');
+
+// Callback KkiaPay — redirection navigateur après paiement widget
+Route::get('payment/kkiapay/callback', \App\Http\Controllers\Payment\KkiapayCallbackController::class)
+    ->name('payment.kkiapay.callback')
+    ->middleware('auth');
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

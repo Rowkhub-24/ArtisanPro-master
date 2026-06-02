@@ -20,10 +20,9 @@ class AvisController extends Controller
             'artisan.user:id,nom,prenom',
         ])
             ->when($request->statut, fn ($q, $s) => match ($s) {
-                'signale'  => $q->where('signale', true),
-                'masque'   => $q->where('masque', true),
-                'visible'  => $q->where('masque', false)->where('signale', false),
-                default    => $q,
+                'signale' => $q->where('signale', true),
+                'visible' => $q->where('masque', false)->where('signale', false),
+                default   => $q,
             })
             ->when($request->q, fn ($q, $s) =>
                 $q->where('commentaire', 'like', "%{$s}%")
@@ -35,7 +34,6 @@ class AvisController extends Controller
         $stats = [
             'total'   => Avis::count(),
             'signale' => Avis::where('signale', true)->count(),
-            'masque'  => Avis::where('masque', true)->count(),
         ];
 
         return Inertia::render('admin/avis/index', [
@@ -45,39 +43,55 @@ class AvisController extends Controller
         ]);
     }
 
-    /** Masquer un avis (modération) */
-    public function masquer(Avis $avis): RedirectResponse
+    /** Valider un avis signalé (le rendre visible) — raison obligatoire 50+ chars */
+    public function valider(Request $request, Avis $avis): RedirectResponse
     {
-        $avis->update(['masque' => true, 'signale' => false]);
+        $request->validate([
+            'raison' => ['required', 'string', 'min:50'],
+        ]);
+
+        $avis->update([
+            'visible'            => true,
+            'masque'             => false,
+            'signale'            => false,
+            'raison_moderation'  => $request->raison,
+        ]);
 
         // Notifier le client
         if ($avis->client?->user) {
             Notification::notifier(
                 $avis->client->user->id,
-                "Votre avis a été masqué par la modération car il ne respecte pas nos conditions d'utilisation.",
+                "Votre avis a été validé par la modération et est désormais visible.",
                 'systeme'
             );
         }
 
-        // Recalculer la note de l'artisan
         $this->recalculerNote($avis->id_artisan);
 
-        return back()->with('success', 'Avis masqué.');
+        return back()->with('success', 'Avis validé et rendu visible.');
     }
 
-    /** Rendre un avis visible */
-    public function restaurer(Avis $avis): RedirectResponse
+    /** Supprimer définitivement un avis signalé — raison obligatoire 50+ chars */
+    public function supprimer(Request $request, Avis $avis): RedirectResponse
     {
-        $avis->update(['masque' => false, 'signale' => false]);
-        $this->recalculerNote($avis->id_artisan);
+        $request->validate([
+            'raison' => ['required', 'string', 'min:50'],
+        ]);
 
-        return back()->with('success', 'Avis restauré.');
-    }
-
-    /** Supprimer définitivement un avis */
-    public function supprimer(Avis $avis): RedirectResponse
-    {
         $artisanId = $avis->id_artisan;
+
+        // Enregistrer la raison avant suppression
+        $avis->update(['raison_moderation' => $request->raison]);
+
+        // Notifier le client
+        if ($avis->client?->user) {
+            Notification::notifier(
+                $avis->client->user->id,
+                "Votre avis a été supprimé définitivement par la modération.",
+                'systeme'
+            );
+        }
+
         $avis->delete();
         $this->recalculerNote($artisanId);
 

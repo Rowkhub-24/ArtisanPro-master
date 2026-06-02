@@ -20,6 +20,8 @@ class Paiement extends Model
         'statut',
         'reference_transaction',
         'date_paiement',
+        'type_paiement',
+        'statut_sequestre',
     ];
 
     /**

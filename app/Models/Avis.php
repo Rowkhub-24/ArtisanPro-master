@@ -18,6 +18,7 @@ class Avis extends Model
         'date_avis',
         'signale',
         'masque',
+        'raison_moderation',
     ];
 
     /**

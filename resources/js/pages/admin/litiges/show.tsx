@@ -1,5 +1,5 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import { AlertTriangle, ArrowLeft, Clock, CheckCircle, XCircle, User, Wrench, Calendar, FileText } from 'lucide-react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { AlertTriangle, ArrowLeft, Clock, CheckCircle, XCircle, User, Wrench, Calendar, FileText, Snowflake, Unlock } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,11 @@ interface LitigeDetail {
     date_ouverture: string;
     statut: 'ouvert' | 'en_cours' | 'resolu' | 'clos';
     resolution_details: string | null;
+    fonds_geles: boolean;
+    raison_decision: string | null;
+    date_decision: string | null;
+    escalade: boolean;
+    date_escalade: string | null;
     client: {
         user: { id: number; nom: string; prenom: string; email: string; telephone: string | null } | null;
     } | null;
@@ -38,10 +43,22 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
     clos:     { label: 'Clos',     color: 'bg-gray-100 text-gray-700 border border-gray-200',          icon: <XCircle className="h-4 w-4" /> },
 };
 
+const MIN_RAISON_LENGTH = 50;
+
 export default function AdminLitigeShow({ litige }: Props) {
+    // Form for updating statut / resolution_details (existing)
     const { data, setData, patch, processing, errors } = useForm({
         statut: litige.statut,
         resolution_details: litige.resolution_details ?? '',
+    });
+
+    // Form for gel/libération (no body needed — just POST)
+    const gelerForm = useForm({});
+    const libererForm = useForm({});
+
+    // Form for decision
+    const decisionForm = useForm({
+        raison_decision: litige.raison_decision ?? '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -49,7 +66,24 @@ export default function AdminLitigeShow({ litige }: Props) {
         patch(route('admin.litiges.statut', litige.id));
     };
 
+    const submitGeler: FormEventHandler = (e) => {
+        e.preventDefault();
+        gelerForm.post(route('admin.litiges.geler', litige.id));
+    };
+
+    const submitLiberer: FormEventHandler = (e) => {
+        e.preventDefault();
+        libererForm.post(route('admin.litiges.liberer', litige.id));
+    };
+
+    const submitDecision: FormEventHandler = (e) => {
+        e.preventDefault();
+        decisionForm.post(route('admin.litiges.decider', litige.id));
+    };
+
     const sc = statusConfig[litige.statut] ?? statusConfig.ouvert;
+    const raisonLength = decisionForm.data.raison_decision.length;
+    const raisonValid = raisonLength >= MIN_RAISON_LENGTH;
 
     return (
         <AdminLayout title={`Litige #${litige.id}`}>
@@ -71,10 +105,26 @@ export default function AdminLitigeShow({ litige }: Props) {
                             Ouvert le {new Date(litige.date_ouverture).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                         </p>
                     </div>
-                    <Badge className={`${sc.color} flex items-center gap-1.5 px-3 py-1.5 text-sm`}>
-                        {sc.icon}
-                        {sc.label}
-                    </Badge>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        {/* Fonds gelés badge */}
+                        {litige.fonds_geles && (
+                            <Badge className="bg-red-100 text-red-800 border border-red-300 flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold">
+                                <Snowflake className="h-4 w-4" />
+                                Fonds gelés
+                            </Badge>
+                        )}
+                        {/* Escalade badge */}
+                        {litige.escalade && (
+                            <Badge className="bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1.5 px-3 py-1.5 text-sm">
+                                <AlertTriangle className="h-4 w-4" />
+                                Escaladé
+                            </Badge>
+                        )}
+                        <Badge className={`${sc.color} flex items-center gap-1.5 px-3 py-1.5 text-sm`}>
+                            {sc.icon}
+                            {sc.label}
+                        </Badge>
+                    </div>
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-2">
@@ -148,7 +198,105 @@ export default function AdminLitigeShow({ litige }: Props) {
                     <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{litige.description_litige}</p>
                 </div>
 
-                {/* Résolution */}
+                {/* Gestion des fonds */}
+                <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm p-6">
+                    <h2 className="font-semibold text-gray-900 flex items-center gap-2 mb-5">
+                        <Snowflake className="h-4 w-4 text-amber-500" />
+                        Gestion des fonds
+                    </h2>
+
+                    {litige.fonds_geles && (
+                        <div className="mb-4 flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+                            <Snowflake className="h-5 w-5 text-red-600 shrink-0" />
+                            <p className="text-sm font-medium text-red-800">
+                                Les fonds de ce litige sont actuellement gelés.
+                            </p>
+                        </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-3">
+                        {!litige.fonds_geles && (
+                            <form onSubmit={submitGeler}>
+                                <Button
+                                    type="submit"
+                                    disabled={gelerForm.processing}
+                                    className="bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-2"
+                                >
+                                    <Snowflake className="h-4 w-4" />
+                                    {gelerForm.processing ? 'Gel en cours...' : 'Geler les fonds'}
+                                </Button>
+                            </form>
+                        )}
+
+                        <form onSubmit={submitLiberer}>
+                            <Button
+                                type="submit"
+                                disabled={libererForm.processing}
+                                variant="outline"
+                                className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2"
+                            >
+                                <Unlock className="h-4 w-4" />
+                                {libererForm.processing ? 'Libération en cours...' : 'Libérer les fonds'}
+                            </Button>
+                        </form>
+                    </div>
+                </div>
+
+                {/* Décision administrative */}
+                <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm p-6">
+                    <h2 className="font-semibold text-gray-900 flex items-center gap-2 mb-5">
+                        <CheckCircle className="h-4 w-4 text-amber-500" />
+                        Décision administrative
+                    </h2>
+
+                    {litige.raison_decision && litige.date_decision && (
+                        <div className="mb-5 rounded-xl bg-emerald-50 border border-emerald-200 p-4">
+                            <p className="text-xs font-medium text-emerald-600 uppercase tracking-wide mb-1">
+                                Décision enregistrée le {new Date(litige.date_decision).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </p>
+                            <p className="text-sm text-gray-700 whitespace-pre-wrap">{litige.raison_decision}</p>
+                        </div>
+                    )}
+
+                    <form onSubmit={submitDecision} className="space-y-3">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                Motif de la décision
+                                <span className="text-red-500 ml-1">*</span>
+                                <span className="text-gray-400 font-normal ml-1">(50 caractères minimum)</span>
+                            </label>
+                            <textarea
+                                value={decisionForm.data.raison_decision}
+                                onChange={(e) => decisionForm.setData('raison_decision', e.target.value)}
+                                rows={5}
+                                placeholder="Décrivez la décision prise, les motifs, les compensations accordées... (minimum 50 caractères)"
+                                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100 resize-none"
+                            />
+                            {/* Character counter */}
+                            <div className="flex items-center justify-between mt-1.5">
+                                <div>
+                                    {decisionForm.errors.raison_decision && (
+                                        <p className="text-xs text-red-600">{decisionForm.errors.raison_decision}</p>
+                                    )}
+                                </div>
+                                <p className={`text-xs font-medium tabular-nums ${raisonValid ? 'text-emerald-600' : 'text-gray-400'}`}>
+                                    {raisonLength} / {MIN_RAISON_LENGTH} min
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex justify-end">
+                            <Button
+                                type="submit"
+                                disabled={decisionForm.processing || !raisonValid}
+                                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {decisionForm.processing ? 'Enregistrement...' : 'Enregistrer la décision'}
+                            </Button>
+                        </div>
+                    </form>
+                </div>
+
+                {/* Résolution (statut) */}
                 <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm p-6">
                     <h2 className="font-semibold text-gray-900 flex items-center gap-2 mb-5">
                         <Wrench className="h-4 w-4 text-amber-500" />
@@ -190,7 +338,7 @@ export default function AdminLitigeShow({ litige }: Props) {
                                 disabled={processing}
                                 className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400"
                             >
-                                {processing ? 'Enregistrement...' : 'Enregistrer la décision'}
+                                {processing ? 'Enregistrement...' : 'Mettre à jour le statut'}
                             </Button>
                         </div>
                     </form>

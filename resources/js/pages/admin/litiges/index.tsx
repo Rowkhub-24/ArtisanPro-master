@@ -13,6 +13,7 @@ interface LitigeRow {
     description_litige: string;
     date_ouverture: string;
     statut: 'ouvert' | 'en_cours' | 'resolu' | 'clos';
+    escalade: boolean;
     resolution_details: string | null;
     client: { user: { id: number; nom: string; prenom: string; email: string } | null } | null;
     artisan: { user: { id: number; nom: string; prenom: string } | null } | null;
@@ -27,8 +28,8 @@ interface Paginated<T> {
 
 interface Props {
     litiges: Paginated<LitigeRow>;
-    stats: { total: number; ouvert: number; en_cours: number; resolu: number; clos: number };
-    filters: { q?: string; statut?: string };
+    stats: { total: number; ouvert: number; ouverts: number; en_cours: number; resolu: number; clos: number };
+    filters: { q?: string; statut?: string; escalade?: string };
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -45,11 +46,23 @@ export default function AdminLitigesIndex({ litiges, stats, filters }: Props) {
         router.get(route('admin.litiges.index'), Object.fromEntries(fd), { preserveState: true });
     };
 
+    const isEscaladeFilter = filters.escalade === 'true' || filters.escalade === '1';
+
     return (
         <AdminLayout title="Litiges">
             <Head title="Litiges - Admin ArtisanPro" />
 
             <div className="space-y-6">
+                {/* Alert banner — shown only when open litiges > 10 (Q17: strictly > 10) */}
+                {stats.ouverts > 10 && (
+                    <div className="flex items-center gap-3 rounded-2xl border border-red-300 bg-red-50 px-5 py-4 text-red-800">
+                        <AlertTriangle className="h-5 w-5 shrink-0 text-red-600" />
+                        <p className="font-semibold">
+                            ⚠️ Alerte : {stats.ouverts} litiges ouverts nécessitent votre attention.
+                        </p>
+                    </div>
+                )}
+
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Gestion des litiges</h1>
                     <p className="text-sm text-gray-500 mt-1">{stats.total} litiges au total</p>
@@ -89,6 +102,24 @@ export default function AdminLitigesIndex({ litiges, stats, filters }: Props) {
                                 <Filter className="mr-2 h-4 w-4" />
                                 Filtrer
                             </Button>
+                            {/* Escaladés quick-filter */}
+                            <Button
+                                type="button"
+                                variant={isEscaladeFilter ? 'default' : 'outline'}
+                                className={isEscaladeFilter
+                                    ? 'bg-red-600 hover:bg-red-700 text-white border-red-600'
+                                    : 'border-red-300 text-red-700 hover:bg-red-50'}
+                                onClick={() =>
+                                    router.get(
+                                        route('admin.litiges.index'),
+                                        isEscaladeFilter ? { q: filters.q, statut: filters.statut } : { q: filters.q, statut: filters.statut, escalade: 'true' },
+                                        { preserveState: true },
+                                    )
+                                }
+                            >
+                                <AlertTriangle className="mr-2 h-4 w-4" />
+                                Escaladés
+                            </Button>
                         </form>
                     </CardContent>
                 </Card>
@@ -114,6 +145,12 @@ export default function AdminLitigesIndex({ litiges, stats, filters }: Props) {
                                                         {sc.icon}
                                                         {sc.label}
                                                     </Badge>
+                                                    {l.escalade && (
+                                                        <Badge className="bg-red-100 text-red-700 border border-red-300 flex items-center gap-1 text-xs">
+                                                            <AlertTriangle className="h-3 w-3" />
+                                                            Escaladé
+                                                        </Badge>
+                                                    )}
                                                     <span className="text-xs text-gray-400">
                                                         {new Date(l.date_ouverture).toLocaleDateString('fr-FR')}
                                                     </span>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Litige;
 use App\Models\Notification;
+use App\Services\LitigeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,6 +13,8 @@ use Inertia\Response;
 
 class LitigeController extends Controller
 {
+    public function __construct(private LitigeService $litigeService) {}
+
     public function index(Request $request): Response
     {
         $litiges = Litige::with([
@@ -25,13 +28,17 @@ class LitigeController extends Controller
                     $u->where('nom', 'like', "%{$s}%")->orWhere('prenom', 'like', "%{$s}%")
                 )
             )
+            ->when($request->boolean('escalade'), fn ($q) => $q->where('escalade', true))
             ->orderByDesc('date_ouverture')
             ->paginate(20)
             ->withQueryString();
 
+        $ouvertsCount = Litige::where('statut', 'ouvert')->count();
+
         $stats = [
             'total'    => Litige::count(),
-            'ouvert'   => Litige::where('statut', 'ouvert')->count(),
+            'ouvert'   => $ouvertsCount,
+            'ouverts'  => $ouvertsCount,
             'en_cours' => Litige::where('statut', 'en_cours')->count(),
             'resolu'   => Litige::where('statut', 'resolu')->count(),
             'clos'     => Litige::where('statut', 'clos')->count(),
@@ -40,7 +47,7 @@ class LitigeController extends Controller
         return Inertia::render('admin/litiges/index', [
             'litiges' => $litiges,
             'stats'   => $stats,
-            'filters' => $request->only(['q', 'statut']),
+            'filters' => $request->only(['q', 'statut', 'escalade']),
         ]);
     }
 
@@ -95,5 +102,44 @@ class LitigeController extends Controller
         }
 
         return back()->with('success', "Litige mis à jour : {$label}.");
+    }
+
+    /**
+     * Geler les fonds associés au litige.
+     */
+    public function gelerFonds(Litige $litige): RedirectResponse
+    {
+        $litige->fonds_geles = true;
+        $litige->save();
+
+        return back()->with('success', 'Les fonds du litige ont été gelés.');
+    }
+
+    /**
+     * Libérer les fonds associés au litige (toujours autorisé, même si gelés — Q11).
+     */
+    public function libererFonds(Litige $litige): RedirectResponse
+    {
+        $this->litigeService->libererFonds($litige);
+
+        return back()->with('success', 'Les fonds du litige ont été libérés.');
+    }
+
+    /**
+     * Enregistrer la décision administrative sur un litige.
+     * Raison obligatoire d'au moins 50 caractères.
+     */
+    public function decider(Request $request, Litige $litige): RedirectResponse
+    {
+        $request->validate([
+            'raison_decision' => ['required', 'string', 'min:50'],
+        ], [
+            'raison_decision.required' => 'La raison de la décision est obligatoire.',
+            'raison_decision.min'      => 'La raison de la décision doit comporter au moins 50 caractères.',
+        ]);
+
+        $this->litigeService->decider($litige, $request->raison_decision, 'admin');
+
+        return back()->with('success', 'La décision a été enregistrée et le litige est marqué comme résolu.');
     }
 }

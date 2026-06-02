@@ -19,5 +19,6 @@
     </head>
     <body class="font-sans antialiased">
         @inertia
+        <script src="https://cdn.kkiapay.me/k.js"></script>
     </body>
 </html>

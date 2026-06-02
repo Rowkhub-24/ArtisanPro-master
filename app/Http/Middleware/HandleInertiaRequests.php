@@ -38,6 +38,14 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        // Compteur de notifications non lues pour l'utilisateur connecté
+        $notificationsNonLues = 0;
+        if ($request->user()) {
+            $notificationsNonLues = \App\Models\Notification::where('id_utilisateur', $request->user()->id)
+                ->where('lue', false)
+                ->count();
+        }
+
         return array_merge(parent::share($request), [
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
@@ -46,7 +54,9 @@ class HandleInertiaRequests extends Middleware
             ],
             'flash' => [
                 'success' => $request->session()->get('success'),
+                'error'   => $request->session()->get('error'),
             ],
+            'notifications_non_lues' => $notificationsNonLues,
         ]);
     }
 }

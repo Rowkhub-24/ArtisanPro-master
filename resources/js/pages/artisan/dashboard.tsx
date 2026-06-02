@@ -2,7 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import {
     Calendar, FileText, Star, MessageSquare, CreditCard,
     TrendingUp, ArrowRight, Clock, CheckCircle,
-    Award, BarChart3,
+    Award, BarChart3, ShieldCheck,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +31,15 @@ interface RecentReservation {
 interface Props {
     stats?: Stats;
     recent_reservations?: RecentReservation[];
+    score_confiance?: number;
+    badge?: string;
 }
+
+const badgeConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
+    aucun:    { label: 'Aucun badge',  color: 'text-gray-600',   bg: 'bg-gray-100',   border: 'border-gray-200' },
+    certifie: { label: 'Certifié',     color: 'text-amber-700',  bg: 'bg-amber-100',  border: 'border-amber-300' },
+    elite:    { label: 'Élite',        color: 'text-violet-700', bg: 'bg-violet-100', border: 'border-violet-300' },
+};
 
 const statusConfig: Record<string, { label: string; color: string }> = {
     en_attente:  { label: 'En attente',  color: 'bg-amber-100 text-amber-800 border border-amber-200' },
@@ -45,19 +53,28 @@ const statusConfig: Record<string, { label: string; color: string }> = {
     litige:      { label: 'Litige',      color: 'bg-amber-100 text-amber-800 border border-amber-200' },
 };
 
-export default function ArtisanDashboard({ stats, recent_reservations }: Props) {
+export default function ArtisanDashboard({ stats, recent_reservations, score_confiance, badge }: Props) {
     const { auth } = usePage<SharedData>().props;
 
     const s: Stats = {
         reservations_total:   stats?.reservations_total   ?? 0,
         reservations_en_cours: stats?.reservations_en_cours ?? 0,
         devis_en_attente:     stats?.devis_en_attente     ?? 0,
-        note_moyenne:         stats?.note_moyenne         ?? 0,
+        note_moyenne:         stats?.note_moyenne         ?? 1.0,
         revenus_total:        stats?.revenus_total        ?? 0,
         avis_total:           stats?.avis_total           ?? 0,
     };
 
     const reservations = recent_reservations ?? [];
+    const score = score_confiance ?? 0;
+    const badgeKey = badge ?? 'aucun';
+    const bc = badgeConfig[badgeKey] ?? badgeConfig.aucun;
+
+    // Progress bar color based on score
+    const progressColor =
+        score >= 80 ? 'bg-violet-500' :
+        score >= 50 ? 'bg-amber-500' :
+        'bg-gray-400';
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -110,6 +127,45 @@ export default function ArtisanDashboard({ stats, recent_reservations }: Props) 
                             </div>
                         </div>
                     ))}
+                </div>
+
+                {/* Score de Confiance */}
+                <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm p-6">
+                    <div className="flex items-start justify-between flex-wrap gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100">
+                                <ShieldCheck className="h-6 w-6 text-amber-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-[hsl(20,10%,50%)]">Score de confiance</p>
+                                <p className="text-3xl font-bold text-[hsl(20,14%,12%)]">
+                                    {score}
+                                    <span className="text-base font-normal text-[hsl(20,10%,50%)]"> / 100</span>
+                                </p>
+                            </div>
+                        </div>
+                        <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold ${bc.bg} ${bc.color} ${bc.border}`}>
+                            <Award className="h-4 w-4" />
+                            {bc.label}
+                        </span>
+                    </div>
+                    <div className="mt-4">
+                        <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs text-[hsl(20,10%,50%)]">Progression</span>
+                            <span className="text-xs font-semibold text-[hsl(20,14%,12%)]">{score}%</span>
+                        </div>
+                        <div className="h-3 w-full rounded-full bg-[hsl(30,20%,92%)] overflow-hidden">
+                            <div
+                                className={`h-full rounded-full transition-all duration-500 ${progressColor}`}
+                                style={{ width: `${score}%` }}
+                            />
+                        </div>
+                        <div className="mt-3 flex items-center gap-4 text-xs text-[hsl(20,10%,50%)]">
+                            <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-gray-400" /> 0–49 : Aucun badge</span>
+                            <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-amber-500" /> 50–79 : Certifié</span>
+                            <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-violet-500" /> 80–100 : Élite</span>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Main Content */}

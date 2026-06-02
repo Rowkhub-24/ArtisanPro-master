@@ -33,6 +33,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at',
         'smtp_username',
         'smtp_password',
+        'push_notifications_enabled',
+        'sms_notifications_enabled',
+        'push_permission_status',
     ];
 
     protected $hidden = [
@@ -62,6 +65,9 @@ class User extends Authenticatable implements MustVerifyEmail
             'derniere_connexion' => 'datetime',
             'mot_de_passe' => 'hashed',
             'smtp_password' => 'encrypted',
+            'push_notifications_enabled' => 'boolean',
+            'sms_notifications_enabled' => 'boolean',
+            'push_permission_status' => 'string',
         ];
     }
 

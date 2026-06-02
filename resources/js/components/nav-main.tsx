@@ -1,9 +1,11 @@
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
+import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 
 export function NavMain({ items = [] }: { items: NavItem[] }) {
-    const page = usePage();
+    const page = usePage<SharedData>();
+    const notificationsNonLues = page.props.notifications_non_lues ?? 0;
+
     return (
         <SidebarGroup className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white p-3">
             <SidebarGroupLabel className="text-xs uppercase tracking-widest text-[hsl(20,10%,55%)] px-2 mb-2">
@@ -12,6 +14,8 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
             <SidebarMenu className="space-y-0.5">
                 {items.map((item) => {
                     const isActive = item.url === '/' ? page.url === '/' : page.url.startsWith(item.url);
+                    const isNotifications = item.url === '/notifications';
+
                     return (
                         <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton asChild isActive={isActive}>
@@ -27,7 +31,14 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                     {item.icon && (
                                         <item.icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-amber-600' : 'text-[hsl(20,10%,55%)]'}`} />
                                     )}
-                                    <span>{item.title}</span>
+                                    <span className="flex-1">{item.title}</span>
+
+                                    {/* Badge notifications non lues */}
+                                    {isNotifications && notificationsNonLues > 0 && (
+                                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
+                                            {notificationsNonLues > 99 ? '99+' : notificationsNonLues}
+                                        </span>
+                                    )}
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

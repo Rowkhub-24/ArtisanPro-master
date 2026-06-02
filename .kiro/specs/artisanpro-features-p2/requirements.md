@@ -1,4 +1,4 @@
-# Document de Requirements — ArtisanPro Phase 2
+# Requirements Document
 
 ## Introduction
 
@@ -6,7 +6,7 @@ ArtisanPro est une plateforme Laravel + React/Inertia.js qui met en relation des
 
 La Phase 2 vise à compléter les fonctionnalités partiellement implémentées (planning vide, revenus vide, SMS stub, messagerie par polling) et à ajouter les fonctionnalités manquantes les plus impactantes pour rendre la plateforme compétitive et complète.
 
-## Glossaire
+## Glossary
 
 - **Plateforme** : L'application web ArtisanPro dans son ensemble
 - **Artisan** : Prestataire de services inscrit sur la plateforme (plombier, électricien, maçon, etc.)
@@ -43,7 +43,7 @@ La Phase 2 vise à compléter les fonctionnalités partiellement implémentées 
 
 **User Story:** En tant que client ou artisan, je veux recevoir les messages instantanément sans recharger la page, afin de pouvoir communiquer efficacement pendant la coordination d'une prestation.
 
-#### Critères d'acceptation
+#### Acceptance Criteria
 
 1. WHEN un utilisateur envoie un message, THE Plateforme SHALL diffuser ce message au destinataire dans un délai inférieur à 2 secondes, en utilisant WebSockets (Laravel Reverb ou Pusher) comme mécanisme de transport principal.
 2. WHEN un nouveau message est reçu, THE Interface_Messagerie SHALL afficher le message sans rechargement de page.
@@ -60,7 +60,7 @@ La Phase 2 vise à compléter les fonctionnalités partiellement implémentées 
 
 **User Story:** En tant qu'artisan, je veux gérer mes créneaux de disponibilité dans un calendrier interactif, afin que les clients puissent réserver uniquement aux horaires où je suis disponible.
 
-#### Critères d'acceptation
+#### Acceptance Criteria
 
 1. THE Calendrier_Artisan SHALL afficher une vue mensuelle et une vue hebdomadaire des créneaux de disponibilité et des réservations confirmées.
 2. WHEN un artisan crée un créneau de disponibilité, THE Calendrier_Artisan SHALL enregistrer ce créneau avec une date de début, une date de fin et un statut (disponible, indisponible, réservé).
@@ -78,7 +78,7 @@ La Phase 2 vise à compléter les fonctionnalités partiellement implémentées 
 
 **User Story:** En tant que client, je veux filtrer les artisans selon plusieurs critères simultanés, afin de trouver rapidement le prestataire le plus adapté à mon besoin.
 
-#### Critères d'acceptation
+#### Acceptance Criteria
 
 1. THE Annuaire_Artisans SHALL permettre de filtrer les artisans par : catégorie de métier, note minimale, fourchette de tarif horaire, zone d'intervention (quartier de Porto-Novo), badge (certifié, élite) et disponibilité immédiate.
 2. WHEN un client applique plusieurs filtres simultanément, THE Annuaire_Artisans SHALL retourner uniquement les artisans satisfaisant l'intégralité des critères sélectionnés (conjonction logique AND).
@@ -95,7 +95,7 @@ La Phase 2 vise à compléter les fonctionnalités partiellement implémentées 
 
 **User Story:** En tant que client, je veux payer un acompte à la réservation et le solde après validation de la prestation, afin d'être protégé contre les prestations non réalisées.
 
-#### Critères d'acceptation
+#### Acceptance Criteria
 
 1. WHEN un client confirme une réservation, THE Systeme_Paiement SHALL collecter un acompte dont le pourcentage (entre 20% et 50%) est défini par l'artisan dans son profil.
 2. WHILE une réservation est en statut "en_cours" ou "confirmée", THE Systeme_Paiement SHALL conserver les fonds de l'acompte en séquestre et ne pas les verser à l'artisan.
@@ -112,7 +112,7 @@ La Phase 2 vise à compléter les fonctionnalités partiellement implémentées 
 
 **User Story:** En tant que client ou artisan, je veux obtenir une facture ou un reçu PDF pour chaque transaction, afin de disposer d'une preuve de paiement pour mes dossiers.
 
-#### Critères d'acceptation
+#### Acceptance Criteria
 
 1. WHEN un paiement est confirmé avec succès, THE Generateur_Facture SHALL créer automatiquement un reçu PDF contenant : numéro de référence unique, date, montant, détail de la prestation, coordonnées du client et de l'artisan, et mention de la commission plateforme.
 2. WHEN un client ou un artisan accède à la page de détail d'un paiement, THE Interface_Paiement SHALL afficher un bouton de téléchargement du reçu PDF.
@@ -127,7 +127,7 @@ La Phase 2 vise à compléter les fonctionnalités partiellement implémentées 
 
 **User Story:** En tant qu'utilisateur, je veux recevoir des notifications push sur mon navigateur ou appareil mobile, afin d'être alerté des événements importants même lorsque je n'utilise pas activement la plateforme.
 
-#### Critères d'acceptation
+#### Acceptance Criteria
 
 1. WHEN un utilisateur se connecte pour la première fois, THE Systeme_Notifications SHALL demander l'autorisation d'envoyer des notifications push via l'API Web Push (VAPID).
 2. WHEN un artisan reçoit une nouvelle réservation, THE Systeme_Notifications SHALL envoyer une notification push à l'artisan contenant le nom du client et la date demandée.
@@ -144,7 +144,7 @@ La Phase 2 vise à compléter les fonctionnalités partiellement implémentées 
 
 **User Story:** En tant qu'utilisateur sans accès permanent à internet, je veux recevoir des SMS pour les événements critiques, afin d'être informé même hors connexion.
 
-#### Critères d'acceptation
+#### Acceptance Criteria
 
 1. THE Service_SMS SHALL intégrer un fournisseur SMS opérationnel compatible avec les numéros béninois (Orange Bénin, MTN Bénin) tel que Twilio, Africa's Talking ou un équivalent régional.
 2. WHEN une réservation est confirmée par un artisan, THE Service_SMS SHALL envoyer un SMS au client contenant : le nom de l'artisan, la date et l'heure de la prestation.
@@ -160,7 +160,7 @@ La Phase 2 vise à compléter les fonctionnalités partiellement implémentées 
 
 **User Story:** En tant qu'admin, je veux disposer d'un workflow structuré pour traiter les litiges avec collecte de preuves et médiation, afin de résoudre les conflits de manière équitable et traçable.
 
-#### Critères d'acceptation
+#### Acceptance Criteria
 
 1. WHEN un client ouvre un litige, THE Formulaire_Litige SHALL permettre de joindre jusqu'à 5 fichiers de preuve (images ou documents PDF, max 10 Mo chacun) et de sélectionner un motif parmi une liste prédéfinie (travaux non réalisés, qualité insuffisante, désaccord tarifaire, autre).
 2. WHEN un litige est ouvert, THE Plateforme SHALL notifier l'artisan concerné et lui accorder un délai de 72 heures pour soumettre sa réponse et ses propres preuves.
@@ -177,7 +177,7 @@ La Phase 2 vise à compléter les fonctionnalités partiellement implémentées 
 
 **User Story:** En tant qu'artisan, je veux pouvoir répondre publiquement aux avis de mes clients, afin de montrer mon professionnalisme et d'apporter des précisions si nécessaire.
 
-#### Critères d'acceptation
+#### Acceptance Criteria
 
 1. WHEN un artisan consulte ses avis, THE Interface_Avis_Artisan SHALL permettre à l'artisan de rédiger une réponse publique à chaque avis reçu, limitée à 500 caractères.
 2. WHEN un artisan soumet une réponse à un avis, THE Plateforme SHALL notifier le client auteur de l'avis que l'artisan a répondu.
@@ -194,7 +194,7 @@ La Phase 2 vise à compléter les fonctionnalités partiellement implémentées 
 
 **User Story:** En tant qu'artisan, je veux visualiser mes performances et revenus dans un tableau de bord détaillé, afin de piloter mon activité et identifier les axes d'amélioration.
 
-#### Critères d'acceptation
+#### Acceptance Criteria
 
 1. THE Tableau_de_Bord_Artisan SHALL afficher les indicateurs suivants pour la période sélectionnée : nombre de réservations (total, en cours, terminées, annulées), revenus bruts, revenus nets (après commission), note moyenne, nombre d'avis reçus et taux de complétion des réservations.
 2. THE Tableau_de_Bord_Artisan SHALL permettre de filtrer les données par période : 7 derniers jours, 30 derniers jours, 3 derniers mois, 12 derniers mois et période personnalisée.
@@ -211,7 +211,7 @@ La Phase 2 vise à compléter les fonctionnalités partiellement implémentées 
 
 **User Story:** En tant qu'admin, je veux disposer d'indicateurs avancés et d'exports de données, afin de prendre des décisions éclairées sur la gestion de la plateforme.
 
-#### Critères d'acceptation
+#### Acceptance Criteria
 
 1. THE Tableau_de_Bord_Admin SHALL afficher en temps réel : le nombre d'utilisateurs connectés, les réservations créées dans les dernières 24 heures et les paiements en attente de confirmation.
 2. THE Tableau_de_Bord_Admin SHALL afficher un graphique de rétention des utilisateurs : pourcentage d'utilisateurs ayant effectué au moins une réservation dans les 30 jours suivant leur inscription.
@@ -228,7 +228,7 @@ La Phase 2 vise à compléter les fonctionnalités partiellement implémentées 
 
 **User Story:** En tant qu'artisan, je veux accéder à des formations structurées avec du contenu intégré (vidéos, quiz), afin de développer mes compétences directement sur la plateforme.
 
-#### Critères d'acceptation
+#### Acceptance Criteria
 
 1. THE Academie SHALL prendre en charge les types de contenu suivants : vidéo (URL YouTube/Vimeo intégrée), document PDF téléchargeable, article texte riche (HTML) et quiz à choix multiples.
 2. WHEN un artisan accède à une formation, THE Academie SHALL enregistrer sa progression (pourcentage de contenu consulté) et reprendre depuis le dernier point d'arrêt.
@@ -245,7 +245,7 @@ La Phase 2 vise à compléter les fonctionnalités partiellement implémentées 
 
 **User Story:** En tant qu'artisan, je veux accéder à un catalogue de fournisseurs partenaires avec leurs offres et tarifs, afin de sourcer facilement les matériaux nécessaires à mes prestations.
 
-#### Critères d'acceptation
+#### Acceptance Criteria
 
 1. THE Marketplace_Fournisseurs SHALL afficher les fournisseurs partenaires avec : nom, description, type (matériaux, outillage, équipements), logo, coordonnées, site web et catégories de produits proposés.
 2. THE Marketplace_Fournisseurs SHALL permettre de filtrer les fournisseurs par type et par catégorie de métier associée.
@@ -261,7 +261,7 @@ La Phase 2 vise à compléter les fonctionnalités partiellement implémentées 
 
 **User Story:** En tant que client, je veux voir les artisans disponibles autour de moi sur une carte interactive avec filtrage en temps réel, afin de choisir le prestataire le plus proche et le plus adapté.
 
-#### Critères d'acceptation
+#### Acceptance Criteria
 
 1. THE Carte_Artisans SHALL afficher les artisans actifs sur une carte interactive centrée sur Porto-Novo avec des marqueurs colorés selon leur badge (aucun : gris, certifié : orange, élite : violet).
 2. WHEN un client active sa géolocalisation, THE Carte_Artisans SHALL centrer la carte sur sa position et afficher un rayon de recherche ajustable (1 km, 3 km, 5 km, 10 km).
@@ -277,7 +277,7 @@ La Phase 2 vise à compléter les fonctionnalités partiellement implémentées 
 
 **User Story:** En tant qu'utilisateur sur mobile, je veux que toutes les fonctionnalités de la plateforme soient pleinement utilisables sur un écran de 375px de large, afin d'accéder au service depuis mon smartphone sans friction.
 
-#### Critères d'acceptation
+#### Acceptance Criteria
 
 1. THE Plateforme SHALL afficher correctement toutes les pages sur des écrans de largeur minimale de 375px (iPhone SE) sans défilement horizontal. Cette exigence s'applique uniquement aux écrans dont la largeur est supérieure ou égale à 375px.
 2. THE Interface_Messagerie SHALL adapter son layout sur mobile : liste des conversations en plein écran, conversation active en plein écran avec navigation retour.

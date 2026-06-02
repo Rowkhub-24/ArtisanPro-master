@@ -128,9 +128,14 @@ export default function ClientPaiements({ paiements = [], total_depense = 0 }: P
                                                 <CreditCard className="h-6 w-6 text-amber-600" />
                                             </div>
                                             <div>
-                                                <p className="font-semibold text-[hsl(20,14%,12%)]">{p.artisan_metier}</p>
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <p className="font-semibold text-[hsl(20,14%,12%)]">{p.artisan_metier}</p>
+                                                    <span className="rounded-full bg-amber-100 text-amber-700 border border-amber-200 px-2 py-0.5 text-xs font-medium">
+                                                        Acompte 30%
+                                                    </span>
+                                                </div>
                                                 <p className="text-sm text-[hsl(20,10%,50%)]">{p.artisan_nom} · {p.methode}</p>
-                                                <p className="text-xs text-[hsl(20,10%,50%)] mt-0.5">Réf: {p.reference}</p>
+                                                <p className="text-xs font-mono text-[hsl(20,10%,60%)] mt-0.5">Réf: {p.reference}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">

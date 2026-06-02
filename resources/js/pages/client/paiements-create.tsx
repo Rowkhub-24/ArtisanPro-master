@@ -1,9 +1,10 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { ArrowLeft, CreditCard, AlertCircle, ShieldCheck } from 'lucide-react';
-import { FormEventHandler } from 'react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { ArrowLeft, ShieldCheck, CheckCircle, XCircle } from 'lucide-react';
+import { useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import KkiapayWidget from '@/components/kkiapay-widget';
 import AppLayout from '@/layouts/app-layout';
 import { type SharedData, type BreadcrumbItem } from '@/types';
 
@@ -28,6 +29,8 @@ interface ReservationDetail {
 
 interface Props {
     reservation: ReservationDetail;
+    kkiapay_public_key?: string;
+    kkiapay_sandbox?: boolean;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -36,89 +39,45 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Paiement', href: '#' },
 ];
 
-export default function ClientPaiementCreate({ reservation }: Props) {
+export default function ClientPaiementCreate({ reservation, kkiapay_public_key, kkiapay_sandbox }: Props) {
     const { auth, flash } = usePage<SharedData>().props;
 
-    const artisanMethod = reservation.artisan?.payment_method ?? 'card';
+    const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'failed'>('idle');
+    const [paymentMessage, setPaymentMessage] = useState('');
 
-    const paymentForm = useForm({
-        reservation_id: reservation.id,
-        method: artisanMethod,
-        card_number: '',
-        card_expiry: '',
-        card_cvc: '',
-        cardholder_name: '',
-    });
+    // Clé publique KkiaPay — depuis les props Inertia ou fallback env
+    const publicKey = kkiapay_public_key ?? '2201f9a037d211f09a5c9f72fcc1e14b';
+    const isSandbox = kkiapay_sandbox ?? false;
 
-    const submitPayment: FormEventHandler = async (e) => {
-        e.preventDefault();
+    // URL de callback Laravel après paiement
+    const callbackUrl = `${window.location.origin}/payment/kkiapay/callback?reservation_id=${reservation.id}`;
 
-        if (!reservation.artisan?.payment_method) {
-            alert("L'artisan n'a pas configuré de mode de paiement.");
-            return;
-        }
+    // Données utilisateur pour pré-remplir le widget
+    const userName = auth?.user
+        ? `${(auth.user as { prenom?: string }).prenom ?? ''} ${(auth.user as { nom?: string }).nom ?? ''}`.trim()
+        : undefined;
+    const userEmail = (auth?.user as { email?: string })?.email;
 
-        const shouldUseProvider = ['card', 'mobile_money'].includes(paymentForm.data.method);
-        if (shouldUseProvider) {
-            if (!reservation.artisan?.payment_provider) {
-                alert("Le prestataire de paiement de l'artisan n'est pas configuré.");
-                return;
-            }
-            const formData = new FormData();
-            Object.entries(paymentForm.data).forEach(([key, value]) => {
-                if (value !== null && value !== undefined) {
-                    formData.append(key, String(value));
-                }
-            });
-
-            const response = await fetch(route('client.paiements.store'), {
-                method: 'POST',
-                body: formData,
-                credentials: 'same-origin',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
-                },
-            });
-
-            let payload: any = {};
-            try {
-                payload = await response.json();
-            } catch (error) {
-                if (response.redirected) {
-                    window.location.href = response.url;
-                    return;
-                }
-                alert('Erreur de paiement : réponse invalide du serveur.');
-                return;
-            }
-
-            if (!response.ok) {
-                alert('Erreur de paiement : ' + (payload.message || response.statusText));
-                return;
-            }
-
-            if (payload.redirect_url) {
-                window.location.href = payload.redirect_url;
-                return;
-            }
-
-            if (payload.redirect) {
-                window.location.href = payload.redirect;
-                return;
-            }
-
-            if (payload.success) {
-                window.location.href = route('client.reservations');
-                return;
-            }
-
-            alert('Paiement initié, mais aucune URL de redirection reçue.');
-            return;
-        }
-
-        paymentForm.post(route('client.paiements.store'), { preserveScroll: true });
+    const handleSuccess = (transactionId: string) => {
+        setPaymentStatus('success');
+        setPaymentMessage(`Paiement confirmé ! Référence : ${transactionId}`);
+        // Rediriger vers la réservation après 2 secondes
+        setTimeout(() => {
+            window.location.href = route('client.reservations.show', reservation.id);
+        }, 2000);
     };
+
+    const handleFailed = (message: string) => {
+        setPaymentStatus('failed');
+        setPaymentMessage(message || 'Le paiement a échoué. Veuillez réessayer.');
+    };
+
+    const montant = Number(reservation.montant_total ?? 0);
+
+    // Acompte = 30% du montant total
+    const ACOMPTE_TAUX = 0.30;
+    const montantAcompte = Math.round(montant * ACOMPTE_TAUX);
+    const montantSolde   = montant - montantAcompte;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -140,20 +99,39 @@ export default function ClientPaiementCreate({ reservation }: Props) {
                     </div>
                 </div>
 
+                {/* Flash messages */}
                 {flash?.success && (
                     <Alert className="border-emerald-200 bg-emerald-50 text-emerald-800">
                         <AlertDescription>{flash.success}</AlertDescription>
                     </Alert>
                 )}
-
                 {flash?.error && (
                     <Alert className="border-red-200 bg-red-50 text-red-800">
                         <AlertDescription>{flash.error}</AlertDescription>
                     </Alert>
                 )}
 
+                {/* Statut paiement en temps réel */}
+                {paymentStatus === 'success' && (
+                    <Alert className="border-emerald-200 bg-emerald-50">
+                        <CheckCircle className="h-4 w-4 text-emerald-600" />
+                        <AlertDescription className="text-emerald-800 font-medium">
+                            {paymentMessage} — Redirection en cours…
+                        </AlertDescription>
+                    </Alert>
+                )}
+                {paymentStatus === 'failed' && (
+                    <Alert className="border-red-200 bg-red-50">
+                        <XCircle className="h-4 w-4 text-red-600" />
+                        <AlertDescription className="text-red-800">
+                            {paymentMessage}
+                        </AlertDescription>
+                    </Alert>
+                )}
+
                 <div className="grid gap-6 lg:grid-cols-3">
-                    {/* Reservation Summary — sticky */}
+
+                    {/* Récapitulatif — sticky */}
                     <div className="lg:col-span-1">
                         <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm sticky top-6 p-6">
                             <h2 className="font-semibold text-[hsl(20,14%,12%)] mb-4">Récapitulatif</h2>
@@ -186,189 +164,121 @@ export default function ClientPaiementCreate({ reservation }: Props) {
 
                             <div className="border-t border-[hsl(30,20%,88%)] pt-4 mt-4">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-[hsl(20,14%,12%)] font-medium">Montant à payer</span>
+                                    <span className="text-[hsl(20,14%,12%)] font-medium">Montant total</span>
+                                    <span className="text-lg font-semibold text-[hsl(20,14%,12%)]">
+                                        {montant.toLocaleString('fr-FR')} FCFA
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center mt-2">
+                                    <span className="text-sm text-amber-700 font-medium">Acompte à payer (30%)</span>
                                     <span className="text-2xl font-bold text-amber-600">
-                                        {Number(reservation.montant_total).toLocaleString('fr-FR')} FCFA
+                                        {montantAcompte.toLocaleString('fr-FR')} FCFA
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center mt-1">
+                                    <span className="text-xs text-[hsl(20,10%,55%)]">Solde restant après prestation</span>
+                                    <span className="text-sm font-medium text-[hsl(20,10%,45%)]">
+                                        {montantSolde.toLocaleString('fr-FR')} FCFA
                                     </span>
                                 </div>
                             </div>
 
-                            {/* Security notice */}
+                            {/* Notice sécurité */}
                             <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 mt-4">
                                 <ShieldCheck className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
                                 <p className="text-xs text-amber-700">
-                                    Vos paiements sont sécurisés par chiffrement SSL. Aucune donnée de paiement n'est stockée sur nos serveurs.
+                                    Paiement sécurisé via KkiaPay. Vos données bancaires ne transitent pas par nos serveurs.
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Payment Form */}
+                    {/* Zone de paiement KkiaPay */}
                     <div className="lg:col-span-2">
                         <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm p-6">
-                            <h2 className="font-semibold text-[hsl(20,14%,12%)] mb-1">Méthode de paiement</h2>
+                            <h2 className="font-semibold text-[hsl(20,14%,12%)] mb-1">Payer via KkiaPay</h2>
                             <p className="text-sm text-[hsl(20,10%,50%)] mb-6">
-                                Paiement via le mode configuré par l'artisan :
-                                <span className="font-semibold text-[hsl(20,14%,12%)]"> {artisanMethod === 'card' ? 'Carte bancaire' : artisanMethod === 'mobile_money' ? 'Mobile Money' : 'Virement bancaire'}</span>
+                                Cliquez sur le bouton ci-dessous pour ouvrir la fenêtre de paiement sécurisée KkiaPay.
+                                Vous pouvez payer par carte bancaire ou Mobile Money (MTN, Moov, etc.).
                             </p>
 
-                            <form onSubmit={submitPayment} className="space-y-6">
-                                <input type="hidden" name="method" value={paymentForm.data.method} />
-
-                                {reservation.artisan?.payment_method ? (
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-3 p-4 border border-[hsl(30,20%,82%)] rounded-xl bg-amber-50">
-                                            <div>
-                                                <p className="font-medium text-[hsl(20,14%,12%)]">
-                                                    {reservation.artisan.payment_method === 'card'
-                                                        ? 'Carte bancaire'
-                                                        : reservation.artisan.payment_method === 'mobile_money'
-                                                            ? 'Portefeuille Mobile'
-                                                            : 'Virement bancaire'}
-                                                </p>
-                                                <p className="text-sm text-[hsl(20,10%,50%)]">
-                                                    Mode de paiement configuré par l'artisan.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-                                        <p className="text-sm font-semibold text-red-700">Ce prestataire n'a pas encore configuré de mode de paiement.</p>
-                                        <p className="text-sm text-red-600">Veuillez contacter l'artisan avant de continuer.</p>
-                                    </div>
-                                )}
-
-                                {(paymentForm.data.method === 'card' || paymentForm.data.method === 'mobile_money') && (
-                                    <div className="space-y-3 border-t border-[hsl(30,20%,88%)] pt-6">
-                                        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                                            <p className="text-sm font-medium text-amber-900">Prestataire de paiement</p>
-                                            <p className="mt-2 text-sm text-amber-700">
-                                                {reservation.artisan?.payment_provider_name
-                                                    ? `Le paiement sera traité via ${reservation.artisan.payment_provider_name}.`
-                                                    : "Le prestataire de paiement de l'artisan n'est pas encore configuré."}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Card Payment Fields */}
-                                {paymentForm.data.method === 'card' && (
-                                    <div className="space-y-4 border-t border-[hsl(30,20%,88%)] pt-6">
-                                        <div>
-                                            <label htmlFor="cardholder" className="block text-sm font-medium text-[hsl(20,14%,12%)]">
-                                                Titulaire de la carte
-                                            </label>
-                                            <input
-                                                id="cardholder"
-                                                type="text"
-                                                value={paymentForm.data.cardholder_name}
-                                                onChange={(e) => paymentForm.setData('cardholder_name', e.target.value)}
-                                                required={paymentForm.data.method === 'card'}
-                                                placeholder="JOHN DOE"
-                                                className="mt-1 w-full rounded-xl border border-[hsl(30,20%,82%)] bg-white px-3 py-2 text-[hsl(20,14%,12%)] placeholder-[hsl(20,10%,60%)] focus:border-amber-400 focus:outline-none"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label htmlFor="cardnumber" className="block text-sm font-medium text-[hsl(20,14%,12%)]">
-                                                Numéro de carte
-                                            </label>
-                                            <input
-                                                id="cardnumber"
-                                                type="text"
-                                                value={paymentForm.data.card_number}
-                                                onChange={(e) => paymentForm.setData('card_number', e.target.value.replace(/\s/g, ''))}
-                                                required={paymentForm.data.method === 'card'}
-                                                placeholder="4242 4242 4242 4242"
-                                                maxLength={19}
-                                                className="mt-1 w-full rounded-xl border border-[hsl(30,20%,82%)] bg-white px-3 py-2 text-[hsl(20,14%,12%)] placeholder-[hsl(20,10%,60%)] focus:border-amber-400 focus:outline-none"
-                                            />
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label htmlFor="expiry" className="block text-sm font-medium text-[hsl(20,14%,12%)]">
-                                                    Expiration
-                                                </label>
-                                                <input
-                                                    id="expiry"
-                                                    type="text"
-                                                    value={paymentForm.data.card_expiry}
-                                                    onChange={(e) => paymentForm.setData('card_expiry', e.target.value)}
-                                                    required={paymentForm.data.method === 'card'}
-                                                    placeholder="MM/YY"
-                                                    maxLength={5}
-                                                    className="mt-1 w-full rounded-xl border border-[hsl(30,20%,82%)] bg-white px-3 py-2 text-[hsl(20,14%,12%)] placeholder-[hsl(20,10%,60%)] focus:border-amber-400 focus:outline-none"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label htmlFor="cvc" className="block text-sm font-medium text-[hsl(20,14%,12%)]">
-                                                    CVC
-                                                </label>
-                                                <input
-                                                    id="cvc"
-                                                    type="text"
-                                                    value={paymentForm.data.card_cvc}
-                                                    onChange={(e) => paymentForm.setData('card_cvc', e.target.value)}
-                                                    required={paymentForm.data.method === 'card'}
-                                                    placeholder="123"
-                                                    maxLength={4}
-                                                    className="mt-1 w-full rounded-xl border border-[hsl(30,20%,82%)] bg-white px-3 py-2 text-[hsl(20,14%,12%)] placeholder-[hsl(20,10%,60%)] focus:border-amber-400 focus:outline-none"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Mobile Money Fields */}
-                                {paymentForm.data.method === 'mobile_money' && (
-                                    <div className="space-y-4 border-t border-[hsl(30,20%,88%)] pt-6 bg-amber-50 border border-amber-100 rounded-xl p-4">
-                                        <p className="text-sm text-[hsl(20,14%,12%)]">
-                                            Vous recevrez un code de confirmation par SMS. Veuillez entrer ce code dans l'application de votre opérateur mobile.
-                                        </p>
-                                        <Alert className="border-amber-200 bg-white">
-                                            <AlertCircle className="h-4 w-4" />
-                                            <AlertDescription>
-                                                Assurez-vous d'avoir suffisamment de fonds dans votre portefeuille.
-                                            </AlertDescription>
-                                        </Alert>
-                                    </div>
-                                )}
-
-                                {/* Virement Fields */}
-                                {paymentForm.data.method === 'virement' && (
-                                    <div className="space-y-4 border-t border-[hsl(30,20%,88%)] pt-6 bg-amber-50 border border-amber-100 rounded-xl p-4">
-                                        <p className="text-sm text-[hsl(20,14%,12%)]">
-                                            Détails du virement vous seront envoyés par email après validation.
-                                        </p>
-                                        <Alert className="border-amber-200 bg-white">
-                                            <AlertCircle className="h-4 w-4" />
-                                            <AlertDescription>
-                                                Veuillez mentionner le numéro de réservation (#<strong>{reservation.id}</strong>) comme référence.
-                                            </AlertDescription>
-                                        </Alert>
-                                    </div>
-                                )}
-
-                                {/* Action Buttons */}
-                                <div className="flex gap-3 border-t border-[hsl(30,20%,88%)] pt-6">
-                                    <Link
-                                        href={route('client.reservations')}
-                                        className="flex-1 inline-flex items-center justify-center rounded-xl border border-[hsl(30,20%,82%)] bg-white px-4 py-2 text-sm font-medium text-[hsl(20,14%,12%)] hover:border-amber-400 transition-colors"
-                                    >
-                                        Annuler
-                                    </Link>
-                                    <button
-                                        type="submit"
-                                        disabled={paymentForm.processing || !reservation.artisan?.payment_method}
-                                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold px-4 py-2 text-sm transition-all disabled:opacity-60"
-                                    >
-                                        <CreditCard className="h-4 w-4" />
-                                        {paymentForm.processing ? 'Traitement...' : `Payer ${Number(reservation.montant_total).toLocaleString('fr-FR')} FCFA`}
-                                    </button>
+                            {/* Logo KkiaPay + info */}
+                            <div className="flex items-center gap-3 rounded-xl border border-[hsl(30,20%,88%)] bg-[hsl(36,33%,97%)] p-4 mb-6">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-sm shrink-0">
+                                    K
                                 </div>
-                            </form>
+                                <div>
+                                    <p className="text-sm font-semibold text-[hsl(20,14%,12%)]">KkiaPay</p>
+                                    <p className="text-xs text-[hsl(20,10%,50%)]">
+                                        Carte bancaire · Mobile Money · Orange Money · MTN MoMo
+                                    </p>
+                                </div>
+                                <div className="ml-auto">
+                                    <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs">
+                                        Sécurisé
+                                    </Badge>
+                                </div>
+                            </div>
+
+                            {/* Montant affiché */}
+                            <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 mb-6">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-sm text-[hsl(20,10%,50%)]">Montant total de la prestation</span>
+                                    <span className="text-sm font-semibold text-[hsl(20,14%,12%)]">{montant.toLocaleString('fr-FR')} FCFA</span>
+                                </div>
+                                <div className="flex justify-between items-center border-t border-amber-200 pt-2">
+                                    <div>
+                                        <p className="text-sm font-semibold text-amber-800">Acompte à verser maintenant (30%)</p>
+                                        <p className="text-xs text-amber-600">Le solde de {montantSolde.toLocaleString('fr-FR')} FCFA sera réglé après la prestation</p>
+                                    </div>
+                                    <p className="text-3xl font-bold text-amber-600 ml-4">
+                                        {montantAcompte.toLocaleString('fr-FR')} FCFA
+                                    </p>
+                                </div>
+                                <p className="text-xs text-amber-600 mt-2 text-center">
+                                    Réservation #{reservation.id} · {reservation.artisan?.metier}
+                                </p>
+                            </div>
+
+                            {/* Bouton KkiaPay */}
+                            <div className="flex flex-col items-center gap-4">
+                                <KkiapayWidget
+                                    amount={montantAcompte}
+                                    publicKey={publicKey}
+                                    callbackUrl={callbackUrl}
+                                    email={userEmail}
+                                    name={userName}
+                                    sandbox={isSandbox}
+                                    data={JSON.stringify({ reservation_id: reservation.id })}
+                                    onSuccess={handleSuccess}
+                                    onFailed={handleFailed}
+                                    label={`Payer l'acompte — ${montantAcompte.toLocaleString('fr-FR')} FCFA`}
+                                    className="w-full max-w-sm py-3 text-base"
+                                    disabled={paymentStatus === 'success'}
+                                />
+
+                                <Link
+                                    href={route('client.reservations')}
+                                    className="text-sm text-[hsl(20,10%,50%)] hover:text-amber-600 transition-colors"
+                                >
+                                    Annuler et retourner aux réservations
+                                </Link>
+                            </div>
+
+                            {/* Méthodes acceptées */}
+                            <div className="mt-6 pt-6 border-t border-[hsl(30,20%,88%)]">
+                                <p className="text-xs text-center text-[hsl(20,10%,55%)] mb-3">Méthodes de paiement acceptées</p>
+                                <div className="flex flex-wrap justify-center gap-2">
+                                    {['Visa', 'Mastercard', 'MTN MoMo', 'Moov Money', 'Orange Money'].map((method) => (
+                                        <span
+                                            key={method}
+                                            className="rounded-lg border border-[hsl(30,20%,88%)] bg-white px-3 py-1 text-xs font-medium text-[hsl(20,14%,12%)]"
+                                        >
+                                            {method}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

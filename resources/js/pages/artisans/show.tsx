@@ -61,6 +61,7 @@ interface ArtisanDetail {
     tarifs_horaire: string | number | null;
     note_moyenne: string | number;
     badge: string;
+    score_confiance: number;
     user: UserLite | null;
     categories: { id: number; nom: string }[];
     prestations: PrestationRow[];
@@ -181,9 +182,20 @@ export default function ArtisanShow({ artisan }: Props) {
                             </div>
                             <div className="space-y-2">
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <span className="rounded-full bg-amber-500/15 border border-amber-500/25 px-3 py-0.5 text-xs font-semibold text-amber-300">
-                                        {artisan.badge}
-                                    </span>
+                                    {/* Badge with color coding: aucun=gray, certifié=orange, élite=violet */}
+                                    {artisan.badge === 'élite' ? (
+                                        <span className="rounded-full bg-violet-500/20 border border-violet-400/35 px-3 py-0.5 text-xs font-semibold text-violet-300">
+                                            ✦ {artisan.badge}
+                                        </span>
+                                    ) : artisan.badge === 'certifié' ? (
+                                        <span className="rounded-full bg-amber-500/20 border border-amber-500/35 px-3 py-0.5 text-xs font-semibold text-amber-300">
+                                            ✓ {artisan.badge}
+                                        </span>
+                                    ) : (
+                                        <span className="rounded-full bg-white/8 border border-white/15 px-3 py-0.5 text-xs font-semibold text-white/50">
+                                            {artisan.badge}
+                                        </span>
+                                    )}
                                     {artisan.categories.map((c) => (
                                         <span key={c.id} className="rounded-full bg-white/8 border border-white/10 px-3 py-0.5 text-xs font-medium text-white/60">
                                             {c.nom}
@@ -200,6 +212,35 @@ export default function ArtisanShow({ artisan }: Props) {
                                     </div>
                                     <span className="text-sm font-semibold text-white/80">{artisan.note_moyenne}</span>
                                     <span className="text-sm text-white/40">({artisan.avis.length} avis)</span>
+                                </div>
+                                {/* Score de confiance */}
+                                <div className="flex items-center gap-3 pt-1">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-xs text-white/40">Score de confiance</span>
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-1.5 w-28 rounded-full bg-white/10 overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full transition-all ${
+                                                        artisan.score_confiance >= 80
+                                                            ? 'bg-gradient-to-r from-violet-500 to-purple-400'
+                                                            : artisan.score_confiance >= 50
+                                                            ? 'bg-gradient-to-r from-amber-500 to-orange-400'
+                                                            : 'bg-gradient-to-r from-white/30 to-white/20'
+                                                    }`}
+                                                    style={{ width: `${artisan.score_confiance}%` }}
+                                                />
+                                            </div>
+                                            <span className={`text-sm font-bold ${
+                                                artisan.score_confiance >= 80
+                                                    ? 'text-violet-300'
+                                                    : artisan.score_confiance >= 50
+                                                    ? 'text-amber-300'
+                                                    : 'text-white/50'
+                                            }`}>
+                                                {artisan.score_confiance}<span className="text-xs font-normal text-white/30">/100</span>
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

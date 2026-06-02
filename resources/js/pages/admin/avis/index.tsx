@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Star, Search, Filter, Eye, EyeOff, Trash2, Flag, MessageSquare } from 'lucide-react';
-import { FormEventHandler } from 'react';
+import { Star, Search, Filter, CheckCircle, Trash2, Flag, MessageSquare, X } from 'lucide-react';
+import { FormEventHandler, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,8 +27,17 @@ interface Paginated<T> {
 
 interface Props {
     avis: Paginated<AvisRow>;
-    stats: { total: number; signale: number; masque: number };
+    stats: { total: number; signale: number };
     filters: { q?: string; statut?: string };
+}
+
+type ModalAction = 'valider' | 'supprimer';
+
+interface ModalState {
+    open: boolean;
+    action: ModalAction | null;
+    avisId: number | null;
+    raison: string;
 }
 
 function StarRating({ note }: { note: number }) {
@@ -41,30 +50,119 @@ function StarRating({ note }: { note: number }) {
     );
 }
 
+const MIN_RAISON = 50;
+
 export default function AdminAvisIndex({ avis, stats, filters }: Props) {
+    const [modal, setModal] = useState<ModalState>({
+        open: false,
+        action: null,
+        avisId: null,
+        raison: '',
+    });
+
+    const openModal = (action: ModalAction, avisId: number) => {
+        setModal({ open: true, action, avisId, raison: '' });
+    };
+
+    const closeModal = () => {
+        setModal({ open: false, action: null, avisId: null, raison: '' });
+    };
+
+    const submitModal = () => {
+        if (!modal.avisId || !modal.action || modal.raison.length < MIN_RAISON) return;
+
+        if (modal.action === 'valider') {
+            router.patch(
+                route('admin.avis.valider', modal.avisId),
+                { raison: modal.raison },
+                { preserveScroll: true, onSuccess: closeModal },
+            );
+        } else {
+            router.delete(
+                route('admin.avis.supprimer', modal.avisId),
+                { data: { raison: modal.raison }, preserveScroll: true, onSuccess: closeModal },
+            );
+        }
+    };
+
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         const fd = new FormData(e.target as HTMLFormElement);
         router.get(route('admin.avis.index'), Object.fromEntries(fd), { preserveState: true });
     };
 
-    const masquer = (id: number) => {
-        router.patch(route('admin.avis.masquer', id), {}, { preserveScroll: true });
-    };
-
-    const restaurer = (id: number) => {
-        router.patch(route('admin.avis.restaurer', id), {}, { preserveScroll: true });
-    };
-
-    const supprimer = (id: number) => {
-        if (confirm('Supprimer définitivement cet avis ?')) {
-            router.delete(route('admin.avis.supprimer', id), { preserveScroll: true });
-        }
-    };
+    const isValider = modal.action === 'valider';
+    const raisonLen = modal.raison.length;
+    const raisonValid = raisonLen >= MIN_RAISON;
 
     return (
         <AdminLayout title="Modération des avis">
             <Head title="Avis - Admin ArtisanPro" />
+
+            {/* Modal */}
+            {modal.open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white shadow-xl">
+                        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+                            <h2 className="text-lg font-semibold text-gray-900">
+                                {isValider ? 'Valider cet avis' : 'Supprimer cet avis'}
+                            </h2>
+                            <button onClick={closeModal} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+                        <div className="px-6 py-5 space-y-4">
+                            <p className="text-sm text-gray-600">
+                                {isValider
+                                    ? "Saisissez la raison pour laquelle vous validez cet avis. Cette raison sera enregistrée dans le journal de modération."
+                                    : "Saisissez la raison pour laquelle vous supprimez définitivement cet avis. Cette action est irréversible."}
+                            </p>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Raison de la décision <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
+                                    value={modal.raison}
+                                    onChange={(e) => setModal((m) => ({ ...m, raison: e.target.value }))}
+                                    rows={4}
+                                    placeholder="Décrivez la raison de votre décision (minimum 50 caractères)..."
+                                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 resize-none"
+                                />
+                                <p className={`mt-1 text-xs text-right ${raisonValid ? 'text-emerald-600' : 'text-gray-400'}`}>
+                                    {raisonLen}/{MIN_RAISON}
+                                    {raisonValid && ' ✓'}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
+                            <Button variant="outline" onClick={closeModal} className="border-gray-200 text-gray-700">
+                                Annuler
+                            </Button>
+                            <Button
+                                onClick={submitModal}
+                                disabled={!raisonValid}
+                                className={
+                                    isValider
+                                        ? 'bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 disabled:opacity-50'
+                                        : 'bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-400 hover:to-rose-400 disabled:opacity-50'
+                                }
+                            >
+                                {isValider ? (
+                                    <>
+                                        <CheckCircle className="mr-2 h-4 w-4" />
+                                        Valider l'avis
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Supprimer définitivement
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -75,11 +173,10 @@ export default function AdminAvisIndex({ avis, stats, filters }: Props) {
                 </div>
 
                 {/* Stats */}
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2">
                     {[
-                        { label: 'Total',    value: stats.total,   color: 'text-gray-900',    bg: 'bg-gray-50 border-gray-200' },
-                        { label: 'Signalés', value: stats.signale, color: 'text-red-600',     bg: 'bg-red-50 border-red-200' },
-                        { label: 'Masqués',  value: stats.masque,  color: 'text-amber-600',   bg: 'bg-amber-50 border-amber-200' },
+                        { label: 'Total',    value: stats.total,   color: 'text-gray-900',  bg: 'bg-gray-50 border-gray-200' },
+                        { label: 'Signalés', value: stats.signale, color: 'text-red-600',   bg: 'bg-red-50 border-red-200' },
                     ].map((s) => (
                         <div key={s.label} className={`rounded-2xl border ${s.bg} p-5`}>
                             <p className="text-sm text-gray-500">{s.label}</p>
@@ -99,7 +196,6 @@ export default function AdminAvisIndex({ avis, stats, filters }: Props) {
                             <select name="statut" defaultValue={filters.statut ?? ''} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-amber-400 focus:outline-none">
                                 <option value="">Tous</option>
                                 <option value="signale">Signalés</option>
-                                <option value="masque">Masqués</option>
                                 <option value="visible">Visibles</option>
                             </select>
                             <Button type="submit" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400">
@@ -132,12 +228,6 @@ export default function AdminAvisIndex({ avis, stats, filters }: Props) {
                                                         Signalé
                                                     </Badge>
                                                 )}
-                                                {a.masque && (
-                                                    <Badge className="bg-amber-100 text-amber-800 border border-amber-200 text-xs">
-                                                        <EyeOff className="h-3 w-3 mr-1" />
-                                                        Masqué
-                                                    </Badge>
-                                                )}
                                                 <span className="text-xs text-gray-400">
                                                     {new Date(a.date_avis).toLocaleDateString('fr-FR')}
                                                 </span>
@@ -157,37 +247,28 @@ export default function AdminAvisIndex({ avis, stats, filters }: Props) {
                                                 </p>
                                             )}
                                         </div>
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            {a.masque ? (
+                                        {a.signale && (
+                                            <div className="flex items-center gap-2 shrink-0">
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    onClick={() => restaurer(a.id)}
+                                                    onClick={() => openModal('valider', a.id)}
                                                     className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                                                 >
-                                                    <Eye className="h-3.5 w-3.5 mr-1" />
-                                                    Restaurer
+                                                    <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                                                    Valider
                                                 </Button>
-                                            ) : (
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    onClick={() => masquer(a.id)}
-                                                    className="border-amber-200 text-amber-700 hover:bg-amber-50"
+                                                    onClick={() => openModal('supprimer', a.id)}
+                                                    className="border-red-200 text-red-700 hover:bg-red-50"
                                                 >
-                                                    <EyeOff className="h-3.5 w-3.5 mr-1" />
-                                                    Masquer
+                                                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                                                    Supprimer
                                                 </Button>
-                                            )}
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => supprimer(a.id)}
-                                                className="border-red-200 text-red-700 hover:bg-red-50"
-                                            >
-                                                <Trash2 className="h-3.5 w-3.5" />
-                                            </Button>
-                                        </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}

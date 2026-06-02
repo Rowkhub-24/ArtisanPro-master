@@ -27,7 +27,9 @@ export interface SharedData {
     auth: Auth;
     flash?: {
         success?: string | null;
+        error?: string | null;
     };
+    notifications_non_lues?: number;
     [key: string]: unknown;
 }
 

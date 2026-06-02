@@ -20,10 +20,19 @@ class Litige extends Model
         'date_ouverture',
         'statut',
         'resolution_details',
+        'fonds_geles',
+        'date_escalade',
+        'escalade',
+        'raison_decision',
+        'date_decision',
     ];
 
     protected $casts = [
         'date_ouverture' => 'datetime',
+        'fonds_geles'    => 'boolean',
+        'escalade'       => 'boolean',
+        'date_escalade'  => 'datetime',
+        'date_decision'  => 'datetime',
     ];
 
     public function client(): BelongsTo

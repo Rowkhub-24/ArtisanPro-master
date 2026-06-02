@@ -41,15 +41,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('paiements/export', [PaiementController::class, 'export'])->name('paiements.export');
 
     // Avis — modération
-    Route::get('avis',                        [AvisController::class, 'index'])->name('avis.index');
-    Route::patch('avis/{avis}/masquer',       [AvisController::class, 'masquer'])->name('avis.masquer');
-    Route::patch('avis/{avis}/restaurer',     [AvisController::class, 'restaurer'])->name('avis.restaurer');
-    Route::delete('avis/{avis}',              [AvisController::class, 'supprimer'])->name('avis.supprimer');
+    Route::get('avis',                            [AvisController::class, 'index'])->name('avis.index');
+    Route::patch('avis/{avis}/valider',           [AvisController::class, 'valider'])->name('avis.valider');
+    Route::delete('avis/{avis}/supprimer',        [AvisController::class, 'supprimer'])->name('avis.supprimer');
 
     // Litiges
     Route::get('litiges',                          [LitigeController::class, 'index'])->name('litiges.index');
     Route::get('litiges/{litige}',                 [LitigeController::class, 'show'])->name('litiges.show');
     Route::patch('litiges/{litige}/statut',        [LitigeController::class, 'updateStatut'])->name('litiges.statut');
+    Route::post('litiges/{litige}/geler',          [LitigeController::class, 'gelerFonds'])->name('litiges.geler');
+    Route::post('litiges/{litige}/liberer',        [LitigeController::class, 'libererFonds'])->name('litiges.liberer');
+    Route::post('litiges/{litige}/decider',        [LitigeController::class, 'decider'])->name('litiges.decider');
 
     // Partenaires
     Route::get('partenaires',                      [PartenaireController::class, 'index'])->name('partenaires.index');
