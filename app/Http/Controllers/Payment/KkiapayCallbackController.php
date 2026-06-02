@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Payment;
 
+use App\Events\PaiementValide;
 use App\Http\Controllers\Controller;
 use App\Models\Artisan;
 use App\Models\Client;
@@ -9,17 +10,20 @@ use App\Models\Notification as AppNotification;
 use App\Models\Paiement;
 use App\Models\Reservation;
 use App\Models\Transaction;
-use App\Services\SmsNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Callback de redirection navigateur après paiement KkiaPay.
+ * Callback de redirection navigateur apres paiement KkiaPay.
  *
  * Paramètres GET attendus :
  *   - transaction_id  : ID de la transaction KkiaPay
  *   - status          : "success" | "failed"
- *   - reservation_id  : ID de la réservation (passé via le champ data du widget)
+ *   - reservation_id  : ID de la reservation
+ *
+ * Apres validation :
+ *   - Cree Transaction + Paiement
+ *   - Declenche PaiementValide (event) -> wallet credit + SMS artisan + SMS client
  */
 class KkiapayCallbackController extends Controller
 {
@@ -32,7 +36,7 @@ class KkiapayCallbackController extends Controller
         $status        = $request->query('status', 'failed');
         $reservationId = $request->query('reservation_id');
 
-        Log::info('KkiaPay callback reçu', [
+        Log::info('KkiaPay callback recu', [
             'transaction_id' => $transactionId,
             'status'         => $status,
             'reservation_id' => $reservationId,
@@ -46,17 +50,14 @@ class KkiapayCallbackController extends Controller
 
         if ($status !== 'success') {
             return redirect()->route('client.reservations')
-                ->with('error', 'Le paiement a échoué ou a été annulé. Veuillez réessayer.');
+                ->with('error', 'Le paiement a echoue ou a ete annule. Veuillez reessayer.');
         }
 
-        // Retrouver la réservation
-        $reservation = $reservationId ? Reservation::find($reservationId) : null;
-
-        // Calculer le montant de l'acompte (30%)
-        $montantTotal  = (float) ($reservation?->montant_total ?? 0);
+        $reservation    = $reservationId ? Reservation::find($reservationId) : null;
+        $montantTotal   = (float) ($reservation?->montant_total ?? 0);
         $montantAcompte = round($montantTotal * self::ACOMPTE_TAUX);
 
-        // Enregistrer la transaction (table transactions)
+        // ── Enregistrer la transaction ────────────────────────────────────────
         $transaction = Transaction::firstOrNew([
             'provider'                => 'kkiapay',
             'provider_transaction_id' => $transactionId,
@@ -85,7 +86,8 @@ class KkiapayCallbackController extends Controller
 
         $transaction->save();
 
-        // Créer le paiement dans la table paiements
+        // ── Creer le paiement ─────────────────────────────────────────────────
+        $paiement = null;
         if ($reservation) {
             $alreadyPaid = Paiement::where('id_reservation', $reservation->id)
                 ->whereIn('statut', ['reussi', 'complete'])
@@ -94,10 +96,12 @@ class KkiapayCallbackController extends Controller
             if (! $alreadyPaid) {
                 $client = Client::find($reservation->id_client);
 
-                Paiement::create([
+                $montantReel = $montantAcompte > 0 ? $montantAcompte : $montantTotal;
+
+                $paiement = Paiement::create([
                     'id_reservation'        => $reservation->id,
                     'id_utilisateur'        => $client?->id_utilisateur,
-                    'montant'               => $montantAcompte > 0 ? $montantAcompte : $montantTotal,
+                    'montant'               => $montantReel,
                     'methode_paiement'      => 'kkiapay',
                     'payment_provider'      => 'kkiapay',
                     'statut'                => 'reussi',
@@ -106,9 +110,8 @@ class KkiapayCallbackController extends Controller
                     'type_transaction'      => 'acompte',
                 ]);
 
-                // Mettre à jour l'acompte versé sur la réservation
                 $reservation->update([
-                    'acompte_verse' => $montantAcompte > 0 ? $montantAcompte : $montantTotal,
+                    'acompte_verse' => $montantReel,
                     'statut'        => in_array($reservation->statut, ['confirmee', 'confirme', 'en_attente'], true)
                         ? 'en_cours'
                         : $reservation->statut,
@@ -117,44 +120,42 @@ class KkiapayCallbackController extends Controller
 
             $montantAffiche = number_format($montantAcompte > 0 ? $montantAcompte : $montantTotal, 0, '.', ' ');
 
-            // ── Notifier l'artisan ────────────────────────────────────────────
+            // ── Notifications in-app (synchrones, non bloquantes) ─────────────
             if ($reservation->id_artisan) {
                 $artisan = Artisan::with('user')->find($reservation->id_artisan);
-                if ($artisan && $artisan->user) {
+                if ($artisan?->user) {
                     AppNotification::notifier(
                         $artisan->user->id,
-                        "💰 Acompte de {$montantAffiche} FCFA reçu via KkiaPay pour la réservation #{$reservation->id}. Référence : {$transactionId}.",
+                        "Acompte de {$montantAffiche} FCFA recu via KkiaPay pour la reservation #{$reservation->id}. Ref : {$transactionId}.",
                         'paiement'
                     );
                 }
             }
 
-            // ── Notifier le client ────────────────────────────────────────────
             $client = Client::find($reservation->id_client);
-            if ($client && $client->id_utilisateur) {
+            if ($client?->id_utilisateur) {
                 AppNotification::notifier(
                     $client->id_utilisateur,
-                    "✅ Votre acompte de {$montantAffiche} FCFA a été confirmé (réf. {$transactionId}). La réservation #{$reservation->id} est en cours.",
+                    "Votre acompte de {$montantAffiche} FCFA a ete confirme (ref. {$transactionId}). La reservation #{$reservation->id} est en cours.",
                     'paiement'
                 );
+            }
 
-                // ── SMS de confirmation au client ─────────────────────────────
+            // ── Event PaiementValide -> wallet credit + SMS (asynchrone/queue) ─
+            if ($paiement) {
                 try {
-                    $sms = new SmsNotificationService();
-                    $sms->sendPaiementConfirmeSms(
-                        $client->user?->telephone ?? '',
-                        $montantAffiche,
-                        $transactionId
-                    );
+                    $reservation->load(['artisan.user', 'client.user']);
+                    PaiementValide::dispatch($paiement, $reservation, $transactionId);
                 } catch (\Throwable $e) {
-                    Log::warning('SMS paiement non envoyé', ['error' => $e->getMessage()]);
+                    Log::warning('KkiapayCallback: PaiementValide event non envoye.', ['error' => $e->getMessage()]);
                 }
             }
+
             return redirect()->route('client.reservations.show', $reservation->id)
-                ->with('success', "Acompte de {$montantAffiche} FCFA confirmé avec succès !");
+                ->with('success', "Acompte de {$montantAffiche} FCFA confirme avec succes !");
         }
 
         return redirect()->route('client.reservations')
-            ->with('success', 'Paiement confirmé avec succès !');
+            ->with('success', 'Paiement confirme avec succes !');
     }
 }

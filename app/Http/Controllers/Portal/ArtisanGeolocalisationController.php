@@ -21,9 +21,10 @@ class ArtisanGeolocalisationController extends Controller
             abort(403);
         }
 
+        // Aucun filtre par date : toutes les entrées sont affichées, y compris les mises à jour tardives (Q21)
         $historique = HistoriqueGeolocalisation::where('id_artisan', $artisan->id)
             ->orderByDesc('date_position')
-            ->limit(100)
+            ->limit(200)
             ->get()
             ->map(fn ($h) => [
                 'id'            => $h->id,
@@ -69,7 +70,10 @@ class ArtisanGeolocalisationController extends Controller
             'date_position' => now(),
         ]);
 
-        return response()->json(['ok' => true]);
+        return response()->json([
+            'ok'            => true,
+            'date_position' => now()->format('Y-m-d H:i:s'),
+        ]);
     }
 
     /** Supprimer l'historique */

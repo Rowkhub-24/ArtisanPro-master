@@ -99,8 +99,11 @@ export default function AdminPartenairesIndex({ partenaires }: Props) {
         }
     };
 
-    const toggleActif = (id: number) => {
-        router.patch(route('admin.partenaires.actif', id), {}, { preserveScroll: true });
+    const toggleActif = (p: Partenaire) => {
+        if (p.actif) {
+            if (!confirm('Ce partenaire sera immédiatement masqué pour tous les utilisateurs. Confirmer ?')) return;
+        }
+        router.patch(route('admin.partenaires.actif', p.id), {}, { preserveScroll: true });
     };
 
     return (
@@ -249,7 +252,7 @@ export default function AdminPartenairesIndex({ partenaires }: Props) {
                                             <Pencil className="h-3.5 w-3.5 mr-1.5" />
                                             Modifier
                                         </Button>
-                                        <Button size="sm" variant="outline" onClick={() => toggleActif(p.id)} className={`border-gray-200 ${p.actif ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}`}>
+                                        <Button size="sm" variant="outline" onClick={() => toggleActif(p)} className={`border-gray-200 ${p.actif ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}`}>
                                             {p.actif ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
                                         </Button>
                                         <Button size="sm" variant="outline" onClick={() => destroy(p.id)} className="border-red-200 text-red-600 hover:bg-red-50">

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\ArtisanValide;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -57,9 +58,20 @@ class UserController extends Controller
             'statut' => ['required', 'in:actif,suspendu,banni'],
         ]);
 
+        $ancienStatut = $user->statut;
         $user->update(['statut' => $request->statut]);
 
-        return back()->with('success', "Statut de {$user->prenom} {$user->nom} mis à jour.");
+        // Si l'admin active un artisan (passage a 'actif'), envoyer SMS de validation
+        if ($request->statut === 'actif' && $ancienStatut !== 'actif' && $user->isArtisan()) {
+            try {
+                $user->load('artisan');
+                if ($user->artisan) {
+                    ArtisanValide::dispatch($user->artisan);
+                }
+            } catch (\Throwable) {}
+        }
+
+        return back()->with('success', "Statut de {$user->prenom} {$user->nom} mis a jour.");
     }
 
     public function destroy(User $user): RedirectResponse
@@ -67,6 +79,6 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->route('admin.users.index')
-            ->with('success', 'Utilisateur supprimé.');
+            ->with('success', 'Utilisateur supprime.');
     }
 }

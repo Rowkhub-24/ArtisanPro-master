@@ -2,7 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutGrid, Users, Wrench, Tag, Calendar,
     CreditCard, Home, ChevronRight,
-    Menu, LogOut, Bell, MessageSquare, AlertTriangle, Building2, BarChart3, User,
+    Menu, LogOut, Bell, MessageSquare, AlertTriangle, Building2, BarChart3, User, Send,
 } from 'lucide-react';
 import { useState } from 'react';
 import { type SharedData } from '@/types';
@@ -25,6 +25,7 @@ const navItems: NavItem[] = [
     { label: 'Litiges',         href: '/admin/litiges',      icon: AlertTriangle, routePrefix: '/admin/litiges' },
     { label: 'Partenaires',     href: '/admin/partenaires',  icon: Building2,     routePrefix: '/admin/partenaires' },
     { label: 'Rapports',        href: '/admin/reports',      icon: BarChart3,     routePrefix: '/admin/reports' },
+    { label: 'SMS',             href: '/admin/sms',          icon: Send,          routePrefix: '/admin/sms' },
     { label: 'Profil',          href: '/settings/profile',   icon: User,          routePrefix: '/settings/profile' },
 ];
 

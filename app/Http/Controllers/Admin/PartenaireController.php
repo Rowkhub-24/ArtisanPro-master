@@ -13,6 +13,8 @@ class PartenaireController extends Controller
 {
     public function index(): Response
     {
+        // Aucune mise en cache intentionnelle : les modifications d'état (activation/désactivation)
+        // doivent être immédiatement visibles dans l'interface d'administration.
         $partenaires = FournisseurPartenaire::orderBy('nom_fournisseur')->paginate(20);
 
         return Inertia::render('admin/partenaires/index', [

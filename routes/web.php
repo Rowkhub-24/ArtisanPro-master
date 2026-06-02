@@ -721,6 +721,85 @@ Route::middleware(['auth'])->group(function () {
             ]);
         })->name('paiements.create');
 
+        /**
+         * Confirme un paiement Kkiapay depuis le callback JS onSuccess.
+         * Appele par fetch() apres que le widget signale le succes cote navigateur.
+         *
+         * Body JSON: { transaction_id, reservation_id }
+         */
+        Route::post('paiements/kkiapay-confirm', function (\Illuminate\Http\Request $request) {
+            $request->validate([
+                'transaction_id' => ['required', 'string'],
+                'reservation_id' => ['required', 'integer'],
+            ]);
+
+            $client = Auth::user()->client;
+            $reservation = \App\Models\Reservation::with(['artisan.user', 'client.user'])
+                ->where('id_client', $client?->id)
+                ->find($request->reservation_id);
+
+            if (! $reservation) {
+                return response()->json(['message' => 'Reservation introuvable ou acces refuse.'], 403);
+            }
+
+            $transactionId = $request->transaction_id;
+
+            // Idempotence : ne pas creer un doublon si deja enregistre
+            $exists = \App\Models\Paiement::where('reference_transaction', $transactionId)
+                ->where('id_reservation', $reservation->id)
+                ->exists();
+
+            if ($exists) {
+                return response()->json(['ok' => true, 'already_exists' => true]);
+            }
+
+            $montantTotal   = (float) ($reservation->montant_total ?? 0);
+            $montantAcompte = $montantTotal > 0 ? round($montantTotal * 0.30) : 0;
+
+            $paiement = \App\Models\Paiement::create([
+                'id_reservation'        => $reservation->id,
+                'id_utilisateur'        => Auth::id(),
+                'montant'               => $montantAcompte > 0 ? $montantAcompte : $montantTotal,
+                'commission'            => round(($montantAcompte > 0 ? $montantAcompte : $montantTotal) * 0.10, 2),
+                'methode_paiement'      => 'kkiapay',
+                'payment_provider'      => 'kkiapay',
+                'type_transaction'      => 'acompte',
+                'statut'                => 'reussi',
+                'reference_transaction' => $transactionId,
+                'date_paiement'         => now(),
+            ]);
+
+            // Mettre a jour l'acompte verse sur la reservation
+            $reservation->update([
+                'acompte_verse' => $montantAcompte > 0 ? $montantAcompte : $montantTotal,
+                'statut'        => in_array($reservation->statut, ['confirmee', 'confirme', 'en_attente'], true)
+                    ? 'en_cours'
+                    : $reservation->statut,
+            ]);
+
+            // Notification in-app artisan
+            if ($reservation->artisan?->user) {
+                $montantFormate = number_format($paiement->montant, 0, '.', ' ');
+                \App\Models\Notification::notifier(
+                    $reservation->artisan->user->id,
+                    "Acompte de {$montantFormate} FCFA recu via KkiaPay pour la reservation #{$reservation->id}. Ref: {$transactionId}.",
+                    'paiement'
+                );
+            }
+
+            // Event -> SMS artisan + SMS client + wallet credit (asynchrone)
+            try {
+                \App\Events\PaiementValide::dispatch($paiement, $reservation, $transactionId);
+            } catch (\Throwable) {}
+
+            return response()->json([
+                'ok'         => true,
+                'paiement_id' => $paiement->id,
+                'montant'    => $paiement->montant,
+                'reference'  => $transactionId,
+            ]);
+        })->name('paiements.kkiapay.confirm');
+
         Route::post('paiements', function (\Illuminate\Http\Request $request) {
             file_put_contents(storage_path('debug-payment.log'), json_encode([
                 'time' => now()->toDateTimeString(),
@@ -1923,11 +2002,114 @@ Route::middleware(['auth'])->group(function () {
 
             return Inertia::render('artisan/paiements', [
                 'paiements'     => $paiements,
-                'revenus_total' => $revenus_total,
-                'revenus_mois'  => $revenus_mois,
-                'en_attente'    => $en_attente,
+                'revenus_total'  => $revenus_total,
+                'revenus_mois'   => $revenus_mois,
+                'en_attente'     => $en_attente,
+                'telephone'      => Auth::user()->telephone ?? '',
+                'solde_disponible' => $revenus_total,
             ]);
         })->name('paiements');
+
+        // ── Export CSV des paiements artisan ─────────────────────────────────
+        Route::get('paiements/export', function () {
+            $artisan = Auth::user()->artisan;
+            if (! $artisan) abort(403);
+
+            $paiements = \App\Models\Paiement::query()
+                ->whereHas('reservation', fn ($q) => $q->where('id_artisan', $artisan->id))
+                ->with(['reservation.client.user'])
+                ->orderByDesc('date_paiement')
+                ->get();
+
+            $filename = 'revenus-artisan-' . now()->format('Y-m-d') . '.csv';
+            $headers = [
+                'Content-Type'        => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                'Cache-Control'       => 'no-cache, no-store, must-revalidate',
+            ];
+
+            $callback = function () use ($paiements) {
+                $handle = fopen('php://output', 'w');
+                // BOM for Excel UTF-8
+                fwrite($handle, "\xEF\xBB\xBF");
+                fputcsv($handle, ['ID', 'Date', 'Client', 'Montant (FCFA)', 'Commission (FCFA)', 'Net (FCFA)', 'Statut', 'Méthode', 'Référence'], ';');
+
+                foreach ($paiements as $p) {
+                    $montant    = (float) $p->montant;
+                    $commission = round($montant * 0.10, 2);
+                    $net        = $montant - $commission;
+                    $client     = $p->reservation?->client?->user;
+                    $clientNom  = $client ? trim($client->prenom . ' ' . $client->nom) : 'Inconnu';
+                    $statut     = $p->statut === 'reussi' ? 'Complété' : ucfirst($p->statut);
+
+                    fputcsv($handle, [
+                        $p->id,
+                        optional($p->date_paiement ?? $p->created_at)->format('d/m/Y H:i'),
+                        $clientNom,
+                        number_format($montant, 2, ',', ' '),
+                        number_format($commission, 2, ',', ' '),
+                        number_format($net, 2, ',', ' '),
+                        $statut,
+                        $p->payment_provider ?? $p->methode_paiement ?? 'kkiapay',
+                        $p->reference_transaction ?? '—',
+                    ], ';');
+                }
+                fclose($handle);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        })->name('paiements.export');
+
+        // ── Demande de virement artisan ───────────────────────────────────────
+        Route::post('paiements/virement', function (\Illuminate\Http\Request $request) {
+            $artisan = Auth::user()->artisan;
+            if (! $artisan) abort(403);
+
+            $request->validate([
+                'montant'   => ['required', 'numeric', 'min:500'],
+                'telephone' => ['required', 'string', 'max:30'],
+                'provider'  => ['nullable', 'string', 'max:50'],
+            ]);
+
+            // Calcul du solde disponible (paiements nets - virements déjà en cours)
+            $paiementsNets = \App\Models\Paiement::query()
+                ->whereHas('reservation', fn ($q) => $q->where('id_artisan', $artisan->id))
+                ->whereIn('statut', ['reussi', 'complete'])
+                ->get()
+                ->sum(fn ($p) => (float) $p->montant * 0.90);
+
+            $virementsEnCours = (float) $artisan->payouts()
+                ->whereIn('status', ['requested', 'processing'])
+                ->sum('amount');
+
+            $soldeDisponible = $paiementsNets - $virementsEnCours;
+
+            if ((float) $request->montant > $soldeDisponible) {
+                return back()->withErrors(['montant' => 'Le montant demandé dépasse votre solde disponible (' . number_format($soldeDisponible, 0, ',', ' ') . ' FCFA).']);
+            }
+
+            $payout = \App\Models\Payout::create([
+                'id_artisan' => $artisan->id,
+                'amount'     => (float) $request->montant,
+                'currency'   => 'XOF',
+                'provider'   => $request->provider ?? 'mobile_money',
+                'status'     => 'requested',
+                'metadata'   => [
+                    'telephone'    => $request->telephone,
+                    'requested_at' => now()->toDateTimeString(),
+                    'artisan_nom'  => trim(Auth::user()->prenom . ' ' . Auth::user()->nom),
+                ],
+            ]);
+
+            // Notification in-app
+            \App\Models\Notification::notifier(
+                Auth::id(),
+                "Votre demande de virement de " . number_format($payout->amount, 0, ',', ' ') . " FCFA vers " . $request->telephone . " a bien été enregistrée. Traitement sous 48h.",
+                'paiement'
+            );
+
+            return back()->with('success', 'Demande de virement enregistrée. Vous serez payé sur le numéro ' . $request->telephone . ' sous 48h ouvrées.');
+        })->name('paiements.virement');
 
         Route::get('avis', function () {
             $artisan = Auth::user()->artisan;

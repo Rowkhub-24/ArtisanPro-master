@@ -111,12 +111,13 @@ class NotificationService
                 'litige'
             );
 
-            // SMS à l'artisan
+            // SMS à l'artisan (avec vérification des préférences SMS — Q15)
             try {
                 $sms = new \App\Services\SmsNotificationService();
                 $sms->sendLitigeOuvertSms(
                     $litige->artisan->user->telephone ?? '',
-                    $litige->id
+                    $litige->id,
+                    $litige->artisan->user
                 );
             } catch (\Throwable) {}
         }
@@ -214,17 +215,29 @@ class NotificationService
 
     /**
      * Notifier via tous les canaux (in-app, push, SMS).
-     * Les notifications in-app sont TOUJOURS créées.
+     * Les notifications in-app sont TOUJOURS créées, quelle que soit la préférence push/SMS.
+     *
+     * @param  User   $user    Destinataire
+     * @param  string $titre   Titre de la notification (utilisé pour push et in-app)
+     * @param  string $corps   Corps du message (utilisé pour push et in-app)
+     * @param  array  $options Options supplémentaires :
+     *                         - 'type'        : type de notification in-app (default 'general')
+     *                         - 'sms_message' : texte SMS spécifique (si absent, $corps est utilisé)
+     *                         - 'push_data'   : données supplémentaires pour la notification push
      */
-    public function notifierAvecCanaux(User $user, string $type, string $message, array $pushData = []): void
+    public function notifierAvecCanaux(User $user, string $titre, string $corps, array $options = []): void
     {
-        // 1. Créer la notification in-app (toujours créée)
-        Notification::notifier($user->id, $message, $type);
+        $type       = $options['type']        ?? 'general';
+        $smsMessage = $options['sms_message'] ?? $corps;
+        $pushData   = $options['push_data']   ?? [];
 
-        // 2. Envoyer push si autorisé
-        $this->envoyerPush($user, 'ArtisanPro', $message, $pushData);
+        // 1. Créer la notification in-app (toujours créée, sans condition push/SMS)
+        Notification::notifier($user->id, $corps, $type);
 
-        // 3. Envoyer SMS si autorisé
-        $this->envoyerSms($user, $message);
+        // 2. Envoyer push si autorisé (skip si push_permission_status === 'denied' ou push_notifications_enabled === false)
+        $this->envoyerPush($user, $titre, $corps, $pushData);
+
+        // 3. Envoyer SMS si autorisé (block si sms_notifications_enabled !== true)
+        $this->envoyerSms($user, $smsMessage);
     }
 }

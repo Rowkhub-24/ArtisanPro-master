@@ -3,245 +3,309 @@
 namespace App\Services;
 
 use App\Models\Reservation;
+use App\Models\SmsLog;
 use App\Models\User;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Service SMS via Africa's Talking (compatible Orange Bénin, MTN Bénin).
+ * Service SMS centralisé utilisant Africa's Talking comme fournisseur.
  *
- * Variables .env requises :
- *   SMS_PROVIDER=africastalking   (ou 'twilio' ou 'stub')
- *   AFRICASTALKING_API_KEY=...
- *   AFRICASTALKING_USERNAME=...
- *   AFRICASTALKING_SENDER_ID=ArtisanPro
- *
- * En mode 'stub', les SMS sont loggés sans envoi réel.
+ * Toutes les méthodes d'envoi vérifient d'abord les préférences SMS de
+ * l'utilisateur (sms_notifications_enabled) avant d'appeler l'API externe.
+ * Si la préférence est false ou null, l'envoi est bloqué par défaut (Q15).
  */
 class SmsNotificationService
 {
     private string $provider;
+    private string $apiKey;
+    private string $username;
+    private string $senderId;
 
     public function __construct()
     {
-        $this->provider = strtolower(env('SMS_PROVIDER', 'stub'));
+        $this->provider  = config('services.africastalking.provider', env('SMS_PROVIDER', 'africastalking'));
+        $this->apiKey    = config('services.africastalking.api_key', env('AFRICASTALKING_API_KEY', ''));
+        $this->username  = config('services.africastalking.username', env('AFRICASTALKING_USERNAME', 'sandbox'));
+        $this->senderId  = config('services.africastalking.sender_id', env('AFRICASTALKING_SENDER_ID', 'ArtisanPro'));
     }
 
-    // ── API publique ──────────────────────────────────────────────────────────
+    // ── Méthode générique ─────────────────────────────────────────────────────
 
     /**
-     * Méthode générique d'envoi SMS vers un utilisateur.
-     * Vérification de défense en profondeur : ne pas envoyer si sms_notifications_enabled n'est pas true.
+     * Envoi générique d'un SMS à un numéro de téléphone.
+     * Si un User est fourni, vérifie sms_notifications_enabled avant envoi.
+     *
+     * @param  string    $telephone Numéro de téléphone du destinataire
+     * @param  string    $message   Contenu du SMS
+     * @param  User|null $user      Utilisateur destinataire (optionnel) pour vérifier les préférences
+     * @param  string    $type      Type de SMS pour le log (default 'general')
+     * @param  int|null  $contextId Identifiant du contexte (réservation, litige, etc.)
      */
-    public function envoyer(string $phone, string $message, ?int $contextId = null, string $type = 'general'): void
+    public function envoyer(string $telephone, string $message, ?User $user = null, string $type = 'general', ?int $contextId = null): void
     {
-        $tel = $this->getPhone($phone);
-        if (! $tel) {
-            Log::debug('SMS skipped: no phone number provided.', ['type' => $type]);
-            return;
-        }
-
-        $this->send($tel, $message, $contextId, $type);
-    }
-
-    /**
-     * Méthode générique d'envoi SMS avec vérification des préférences utilisateur.
-     * Défense en profondeur : bloquer si sms_notifications_enabled !== true (Q15).
-     */
-    public function envoyerPourUtilisateur(User $user, string $message, string $type = 'general', ?int $contextId = null): void
-    {
-        // Défense en profondeur : vérifier les préférences SMS de l'utilisateur
-        if ($user->sms_notifications_enabled !== true) {
-            Log::debug("SMS [{$type}] bloqué par préférence utilisateur.", [
-                'user_id' => $user->id,
-                'sms_notifications_enabled' => $user->sms_notifications_enabled,
+        // Vérifier les préférences SMS de l'utilisateur si fourni (Q15)
+        if ($user !== null && $user->sms_notifications_enabled !== true) {
+            Log::debug('SMS bloqué : préférences désactivées ou indéterminées', [
+                'user_id'                    => $user->id,
+                'sms_notifications_enabled'  => $user->sms_notifications_enabled,
+                'type'                       => $type,
             ]);
             return;
         }
 
-        $phone = $user->telephone ?? '';
-        $tel = $this->getPhone($phone);
-        if (! $tel) {
-            Log::debug("SMS [{$type}] skipped: no phone number for user.", ['user_id' => $user->id]);
+        if (empty($telephone)) {
+            Log::warning('SMS ignoré : numéro de téléphone vide', ['type' => $type, 'context_id' => $contextId]);
             return;
         }
 
-        $this->send($tel, $message, $contextId, $type);
+        $this->envoyerViaApi($telephone, $message, $type, $contextId);
     }
 
+    // ── Méthodes événementielles ──────────────────────────────────────────────
+
+    /**
+     * SMS de confirmation de réservation envoyé au client.
+     * Vérifie les préférences SMS du client avant envoi.
+     */
     public function sendConfirmationSms(Reservation $reservation): void
     {
-        $phone = $this->getPhone($reservation->client?->user?->telephone);
-        if (! $phone) return;
+        $clientUser = $reservation->client?->user;
+
+        if (! $clientUser) {
+            return;
+        }
+
+        // Guard : bloquer si sms_notifications_enabled !== true (Q15)
+        if ($clientUser->sms_notifications_enabled !== true) {
+            Log::debug('SMS confirmation bloqué : préférences SMS désactivées', [
+                'user_id'                   => $clientUser->id,
+                'sms_notifications_enabled' => $clientUser->sms_notifications_enabled,
+                'reservation_id'            => $reservation->id,
+            ]);
+            return;
+        }
 
         $artisanNom = $reservation->artisan?->user
             ? trim($reservation->artisan->user->prenom . ' ' . $reservation->artisan->user->nom)
             : 'votre artisan';
 
-        $date = optional($reservation->date)->format('d/m/Y') ?? 'date à confirmer';
-        $creneau = $reservation->creneau ?? '';
+        $date = $reservation->date_debut
+            ? $reservation->date_debut->format('d/m/Y à H:i')
+            : ($reservation->date?->format('d/m/Y') ?? 'date à confirmer');
 
-        $message = "ArtisanPro : Votre réservation #{$reservation->id} est confirmée. "
-            . "Artisan : {$artisanNom}. Date : {$date} {$creneau}. "
-            . "Bonne prestation !";
+        $message = "ArtisanPro : Votre réservation #{$reservation->id} avec {$artisanNom} est confirmée pour le {$date}. Merci !";
 
-        $this->send($phone, $message, $reservation->id, 'confirmation');
+        $this->envoyerViaApi(
+            $clientUser->telephone ?? '',
+            $message,
+            'confirmation_reservation',
+            $reservation->id
+        );
     }
 
+    /**
+     * SMS de rejet/annulation de réservation envoyé au client.
+     * Vérifie les préférences SMS du client avant envoi.
+     */
     public function sendRejectionSms(Reservation $reservation): void
     {
-        $phone = $this->getPhone($reservation->client?->user?->telephone);
-        if (! $phone) return;
+        $clientUser = $reservation->client?->user;
 
-        $message = "ArtisanPro : Votre réservation #{$reservation->id} a été annulée. "
-            . "Contactez-nous pour toute question.";
+        if (! $clientUser) {
+            return;
+        }
 
-        $this->send($phone, $message, $reservation->id, 'annulation');
-    }
-
-    public function sendPaiementConfirmeSms(string $phone, string $montant, string $reference): void
-    {
-        $tel = $this->getPhone($phone);
-        if (! $tel) return;
-
-        $message = "ArtisanPro : Paiement de {$montant} FCFA confirmé. Réf : {$reference}. Merci !";
-        $this->send($tel, $message, null, 'paiement');
-    }
-
-    public function sendLitigeOuvertSms(string $phone, int $litigeId): void
-    {
-        $tel = $this->getPhone($phone);
-        if (! $tel) return;
-
-        $message = "ArtisanPro : Un litige #{$litigeId} a été ouvert. "
-            . "Connectez-vous pour répondre dans les 72h.";
-        $this->send($tel, $message, null, 'litige');
-    }
-
-    // ── Envoi interne ─────────────────────────────────────────────────────────
-
-    private function send(string $phone, string $message, ?int $reservationId, string $type): void
-    {
-        if ($this->provider === 'stub') {
-            Log::info("SMS [{$type}] (stub)", [
-                'phone'          => $this->maskPhone($phone),
-                'message'        => $message,
-                'reservation_id' => $reservationId,
+        // Guard : bloquer si sms_notifications_enabled !== true (Q15)
+        if ($clientUser->sms_notifications_enabled !== true) {
+            Log::debug('SMS rejet bloqué : préférences SMS désactivées', [
+                'user_id'                   => $clientUser->id,
+                'sms_notifications_enabled' => $clientUser->sms_notifications_enabled,
+                'reservation_id'            => $reservation->id,
             ]);
             return;
         }
 
-        if ($this->provider === 'africastalking') {
-            $this->sendViaAfricasTalking($phone, $message, $type);
-            return;
-        }
+        $artisanNom = $reservation->artisan?->user
+            ? trim($reservation->artisan->user->prenom . ' ' . $reservation->artisan->user->nom)
+            : 'votre artisan';
 
-        Log::warning("SMS provider inconnu : {$this->provider}. SMS non envoyé.", [
-            'phone' => $this->maskPhone($phone),
-            'type'  => $type,
-        ]);
+        $message = "ArtisanPro : Votre réservation #{$reservation->id} avec {$artisanNom} a été annulée. Contactez-nous pour plus d'informations.";
+
+        $this->envoyerViaApi(
+            $clientUser->telephone ?? '',
+            $message,
+            'annulation_reservation',
+            $reservation->id
+        );
     }
 
-    private function sendViaAfricasTalking(string $phone, string $message, string $type): void
+    /**
+     * SMS d'alerte ouverture de litige envoyé à l'artisan.
+     * Vérifie les préférences SMS de l'artisan avant envoi.
+     *
+     * @param  string   $telephone  Numéro de l'artisan
+     * @param  int      $litigeId   Identifiant du litige
+     * @param  User|null $artisanUser  Utilisateur artisan pour vérifier les préférences
+     */
+    public function sendLitigeOuvertSms(string $telephone, int $litigeId, ?User $artisanUser = null): void
     {
-        $apiKey   = env('AFRICASTALKING_API_KEY');
-        $username = env('AFRICASTALKING_USERNAME');
-        $senderId = env('AFRICASTALKING_SENDER_ID', 'ArtisanPro');
-
-        if (! $apiKey || ! $username) {
-            Log::warning('Africa\'s Talking non configuré (AFRICASTALKING_API_KEY ou USERNAME manquant).', [
-                'type' => $type,
+        // Guard : bloquer si sms_notifications_enabled !== true (Q15)
+        if ($artisanUser !== null && $artisanUser->sms_notifications_enabled !== true) {
+            Log::debug('SMS litige bloqué : préférences SMS désactivées', [
+                'user_id'                   => $artisanUser->id,
+                'sms_notifications_enabled' => $artisanUser->sms_notifications_enabled,
+                'litige_id'                 => $litigeId,
             ]);
             return;
         }
 
-        // En sandbox, l'username est toujours "sandbox" et l'endpoint est différent
-        $isSandbox = ($username === 'sandbox');
-        $endpoint  = $isSandbox
-            ? 'https://api.sandbox.africastalking.com/version1/messaging'
-            : 'https://api.africastalking.com/version1/messaging';
+        if (empty($telephone)) {
+            Log::warning('SMS litige ignoré : numéro de téléphone vide', ['litige_id' => $litigeId]);
+            return;
+        }
 
-        // Le sender_id n'est pas supporté en sandbox
-        $payload = [
-            'username' => $username,
-            'to'       => $phone,
-            'message'  => $message,
+        $message = "ArtisanPro : Un litige #{$litigeId} a été ouvert. Connectez-vous pour soumettre votre réponse dans les 72h.";
+
+        $this->envoyerViaApi($telephone, $message, 'litige_ouvert', $litigeId);
+    }
+
+    // ── Couche d'envoi API ────────────────────────────────────────────────────
+
+    /**
+     * Appel à l'API Africa's Talking pour envoyer le SMS.
+     * Enregistre le résultat dans sms_logs.
+     */
+    private function envoyerViaApi(string $telephone, string $message, string $type, ?int $contextId = null): void
+    {
+        // Masquer partiellement le numéro pour les logs (RGPD)
+        $telephoneMasque = $this->masquerTelephone($telephone);
+
+        $logData = [
+            'recipient'    => $telephoneMasque,
+            'message'      => $message,
+            'status'       => 'pending',
+            'provider'     => $this->provider,
+            'type'         => $type,
+            'context_id'   => $contextId,
+            'context_type' => $this->typeContexte($type),
+            'attempt'      => 1,
         ];
-        if (! $isSandbox && $senderId) {
-            $payload['from'] = $senderId;
-        }
 
         try {
-            $response = Http::withHeaders([
-                'apiKey' => $apiKey,
-                'Accept' => 'application/json',
-            ])->asForm()->post($endpoint, $payload);
+            if (empty($this->apiKey) || $this->username === 'sandbox') {
+                // Mode sandbox / clé manquante : simuler l'envoi
+                Log::info("SMS [{$type}] (sandbox) → {$telephoneMasque} : {$message}");
 
-            if ($response->successful()) {
-                Log::info("SMS [{$type}] envoyé via Africa's Talking" . ($isSandbox ? ' (sandbox)' : '') . '.', [
-                    'phone'    => $this->maskPhone($phone),
-                    'response' => $response->json(),
-                ]);
-            } else {
-                Log::error("SMS [{$type}] échec Africa's Talking.", [
-                    'phone'    => $this->maskPhone($phone),
-                    'status'   => $response->status(),
-                    'body'     => $response->body(),
-                    'sandbox'  => $isSandbox,
-                ]);
+                SmsLog::create(array_merge($logData, [
+                    'status'   => 'sent',
+                    'response' => json_encode(['status' => 'sandbox_simulated']),
+                    'sent_at'  => now(),
+                ]));
+
+                return;
             }
+
+            // Appel HTTP à l'API Africa's Talking
+            $response = $this->appelAfricasTalking($telephone, $message);
+
+            SmsLog::create(array_merge($logData, [
+                'status'   => 'sent',
+                'response' => json_encode($response),
+                'sent_at'  => now(),
+            ]));
+
+            Log::info("SMS [{$type}] envoyé → {$telephoneMasque}");
+
         } catch (\Throwable $e) {
-            Log::error("SMS [{$type}] exception.", [
-                'phone' => $this->maskPhone($phone),
-                'error' => $e->getMessage(),
+            Log::error("SMS [{$type}] échec → {$telephoneMasque}", [
+                'error'      => $e->getMessage(),
+                'type'       => $type,
+                'context_id' => $contextId,
             ]);
+
+            SmsLog::create(array_merge($logData, [
+                'status'        => 'failed',
+                'error_message' => $e->getMessage(),
+                'sent_at'       => now(),
+            ]));
         }
+    }
+
+    /**
+     * Effectue la requête HTTP vers l'API Africa's Talking.
+     *
+     * @return array<string, mixed>
+     */
+    private function appelAfricasTalking(string $telephone, string $message): array
+    {
+        $url = 'https://api.africastalking.com/version1/messaging';
+
+        $payload = [
+            'username' => $this->username,
+            'to'       => $telephone,
+            'message'  => $message,
+        ];
+
+        if (! empty($this->senderId)) {
+            $payload['from'] = $this->senderId;
+        }
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => http_build_query($payload),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER     => [
+                'apiKey: ' . $this->apiKey,
+                'Accept: application/json',
+                'Content-Type: application/x-www-form-urlencoded',
+            ],
+            CURLOPT_TIMEOUT        => 10,
+        ]);
+
+        $rawResponse = curl_exec($ch);
+        $httpCode    = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError   = curl_error($ch);
+        curl_close($ch);
+
+        if ($curlError) {
+            throw new \RuntimeException("cURL error: {$curlError}");
+        }
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            throw new \RuntimeException("Africa's Talking API returned HTTP {$httpCode}: {$rawResponse}");
+        }
+
+        /** @var array<string, mixed> $decoded */
+        $decoded = json_decode($rawResponse, true) ?? [];
+
+        return $decoded;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /**
-     * Normalise un numéro béninois au format international E.164.
-     *
-     * Bénin (indicatif +229) :
-     *  - Nouveau format (depuis 2021) : 10 chiffres locaux → +22901XXXXXXXX, +22961XXXXXXXX, etc.
-     *  - Ancien format                : 8 chiffres locaux  → +229XXXXXXXX
-     *  - Déjà en E.164               : commence par +229 ou 229 suivi de 8 ou 10 chiffres
+     * Masque partiellement un numéro de téléphone pour les logs.
+     * Ex. : +22961234567 → +229****4567
      */
-    private function getPhone(?string $phone): ?string
+    private function masquerTelephone(string $telephone): string
     {
-        if (! $phone) return null;
-
-        $clean = preg_replace('/\D/', '', $phone);
-
-        // Déjà au format international avec indicatif 229
-        // Accepte 229 + 8 chiffres (ancien) ou 229 + 10 chiffres (nouveau)
-        if (str_starts_with($clean, '229') && in_array(strlen($clean), [11, 13])) {
-            return '+' . $clean;
+        if (strlen($telephone) <= 4) {
+            return str_repeat('*', strlen($telephone));
         }
 
-        // Numéro local béninois — nouveau format 10 chiffres
-        if (strlen($clean) === 10) {
-            return '+229' . $clean;
-        }
-
-        // Numéro local béninois — ancien format 8 chiffres
-        if (strlen($clean) === 8) {
-            return '+229' . $clean;
-        }
-
-        // Autre format international sans le + (ex: 33XXXXXXXXX pour France)
-        if (strlen($clean) >= 10) {
-            return '+' . $clean;
-        }
-
-        Log::debug('SMS: numéro de téléphone non reconnu.', ['raw' => substr($clean, 0, 4) . '****']);
-        return null;
+        return substr($telephone, 0, -6) . '****' . substr($telephone, -2);
     }
 
-    private function maskPhone(string $phone): string
+    /**
+     * Détermine le type de contexte Eloquent morphique depuis le type SMS.
+     */
+    private function typeContexte(string $type): ?string
     {
-        if (strlen($phone) <= 4) return '****';
-        return substr($phone, 0, 4) . str_repeat('*', strlen($phone) - 8) . substr($phone, -4);
+        return match (true) {
+            str_contains($type, 'reservation') => \App\Models\Reservation::class,
+            str_contains($type, 'litige')      => \App\Models\Litige::class,
+            default                            => null,
+        };
     }
 }

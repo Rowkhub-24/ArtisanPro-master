@@ -24,7 +24,7 @@ interface Props {
     position_actuelle: { latitude: number | null; longitude: number | null };
 }
 
-export default function ArtisanGeolocalisation({ historique, position_actuelle }: Props) {
+export default function ArtisanGeolocalisation({ historique: historiqueInitial, position_actuelle }: Props) {
     const [tracking, setTracking] = useState(false);
     const [currentPos, setCurrentPos] = useState<{ lat: number; lng: number } | null>(
         position_actuelle.latitude && position_actuelle.longitude
@@ -32,6 +32,7 @@ export default function ArtisanGeolocalisation({ historique, position_actuelle }
             : null
     );
     const [status, setStatus] = useState<string>('');
+    const [historique, setHistorique] = useState<HistoriqueEntry[]>(historiqueInitial);
     const watchIdRef = useRef<number | null>(null);
 
     const enregistrerPosition = (lat: number, lng: number) => {
@@ -42,12 +43,23 @@ export default function ArtisanGeolocalisation({ historique, position_actuelle }
                 'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
             },
             body: JSON.stringify({ latitude: lat, longitude: lng }),
-        }).then(() => {
-            setCurrentPos({ lat, lng });
-            setStatus(`Position enregistrée à ${new Date().toLocaleTimeString('fr-FR')}`);
-        }).catch(() => {
-            setStatus('Erreur lors de l\'enregistrement');
-        });
+        })
+            .then((res) => res.json())
+            .then((response: { ok?: boolean; date_position?: string }) => {
+                setCurrentPos({ lat, lng });
+                if (response.ok && response.date_position) {
+                    setHistorique((prev) => [
+                        { id: Date.now(), latitude: lat, longitude: lng, date_position: response.date_position as string },
+                        ...prev,
+                    ]);
+                    setStatus(`Position enregistrée le ${response.date_position}`);
+                } else {
+                    setStatus(`Position enregistrée à ${new Date().toLocaleTimeString('fr-FR')}`);
+                }
+            })
+            .catch(() => {
+                setStatus("Erreur lors de l'enregistrement");
+            });
     };
 
     const startTracking = () => {

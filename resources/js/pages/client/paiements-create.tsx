@@ -58,10 +58,30 @@ export default function ClientPaiementCreate({ reservation, kkiapay_public_key, 
         : undefined;
     const userEmail = (auth?.user as { email?: string })?.email;
 
-    const handleSuccess = (transactionId: string) => {
+    const handleSuccess = async (transactionId: string) => {
         setPaymentStatus('success');
-        setPaymentMessage(`Paiement confirmé ! Référence : ${transactionId}`);
-        // Rediriger vers la réservation après 2 secondes
+        setPaymentMessage(`Paiement confirme ! Reference : ${transactionId}`);
+
+        // Enregistrer le paiement cote serveur (idempotent)
+        try {
+            await fetch(route('client.paiements.kkiapay.confirm'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    transaction_id: transactionId,
+                    reservation_id: reservation.id,
+                }),
+            });
+        } catch (_) {
+            // L'echec ici est non bloquant — le callback HTTP de Kkiapay
+            // servira de filet de securite en production
+        }
+
+        // Rediriger vers la reservation apres 2 secondes
         setTimeout(() => {
             window.location.href = route('client.reservations.show', reservation.id);
         }, 2000);

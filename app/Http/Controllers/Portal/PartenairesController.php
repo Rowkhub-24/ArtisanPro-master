@@ -11,6 +11,8 @@ class PartenairesController extends Controller
 {
     public function __invoke(): Response
     {
+        // Aucune mise en cache intentionnelle : lorsqu'un administrateur désactive un partenaire,
+        // il doit disparaître immédiatement du portail public sans nécessiter de vidage de cache.
         $partenaires = FournisseurPartenaire::where('actif', true)
             ->orderBy('nom_fournisseur')
             ->get()
@@ -25,8 +27,16 @@ class PartenairesController extends Controller
                 'type'              => $p->type,
             ]);
 
+        $types = FournisseurPartenaire::where('actif', true)
+            ->whereNotNull('type')
+            ->distinct()
+            ->pluck('type')
+            ->sort()
+            ->values();
+
         return Inertia::render('portal/partenaires', [
             'partenaires' => $partenaires,
+            'types'       => $types,
         ]);
     }
 }

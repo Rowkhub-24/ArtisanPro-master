@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Portal;
 
+use App\Events\ReservationCreee;
 use App\Http\Controllers\Controller;
 use App\Models\Artisan;
 use App\Models\Reservation;
@@ -20,10 +21,10 @@ class ClientReservationStoreController extends Controller
         }
 
         $data = $request->validate([
-            'id_artisan' => ['required', 'exists:artisans,id'],
-            'date' => ['required', 'date_format:Y-m-d'],
-            'creneau' => ['nullable', 'string', 'max:255'],
-            'heure_specifique' => ['nullable', 'required_if:creneau,heure_specifique', 'date_format:H:i'],
+            'id_artisan'         => ['required', 'exists:artisans,id'],
+            'date'               => ['required', 'date_format:Y-m-d'],
+            'creneau'            => ['nullable', 'string', 'max:255'],
+            'heure_specifique'   => ['nullable', 'required_if:creneau,heure_specifique', 'date_format:H:i'],
             'description_besoin' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -34,8 +35,9 @@ class ClientReservationStoreController extends Controller
 
         $dateDebut = Carbon::createFromFormat('Y-m-d', $data['date']);
         if ($dateDebut === false) {
-            abort(422, 'Date de réservation invalide.');
+            abort(422, 'Date de reservation invalide.');
         }
+
         if ($data['creneau'] === 'matin') {
             $dateDebut->setTime(8, 0, 0);
         } elseif ($data['creneau'] === 'apres_midi') {
@@ -48,28 +50,32 @@ class ClientReservationStoreController extends Controller
             $dateDebut->setTime(0, 0, 0);
         }
 
-        $artisan = Artisan::find($data['id_artisan']);
+        $artisan      = Artisan::find($data['id_artisan']);
         $montantTotal = $artisan?->tarifs_horaire ?? null;
 
         $reservation = Reservation::query()->create([
-            'id_client' => $user->client->id,
-            'id_artisan' => $data['id_artisan'],
-            'date_debut' => $dateDebut,
-            'date' => $data['date'],
-            'creneau' => $creneau,
+            'id_client'          => $user->client->id,
+            'id_artisan'         => $data['id_artisan'],
+            'date_debut'         => $dateDebut,
+            'date'               => $data['date'],
+            'creneau'            => $creneau,
             'description_besoin' => $data['description_besoin'] ?? null,
-            'montant_total' => $montantTotal,
-            'date_creation' => now(),
-            'statut' => 'en_cours',
+            'montant_total'      => $montantTotal,
+            'date_creation'      => now(),
+            'statut'             => 'en_cours',
         ]);
 
-        // Notifier l'artisan de la nouvelle réservation
+        // Notification in-app (service existant)
         try {
             (new NotificationService())->reservationCreee($reservation->load('artisan.user'));
         } catch (\Throwable) {}
 
-        return back()->with('success', 'Votre réservation a été créée. L\'artisan sera informé.');
+        // Event SMS — notifie l'artisan de la nouvelle demande (queue)
+        try {
+            $reservation->load(['artisan.user', 'client.user']);
+            ReservationCreee::dispatch($reservation);
+        } catch (\Throwable) {}
 
-        return back()->with('success', 'Votre réservation a été créée. L’artisan sera informé.');
+        return back()->with('success', "Votre reservation a ete creee. L'artisan sera informe.");
     }
 }

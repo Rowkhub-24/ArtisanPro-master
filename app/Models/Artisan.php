@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Crypt;
+use App\Models\AcademieParcours;
 
 class Artisan extends Model
 {
+    use HasFactory;
+
     protected $table = 'artisans';
 
     protected $fillable = [
@@ -28,6 +32,7 @@ class Artisan extends Model
         'score_confiance',
         'latitude',
         'longitude',
+        'points_formation',
     ];
 
     /**
@@ -43,6 +48,7 @@ class Artisan extends Model
             'longitude' => 'decimal:8',
             'payment_provider' => 'string',
             'payment_method' => 'string',
+            'points_formation' => 'integer',
         ];
     }
 
@@ -124,5 +130,11 @@ class Artisan extends Model
     public function payouts(): HasMany
     {
         return $this->hasMany(Payout::class, 'id_artisan');
+    }
+
+    public function parcours(): BelongsToMany
+    {
+        return $this->belongsToMany(AcademieParcours::class, 'artisan_parcours', 'id_artisan', 'id_parcours')
+            ->withPivot(['date_completion', 'points_attribues']);
     }
 }

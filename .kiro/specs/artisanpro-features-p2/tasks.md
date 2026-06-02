@@ -79,15 +79,15 @@ Plan d'implémentation des 7 fonctionnalités P2 d'ArtisanPro sur la stack Larav
   - [x] 7.1 Créer la migration `add_notification_preferences_to_utilisateurs_table` (colonnes : `push_notifications_enabled` boolean default true, `sms_notifications_enabled` boolean default true, `push_permission_status` enum('granted','denied','default') default 'default')
   - [x] 7.2 Mettre à jour le modèle `User` (`$fillable`, `$casts`)
 
-- [-] 8. NotificationService P2 : push et SMS avec vérification des préférences
+- [x] 8. NotificationService P2 : push et SMS avec vérification des préférences
   Étendre `NotificationService` pour push (skip si refusé, Q5/Q14) et SMS (bloquer si désactivé, Q15). Les notifications in-app sont toujours créées.
-  - [-] 8.1 Ajouter `envoyerPush()`, `envoyerSms()`, `notifierAvecCanaux()` à `app/Services/NotificationService.php`
-  - [-] 8.2 Mettre à jour `SmsNotificationService` pour vérifier `sms_notifications_enabled` avant envoi
-  - [ ] 8.3 Vérifier la configuration Laravel Echo / Pusher ou Reverb dans `.env` et `config/broadcasting.php`
+  - [x] 8.1 Ajouter `envoyerPush()`, `envoyerSms()`, `notifierAvecCanaux()` à `app/Services/NotificationService.php`
+  - [x] 8.2 Mettre à jour `SmsNotificationService` pour vérifier `sms_notifications_enabled` avant envoi
+  - [x] 8.3 Vérifier la configuration Laravel Echo / Pusher ou Reverb dans `.env` et `config/broadcasting.php`
 
 - [ ] 9. Frontend : préférences de notification et permission push
   Ajouter les toggles de préférences dans les paramètres. Demander la permission push via l'API Notification du navigateur. Afficher le compteur de non-lues dans la navbar.
-  - [ ] 9.1 Créer la route `PATCH /settings/notification-preferences` et le contrôleur `Settings\NotificationPreferencesController`
+  - [-] 9.1 Créer la route `PATCH /settings/notification-preferences` et le contrôleur `Settings\NotificationPreferencesController`
   - [ ] 9.2 Ajouter les toggles push/SMS dans `resources/js/pages/settings/profile.tsx` (ou nouvelle page `notification-preferences.tsx`)
   - [ ] 9.3 Implémenter la demande de permission push (`Notification.requestPermission()`) et synchroniser avec le backend
   - [ ] 9.4 Afficher le badge de notifications non lues dans le layout principal (appel à `/notifications/compteur`)
@@ -95,25 +95,25 @@ Plan d'implémentation des 7 fonctionnalités P2 d'ArtisanPro sur la stack Larav
 
 ### F5 — Académie / Formation (pages artisan)
 
-- [ ] 10. Migrations et modèles : parcours, quiz, points de formation
+- [x] 10. Migrations et modèles : parcours, quiz, points de formation
   Créer les tables pour les parcours (groupes de formations), les quiz, et les points bonus. Les points bonus sont attribués à la complétion du parcours indépendamment des scores quiz (Q18).
-  - [ ] 10.1 Créer la migration `create_academie_parcours_table` (id, titre string 200, description text nullable, points_bonus int default 0, timestamps)
-  - [ ] 10.2 Créer la migration `create_parcours_formation_table` (pivot : id_parcours FK, id_formation FK, ordre int default 0, PK composite)
-  - [ ] 10.3 Créer la migration `create_artisan_parcours_table` (pivot : id_artisan FK, id_parcours FK, date_completion datetime nullable, points_attribues int default 0, PK composite)
-  - [ ] 10.4 Créer la migration `create_academie_quiz_table` (id, id_formation FK, question text, reponses json, bonne_reponse int, timestamps)
-  - [ ] 10.5 Créer la migration `add_quiz_fields_to_artisan_formation_table` (score_quiz tinyint nullable, tentatives int default 0)
-  - [ ] 10.6 Créer la migration `add_points_formation_to_artisans_table` (points_formation int default 0)
-  - [ ] 10.7 Créer les modèles `app/Models/AcademieParcours.php` et `app/Models/AcademieQuiz.php` avec les relations
-  - [ ] 10.8 Mettre à jour `AcademieFormation` (relations `quiz()`, `parcours()`) et `Artisan` (`points_formation` dans `$fillable`)
+  - [x] 10.1 Créer la migration `create_academie_parcours_table` (id, titre string 200, description text nullable, points_bonus int default 0, timestamps)
+  - [x] 10.2 Créer la migration `create_parcours_formation_table` (pivot : id_parcours FK, id_formation FK, ordre int default 0, PK composite)
+  - [x] 10.3 Créer la migration `create_artisan_parcours_table` (pivot : id_artisan FK, id_parcours FK, date_completion datetime nullable, points_attribues int default 0, PK composite)
+  - [x] 10.4 Créer la migration `create_academie_quiz_table` (id, id_formation FK, question text, reponses json, bonne_reponse int, timestamps)
+  - [x] 10.5 Créer la migration `add_quiz_fields_to_artisan_formation_table` (score_quiz tinyint nullable, tentatives int default 0)
+  - [x] 10.6 Créer la migration `add_points_formation_to_artisans_table` (points_formation int default 0)
+  - [x] 10.7 Créer les modèles `app/Models/AcademieParcours.php` et `app/Models/AcademieQuiz.php` avec les relations
+  - [x] 10.8 Mettre à jour `AcademieFormation` (relations `quiz()`, `parcours()`) et `Artisan` (`points_formation` dans `$fillable`)
 
 - [ ] 11. Service académie : quiz (seuil 70%) et points bonus de parcours
   Implémenter `AcademieService` avec validation des quiz (seuil 70%) et attribution des points bonus à la complétion d'un parcours (Q18 : indépendamment des scores individuels).
-  - [ ] 11.1 Créer `app/Services/AcademieService.php` avec `soumettreQuiz()` (calcul score, enregistrement, incrémentation tentatives) et `verifierCompletionParcours()` (attribution points bonus si toutes formations complétées)
-  - [ ] 11.2 Écrire les tests unitaires pour `soumettreQuiz` (seuil 70%) et `verifierCompletionParcours` (points bonus indépendants du score quiz)
+  - [x] 11.1 Créer `app/Services/AcademieService.php` avec `soumettreQuiz()` (calcul score, enregistrement, incrémentation tentatives) et `verifierCompletionParcours()` (attribution points bonus si toutes formations complétées)
+  - [-] 11.2 Écrire les tests unitaires pour `soumettreQuiz` (seuil 70%) et `verifierCompletionParcours` (points bonus indépendants du score quiz)
 
 - [ ] 12. Contrôleur et routes académie P2
   Étendre `ArtisanAcademyController` pour les parcours et les quiz.
-  - [ ] 12.1 Mettre à jour `ArtisanAcademyController::__invoke()` pour retourner formations, parcours, et `points_formation` de l'artisan
+  - [-] 12.1 Mettre à jour `ArtisanAcademyController::__invoke()` pour retourner formations, parcours, et `points_formation` de l'artisan
   - [ ] 12.2 Ajouter la méthode `soumettreQuiz(Request $request, AcademieQuiz $quiz)` au contrôleur
   - [ ] 12.3 Mettre à jour `completer()` pour appeler `AcademieService::verifierCompletionParcours()` après marquage
   - [ ] 12.4 Enregistrer les routes : `POST artisan/academy/quiz/{quiz}/soumettre`, `POST artisan/academy/formations/{formation}/completer`
@@ -129,30 +129,30 @@ Plan d'implémentation des 7 fonctionnalités P2 d'ArtisanPro sur la stack Larav
 
 ### F6 — Géolocalisation temps réel (historique)
 
-- [ ] 14. Backend géolocalisation P2 : traitement universel et mises à jour tardives
+- [x] 14. Backend géolocalisation P2 : traitement universel et mises à jour tardives
   Traiter toutes les positions sans filtrage géographique (Q20). Afficher les mises à jour tardives telles quelles (Q21). Augmenter la limite d'historique à 200 entrées.
-  - [ ] 14.1 Mettre à jour `ArtisanGeolocalisationController::enregistrer()` : retourner `date_position` formatée dans la réponse JSON, augmenter la limite à 200
-  - [ ] 14.2 Vérifier que `index()` ne filtre pas par date (toutes les entrées sont affichées, Q21)
+  - [x] 14.1 Mettre à jour `ArtisanGeolocalisationController::enregistrer()` : retourner `date_position` formatée dans la réponse JSON, augmenter la limite à 200
+  - [x] 14.2 Vérifier que `index()` ne filtre pas par date (toutes les entrées sont affichées, Q21)
 
 - [ ] 15. Frontend géolocalisation P2 : temps réel et mises à jour tardives
   Afficher les nouvelles positions en tête de liste sans rechargement. Indicateur de délai depuis la dernière mise à jour. Pas de défilement horizontal ≥ 375px (Q2).
-  - [ ] 15.1 Mettre à jour `resources/js/pages/artisan/geolocalisation.tsx` : état local pour les nouvelles positions, ajout en tête de liste après enregistrement
+  - [-] 15.1 Mettre à jour `resources/js/pages/artisan/geolocalisation.tsx` : état local pour les nouvelles positions, ajout en tête de liste après enregistrement
   - [ ] 15.2 Ajouter un indicateur visuel du délai depuis la dernière mise à jour (ex: "Il y a 45s")
   - [ ] 15.3 Appliquer `overflow-x-hidden` sur le conteneur principal pour éviter le défilement horizontal
 
 ### F7 — Partenaires (pages basiques)
 
-- [ ] 16. Backend partenaires P2 : désactivation immédiate et masquage instantané
+- [x] 16. Backend partenaires P2 : désactivation immédiate et masquage instantané
   Vérifier et documenter que la désactivation masque immédiatement le partenaire (Q19). Améliorer l'interface admin avec toggle et confirmation.
-  - [ ] 16.1 Vérifier que `PartenairesController` ne met pas en cache les résultats (pas de `Cache::remember`)
-  - [ ] 16.2 Mettre à jour `resources/js/pages/admin/partenaires/index.tsx` : toggle actif/inactif avec message de confirmation "Ce partenaire sera immédiatement masqué pour tous les utilisateurs"
-  - [ ] 16.3 Ajouter un badge de statut clair (Actif/Inactif) sur chaque ligne de partenaire
+  - [x] 16.1 Vérifier que `PartenairesController` ne met pas en cache les résultats (pas de `Cache::remember`)
+  - [x] 16.2 Mettre à jour `resources/js/pages/admin/partenaires/index.tsx` : toggle actif/inactif avec message de confirmation "Ce partenaire sera immédiatement masqué pour tous les utilisateurs"
+  - [x] 16.3 Ajouter un badge de statut clair (Actif/Inactif) sur chaque ligne de partenaire
 
 - [ ] 17. Page publique partenaires : affichage et filtrage par type
   Créer ou améliorer `portal/partenaires.tsx` avec filtrage par type et mise en page responsive.
-  - [ ] 17.1 Créer ou mettre à jour `resources/js/pages/portal/partenaires.tsx` avec cartes partenaires (nom, description, logo, site web, contact)
-  - [ ] 17.2 Mettre à jour `PartenairesController` pour passer les types disponibles pour le filtre
-  - [ ] 17.3 Appliquer `overflow-x-hidden` pour éviter le défilement horizontal ≥ 375px
+  - [-] 17.1 Créer ou mettre à jour `resources/js/pages/portal/partenaires.tsx` avec cartes partenaires (nom, description, logo, site web, contact)
+  - [x] 17.2 Mettre à jour `PartenairesController` pour passer les types disponibles pour le filtre
+  - [-] 17.3 Appliquer `overflow-x-hidden` pour éviter le défilement horizontal ≥ 375px
 
 
 ## Notes

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Events\UserRegistered;
 use App\Http\Controllers\Controller;
 use App\Models\Artisan;
 use App\Models\Client;
@@ -36,7 +37,6 @@ class RegisteredUserController extends Controller
             'avatar'           => ['nullable', 'image', 'mimes:jpeg,png,webp,gif', 'max:2048'],
         ]);
 
-        // Handle avatar upload
         $avatarPath = null;
         if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
             $avatarPath = $request->file('avatar')->store('avatars', 'public');
@@ -62,21 +62,28 @@ class RegisteredUserController extends Controller
                 ]);
             } else {
                 Artisan::query()->create([
-                    'id_utilisateur'   => $user->id,
-                    'metier'           => $validated['metier'],
-                    'description'      => null,
-                    'bio'              => null,
+                    'id_utilisateur'    => $user->id,
+                    'metier'            => $validated['metier'],
+                    'description'       => null,
+                    'bio'               => null,
                     'zone_intervention' => 'Porto-Novo',
-                    'tarifs_horaire'   => null,
-                    'note_moyenne'     => 0,
-                    'badge'            => 'aucun',
+                    'tarifs_horaire'    => null,
+                    'note_moyenne'      => 0,
+                    'badge'             => 'aucun',
                 ]);
             }
 
             return $user;
         });
 
+        // Laravel built-in event (email verification)
         event(new Registered($user));
+
+        // ArtisanPro custom event -> SMS bienvenue (queued)
+        try {
+            UserRegistered::dispatch($user);
+        } catch (\Throwable) {}
+
         Auth::login($user);
 
         return to_route('dashboard');

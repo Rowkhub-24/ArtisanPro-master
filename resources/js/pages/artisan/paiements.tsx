@@ -1,6 +1,6 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { CreditCard, ArrowLeft, TrendingUp, CheckCircle, Clock, Download, ArrowDownToLine } from 'lucide-react';
+import { CreditCard, ArrowLeft, TrendingUp, CheckCircle, Clock, Download, ArrowDownToLine, X, Phone, Banknote, AlertCircle } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
@@ -28,6 +28,8 @@ interface Props {
     revenus_total?: number;
     revenus_mois?: number;
     en_attente?: number;
+    telephone?: string;
+    solde_disponible?: number;
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -36,14 +38,56 @@ const statusConfig: Record<string, { label: string; color: string }> = {
     vire:       { label: 'Viré',       color: 'bg-blue-100 text-blue-800 border border-blue-200' },
 };
 
-export default function ArtisanPaiements({ paiements = [], revenus_total = 0, revenus_mois = 0, en_attente = 0 }: Props) {
-    const [showExportModal, setShowExportModal] = useState(false);
+export default function ArtisanPaiements({
+    paiements = [],
+    revenus_total = 0,
+    revenus_mois = 0,
+    en_attente = 0,
+    telephone = '',
+    solde_disponible = 0,
+}: Props) {
+    const { props } = usePage<{ flash?: { success?: string }; errors?: Record<string, string> }>();
+    const flash = props.flash;
+
+    const [showExportModal, setShowExportModal]     = useState(false);
     const [showVirementModal, setShowVirementModal] = useState(false);
+
+    // ── Virement form ──────────────────────────────────────────────────────
+    const { data, setData, post, processing, errors, reset } = useForm({
+        montant:   '',
+        telephone: telephone,
+        provider:  'mobile_money',
+    });
+
+    function submitVirement(e: React.FormEvent) {
+        e.preventDefault();
+        post(route('artisan.paiements.virement'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowVirementModal(false);
+                reset('montant');
+            },
+        });
+    }
+
+    // ── Export ─────────────────────────────────────────────────────────────
+    function handleExport(format: 'csv') {
+        window.location.href = route('artisan.paiements.export');
+        setShowExportModal(false);
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Mes Revenus - ArtisanPro" />
             <div className="flex flex-col gap-8 p-6 bg-[hsl(36,33%,97%)] min-h-screen">
+
+                {/* Flash success */}
+                {flash?.success && (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex items-start gap-3">
+                        <CheckCircle className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
+                        <p className="text-sm text-emerald-800">{flash.success}</p>
+                    </div>
+                )}
 
                 {/* Header */}
                 <div className="flex items-center justify-between flex-wrap gap-4">
@@ -80,7 +124,6 @@ export default function ArtisanPaiements({ paiements = [], revenus_total = 0, re
 
                 {/* Stats */}
                 <div className="grid gap-4 md:grid-cols-3">
-                    {/* Dark total card */}
                     <div className="rounded-2xl bg-[hsl(20,14%,10%)] p-6 text-white shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
@@ -166,52 +209,156 @@ export default function ArtisanPaiements({ paiements = [], revenus_total = 0, re
                     )}
                 </div>
 
-                {/* Export Modal */}
+                {/* ── Export Modal ─────────────────────────────────────────────── */}
                 {showExportModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-[hsl(20,14%,6%)]/70 backdrop-blur-sm" onClick={() => setShowExportModal(false)} />
-                        <div className="relative w-full max-w-md rounded-2xl bg-white border border-[hsl(30,20%,88%)] p-6 shadow-2xl">
-                            <h3 className="text-xl font-semibold text-[hsl(20,14%,12%)]">Export des paiements</h3>
-                            <p className="mt-2 text-[hsl(20,10%,50%)]">Cette fonctionnalité est en cours d'implémentation. Vous pourrez bientôt télécharger l'historique de vos revenus.</p>
-                            <div className="mt-6 flex justify-end gap-2">
+                        <div className="relative w-full max-w-sm rounded-2xl bg-white border border-[hsl(30,20%,88%)] p-6 shadow-2xl">
+                            <button
+                                onClick={() => setShowExportModal(false)}
+                                className="absolute right-4 top-4 rounded-lg p-1 text-[hsl(20,10%,50%)] hover:bg-gray-100"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
+                                    <Download className="h-5 w-5 text-amber-600" />
+                                </div>
+                                <h3 className="text-xl font-semibold text-[hsl(20,14%,12%)]">Exporter les revenus</h3>
+                            </div>
+                            <p className="text-sm text-[hsl(20,10%,50%)] mb-6">
+                                Téléchargez l'historique complet de vos paiements au format CSV (compatible Excel).
+                            </p>
+                            <div className="flex justify-end gap-2">
                                 <button
                                     onClick={() => setShowExportModal(false)}
                                     className="inline-flex items-center rounded-xl border border-[hsl(30,20%,82%)] bg-white px-4 py-2 text-sm font-medium text-[hsl(20,14%,12%)] hover:border-amber-400 transition-colors"
                                 >
-                                    Fermer
+                                    Annuler
                                 </button>
                                 <button
-                                    onClick={() => setShowExportModal(false)}
-                                    className="inline-flex items-center rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold px-4 py-2 text-sm transition-all"
+                                    onClick={() => handleExport('csv')}
+                                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold px-4 py-2 text-sm transition-all"
                                 >
-                                    Ok
+                                    <Download className="h-4 w-4" />
+                                    Télécharger CSV
                                 </button>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* Virement Modal */}
+                {/* ── Virement Modal ───────────────────────────────────────────── */}
                 {showVirementModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-[hsl(20,14%,6%)]/70 backdrop-blur-sm" onClick={() => setShowVirementModal(false)} />
                         <div className="relative w-full max-w-md rounded-2xl bg-white border border-[hsl(30,20%,88%)] p-6 shadow-2xl">
-                            <h3 className="text-xl font-semibold text-[hsl(20,14%,12%)]">Demande de virement</h3>
-                            <p className="mt-2 text-[hsl(20,10%,50%)]">Votre demande de virement a bien été enregistrée. Le virement sera traité sous 48h ouvrées.</p>
-                            <div className="mt-6 flex justify-end gap-2">
-                                <button
-                                    onClick={() => setShowVirementModal(false)}
-                                    className="inline-flex items-center rounded-xl border border-[hsl(30,20%,82%)] bg-white px-4 py-2 text-sm font-medium text-[hsl(20,14%,12%)] hover:border-amber-400 transition-colors"
-                                >
-                                    Fermer
-                                </button>
-                                <button
-                                    onClick={() => setShowVirementModal(false)}
-                                    className="inline-flex items-center rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold px-4 py-2 text-sm transition-all"
-                                >
-                                    Très bien
-                                </button>
+                            <button
+                                onClick={() => setShowVirementModal(false)}
+                                className="absolute right-4 top-4 rounded-lg p-1 text-[hsl(20,10%,50%)] hover:bg-gray-100"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
+                                    <Banknote className="h-5 w-5 text-amber-600" />
+                                </div>
+                                <h3 className="text-xl font-semibold text-[hsl(20,14%,12%)]">Demander un virement</h3>
                             </div>
+                            <p className="text-sm text-[hsl(20,10%,50%)] mb-1">
+                                Solde disponible : <strong className="text-emerald-600">{solde_disponible.toLocaleString('fr-FR')} FCFA</strong>
+                            </p>
+                            <p className="text-xs text-[hsl(20,10%,55%)] mb-5">Le virement sera envoyé directement sur votre numéro Mobile Money sous 48h ouvrées.</p>
+
+                            <form onSubmit={submitVirement} className="space-y-4">
+                                {/* Montant */}
+                                <div>
+                                    <label className="block text-sm font-medium text-[hsl(20,14%,12%)] mb-1.5">
+                                        Montant à virer (FCFA)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="500"
+                                        max={solde_disponible}
+                                        step="1"
+                                        value={data.montant}
+                                        onChange={e => setData('montant', e.target.value)}
+                                        placeholder="Ex: 5000"
+                                        className="w-full rounded-xl border border-[hsl(30,20%,82%)] bg-white px-4 py-2.5 text-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+                                        required
+                                    />
+                                    {errors.montant && (
+                                        <p className="mt-1.5 flex items-center gap-1 text-xs text-red-600">
+                                            <AlertCircle className="h-3.5 w-3.5" />
+                                            {errors.montant}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Numéro de téléphone */}
+                                <div>
+                                    <label className="block text-sm font-medium text-[hsl(20,14%,12%)] mb-1.5">
+                                        Numéro Mobile Money
+                                    </label>
+                                    <div className="relative">
+                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(20,10%,55%)]" />
+                                        <input
+                                            type="tel"
+                                            value={data.telephone}
+                                            onChange={e => setData('telephone', e.target.value)}
+                                            placeholder="+229 xx xx xx xx"
+                                            className="w-full rounded-xl border border-[hsl(30,20%,82%)] bg-white pl-10 pr-4 py-2.5 text-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+                                            required
+                                        />
+                                    </div>
+                                    {errors.telephone && (
+                                        <p className="mt-1.5 flex items-center gap-1 text-xs text-red-600">
+                                            <AlertCircle className="h-3.5 w-3.5" />
+                                            {errors.telephone}
+                                        </p>
+                                    )}
+                                    <p className="mt-1 text-xs text-[hsl(20,10%,55%)]">Pré-rempli avec votre numéro de compte. Modifiez si nécessaire.</p>
+                                </div>
+
+                                {/* Provider */}
+                                <div>
+                                    <label className="block text-sm font-medium text-[hsl(20,14%,12%)] mb-1.5">
+                                        Opérateur
+                                    </label>
+                                    <select
+                                        value={data.provider}
+                                        onChange={e => setData('provider', e.target.value)}
+                                        className="w-full rounded-xl border border-[hsl(30,20%,82%)] bg-white px-4 py-2.5 text-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+                                    >
+                                        <option value="mobile_money">Mobile Money (MTN / Moov)</option>
+                                        <option value="kkiapay">KkiaPay</option>
+                                        <option value="fedapay">FedaPay</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex justify-end gap-2 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowVirementModal(false)}
+                                        className="inline-flex items-center rounded-xl border border-[hsl(30,20%,82%)] bg-white px-4 py-2 text-sm font-medium text-[hsl(20,14%,12%)] hover:border-amber-400 transition-colors"
+                                    >
+                                        Annuler
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 disabled:opacity-60 text-white font-semibold px-5 py-2 text-sm transition-all"
+                                    >
+                                        {processing ? 'Envoi…' : (
+                                            <>
+                                                <ArrowDownToLine className="h-4 w-4" />
+                                                Confirmer le virement
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 )}
