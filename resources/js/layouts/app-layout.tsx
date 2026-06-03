@@ -5,7 +5,7 @@ import {
     MapPin, Bell, Home, ChevronRight, Menu, LogOut, Sparkles,
     Hammer, Search,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import DiagnosticIAModal from '@/components/diagnostic-ia-modal';
 
@@ -222,7 +222,22 @@ export default function AppLayout({ children, breadcrumbs = [] }: AppLayoutProps
     const userName  = `${auth?.user?.prenom ?? ''} ${auth?.user?.nom ?? ''}`.trim();
     const userEmail = (auth?.user?.email as string) ?? '';
     const avatarUrl = (auth?.user?.avatar_url ?? auth?.user?.avatar) as string | null ?? null;
-    const notifCount = notifications_non_lues ?? 0;
+
+    // Seed with server-side count; poll every 30s for live updates
+    const [notifCount, setNotifCount] = useState<number>(notifications_non_lues ?? 0);
+
+    useEffect(() => {
+        const fetchCount = () => {
+            fetch(route('notifications.compteur'))
+                .then((r) => r.json())
+                .then((data: { count?: number }) => setNotifCount(data.count ?? 0))
+                .catch(() => {});
+        };
+        // First fetch immediately to get a fresh count
+        fetchCount();
+        const interval = setInterval(fetchCount, 30_000);
+        return () => clearInterval(interval);
+    }, []);
 
     const sidebarProps: SidebarProps = {
         navItems,

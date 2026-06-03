@@ -1,4 +1,4 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { CreditCard, ArrowLeft, TrendingUp, CheckCircle, Clock, Download, ArrowDownToLine, X, Phone, Banknote, AlertCircle } from 'lucide-react';
 
@@ -66,6 +66,8 @@ export default function ArtisanPaiements({
             onSuccess: () => {
                 setShowVirementModal(false);
                 reset('montant');
+                // Recharger la page pour mettre à jour le solde disponible
+                router.reload({ only: ['revenus_total', 'revenus_mois', 'en_attente', 'solde_disponible'] });
             },
         });
     }
@@ -123,13 +125,13 @@ export default function ArtisanPaiements({
                 </div>
 
                 {/* Stats */}
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-4">
                     <div className="rounded-2xl bg-[hsl(20,14%,10%)] p-6 text-white shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-amber-400 text-sm font-medium">Revenus totaux</p>
                                 <p className="text-3xl font-bold mt-1">{revenus_total.toLocaleString('fr-FR')}</p>
-                                <p className="text-[hsl(20,10%,60%)] text-sm">FCFA</p>
+                                <p className="text-[hsl(20,10%,60%)] text-sm">FCFA nets</p>
                             </div>
                             <TrendingUp className="h-10 w-10 text-amber-400" />
                         </div>
@@ -155,6 +157,18 @@ export default function ArtisanPaiements({
                             </div>
                             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100">
                                 <Clock className="h-6 w-6 text-amber-600" />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 shadow-sm p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-emerald-700 font-medium">Solde disponible</p>
+                                <p className="text-3xl font-bold text-emerald-700 mt-1">{solde_disponible.toLocaleString('fr-FR')}</p>
+                                <p className="text-xs text-emerald-600">FCFA · à virer</p>
+                            </div>
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-200">
+                                <Banknote className="h-6 w-6 text-emerald-700" />
                             </div>
                         </div>
                     </div>

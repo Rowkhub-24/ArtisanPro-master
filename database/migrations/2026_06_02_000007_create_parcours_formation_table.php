@@ -1,5 +1,4 @@
 <?php
-// database/migrations/2026_06_02_000002_create_parcours_formation_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -9,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Table may already exist if a previous migration attempt partially ran.
+        // Drop and recreate to ensure the FK constraints are correctly applied.
+        Schema::dropIfExists('parcours_formation');
+
         Schema::create('parcours_formation', function (Blueprint $table) {
             $table->unsignedBigInteger('id_parcours');
             $table->unsignedBigInteger('id_formation');

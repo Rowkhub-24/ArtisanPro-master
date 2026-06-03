@@ -1,5 +1,4 @@
 <?php
-// database/migrations/2026_06_02_000003_create_artisan_parcours_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -9,6 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Guard against partial previous run
+        Schema::dropIfExists('artisan_parcours');
+
         Schema::create('artisan_parcours', function (Blueprint $table) {
             $table->unsignedBigInteger('id_artisan');
             $table->unsignedBigInteger('id_parcours');
