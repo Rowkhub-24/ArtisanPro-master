@@ -28,6 +28,15 @@ class Reservation extends Model
         'acompte_verse',
         'solde_paye',
         'date_creation',
+        // Automation workflow fields (Req 8.4)
+        'adresse_intervention',
+        'latitude_client',
+        'longitude_client',
+        'duree_estimee_min',
+        'source_acceptation',
+        'source_devis',
+        'source_validation',
+        'source_terminaison',
     ];
 
     /**
@@ -43,6 +52,14 @@ class Reservation extends Model
             'montant_total' => 'decimal:2',
             'acompte_verse' => 'decimal:2',
             'solde_paye' => 'decimal:2',
+            // Automation workflow casts (Req 8.4)
+            'latitude_client' => 'float',
+            'longitude_client' => 'float',
+            'duree_estimee_min' => 'integer',
+            'source_acceptation' => 'string',
+            'source_devis' => 'string',
+            'source_validation' => 'string',
+            'source_terminaison' => 'string',
         ];
     }
 

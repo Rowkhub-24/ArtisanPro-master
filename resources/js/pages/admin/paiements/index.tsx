@@ -16,9 +16,12 @@ interface Props { paiements: Paginated<Paiement>; stats: Stats; filters: { statu
 
 const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
     en_attente: { label: 'En attente', bg: 'bg-amber-100',   text: 'text-amber-800' },
+    reussi:     { label: 'Réussi',     bg: 'bg-emerald-100', text: 'text-emerald-800' },
     complete:   { label: 'Complété',   bg: 'bg-emerald-100', text: 'text-emerald-800' },
     echoue:     { label: 'Échoué',     bg: 'bg-red-100',     text: 'text-red-800' },
+    echec:      { label: 'Échoué',     bg: 'bg-red-100',     text: 'text-red-800' },
     rembourse:  { label: 'Remboursé',  bg: 'bg-blue-100',    text: 'text-blue-800' },
+    annule:     { label: 'Annulé',     bg: 'bg-gray-100',    text: 'text-gray-700' },
 };
 
 export default function AdminPaiementsIndex({ paiements, stats, filters }: Props) {
@@ -75,9 +78,12 @@ export default function AdminPaiementsIndex({ paiements, stats, filters }: Props
                         <select name="statut" defaultValue={filters.statut ?? ''}
                             className="rounded-xl border border-[hsl(30,20%,82%)] bg-white px-3 py-2 text-sm text-[hsl(20,14%,12%)] focus:border-amber-400 focus:outline-none">
                             <option value="">Tous les statuts</option>
-                            {Object.entries(statusConfig).map(([k, v]) => (
-                                <option key={k} value={k}>{v.label}</option>
-                            ))}
+                            <option value="en_attente">En attente</option>
+                            <option value="reussi">Réussi</option>
+                            <option value="complete">Complété</option>
+                            <option value="echoue">Échoué</option>
+                            <option value="rembourse">Remboursé</option>
+                            <option value="annule">Annulé</option>
                         </select>
                         <button type="submit"
                             className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold px-4 py-2 text-sm shadow-sm transition-all">

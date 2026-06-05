@@ -26,6 +26,7 @@ interface ReservationItem {
     };
     montant?: number;
     has_avis?: boolean;
+    has_paiement?: boolean;
     can_leave_review?: boolean;
 }
 
@@ -66,20 +67,23 @@ export default function ClientReservations({ reservations }: Props) {
     };
 
     const getStatusBadge = (statut: string) => {
+        // Normalise legacy/alias values to canonical ones
         const map: Record<string, string> = {
-            en_attente: 'en_cours',
-            confirme: 'confirmee',
-            annule: 'annulee',
-            termine: 'terminee',
+            en_attente: 'en_attente',
+            confirme:   'confirmee',
+            annule:     'annulee',
+            termine:    'terminee',
+            payee:      'en_cours',
         };
         const s = map[statut] ?? statut;
 
         const statusConfig: Record<string, { label: string; className: string }> = {
-            en_cours:  { label: 'En cours',  className: 'bg-blue-100 text-blue-800 border border-blue-200' },
-            confirmee: { label: 'Confirmée', className: 'bg-emerald-100 text-emerald-800 border border-emerald-200' },
-            annulee:   { label: 'Annulée',   className: 'bg-red-100 text-red-800 border border-red-200' },
-            terminee:  { label: 'Terminée',  className: 'bg-gray-100 text-gray-700 border border-gray-200' },
-            litige:    { label: 'Litige',    className: 'bg-amber-100 text-amber-800 border border-amber-200' },
+            en_attente: { label: 'En attente',  className: 'bg-blue-100 text-blue-800 border border-blue-200' },
+            en_cours:   { label: 'En cours',    className: 'bg-blue-100 text-blue-800 border border-blue-200' },
+            confirmee:  { label: 'Confirmée',   className: 'bg-emerald-100 text-emerald-800 border border-emerald-200' },
+            annulee:    { label: 'Annulée',     className: 'bg-red-100 text-red-800 border border-red-200' },
+            terminee:   { label: 'Terminée',    className: 'bg-gray-100 text-gray-700 border border-gray-200' },
+            litige:     { label: 'Litige',      className: 'bg-amber-100 text-amber-800 border border-amber-200' },
         };
 
         const config = statusConfig[s] ?? { label: String(statut), className: 'bg-gray-100 text-gray-700 border border-gray-200' };
@@ -88,7 +92,7 @@ export default function ClientReservations({ reservations }: Props) {
 
     const getStatusIcon = (statut: string) => {
         const map: Record<string, string> = {
-            en_attente: 'en_cours',
+            en_attente: 'en_attente',
             confirme: 'confirmee',
             annule: 'annulee',
             termine: 'terminee',
@@ -99,10 +103,12 @@ export default function ClientReservations({ reservations }: Props) {
                 return <CheckCircle className="h-5 w-5 text-emerald-600" />;
             case 'annulee':
                 return <XCircle className="h-5 w-5 text-red-600" />;
+            case 'terminee':
+                return <CheckCircle className="h-5 w-5 text-gray-500" />;
             case 'en_cours':
-                return <Clock className="h-5 w-5 text-blue-600" />;
+            case 'en_attente':
             default:
-                return <Clock className="h-5 w-5 text-amber-600" />;
+                return <Clock className="h-5 w-5 text-blue-600" />;
         }
     };
 
@@ -257,7 +263,7 @@ export default function ClientReservations({ reservations }: Props) {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-[hsl(20,10%,50%)]">En attente</p>
-                                <p className="text-2xl font-bold text-blue-600">{reservations.filter(r => ['en_cours', 'en_attente'].includes(r.statut ?? '')).length}</p>
+                                <p className="text-2xl font-bold text-blue-600">{reservations.filter(r => ['en_attente'].includes(r.statut ?? '')).length}</p>
                             </div>
                             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
                                 <Clock className="h-6 w-6 text-blue-600" />
@@ -267,8 +273,8 @@ export default function ClientReservations({ reservations }: Props) {
                     <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-[hsl(20,10%,50%)]">Confirmées</p>
-                                <p className="text-2xl font-bold text-emerald-600">{reservations.filter(r => ['confirmee', 'confirme'].includes(r.statut ?? '')).length}</p>
+                                <p className="text-sm font-medium text-[hsl(20,10%,50%)]">Confirmées / En cours</p>
+                                <p className="text-2xl font-bold text-emerald-600">{reservations.filter(r => ['confirmee', 'confirme', 'en_cours', 'payee'].includes(r.statut ?? '')).length}</p>
                             </div>
                             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">
                                 <CheckCircle className="h-6 w-6 text-emerald-600" />
@@ -341,7 +347,8 @@ export default function ClientReservations({ reservations }: Props) {
                                             </div>
                                         )}
                                         <div className="flex gap-2 flex-wrap">
-                                            {['en_attente', 'en_cours'].includes(reservation.statut ?? '') && (
+                                            {/* Annuler : seulement si en attente/en cours ET pas encore payé */}
+                                            {['en_attente', 'en_cours'].includes(reservation.statut ?? '') && !reservation.has_paiement && (
                                                 <Link
                                                     href={route('client.reservations.cancel', { reservation: reservation.id })}
                                                     method="delete"
@@ -350,6 +357,7 @@ export default function ClientReservations({ reservations }: Props) {
                                                     Annuler
                                                 </Link>
                                             )}
+                                            {/* Donner un avis : seulement si terminée */}
                                             {reservation.can_leave_review && (
                                                 <Link
                                                     href={route('client.avis.create', { reservation_id: reservation.id })}
@@ -358,7 +366,8 @@ export default function ClientReservations({ reservations }: Props) {
                                                     Donner un avis
                                                 </Link>
                                             )}
-                                            {['confirme', 'confirmee'].includes(reservation.statut ?? '') && (
+                                            {/* Payer : seulement si confirmée ET pas encore payé */}
+                                            {['confirme', 'confirmee'].includes(reservation.statut ?? '') && !reservation.has_paiement && (
                                                 <Link
                                                     href={route('client.paiements.create', { reservation_id: reservation.id })}
                                                     className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 text-sm transition-colors"
@@ -366,6 +375,13 @@ export default function ClientReservations({ reservations }: Props) {
                                                     <CreditCard className="h-4 w-4" />
                                                     Payer
                                                 </Link>
+                                            )}
+                                            {/* Paiement effectué - badge informatif */}
+                                            {['confirme', 'confirmee', 'en_cours'].includes(reservation.statut ?? '') && reservation.has_paiement && (
+                                                <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 text-sm font-medium">
+                                                    <CheckCircle className="h-4 w-4" />
+                                                    Payé
+                                                </span>
                                             )}
                                             <Link
                                                 href={route('client.reservations.show', { reservation: reservation.id })}

@@ -16,9 +16,10 @@
         @inertiaHead
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="user-id" content="{{ $page['props']['auth']['user']['id'] ?? '' }}">
+        {{-- KkiaPay CDN chargé en defer pour être disponible dès que React monte --}}
+        <script src="https://cdn.kkiapay.me/k.js" defer></script>
     </head>
     <body class="font-sans antialiased">
         @inertia
-        <script src="https://cdn.kkiapay.me/k.js"></script>
     </body>
 </html>

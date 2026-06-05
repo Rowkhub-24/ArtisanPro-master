@@ -87,7 +87,7 @@ Plan d'implémentation des 7 fonctionnalités P2 d'ArtisanPro sur la stack Larav
 
 - [ ] 9. Frontend : préférences de notification et permission push
   Ajouter les toggles de préférences dans les paramètres. Demander la permission push via l'API Notification du navigateur. Afficher le compteur de non-lues dans la navbar.
-  - [-] 9.1 Créer la route `PATCH /settings/notification-preferences` et le contrôleur `Settings\NotificationPreferencesController`
+  - [ ] 9.1 Créer la route `PATCH /settings/notification-preferences` et le contrôleur `Settings\NotificationPreferencesController`
   - [ ] 9.2 Ajouter les toggles push/SMS dans `resources/js/pages/settings/profile.tsx` (ou nouvelle page `notification-preferences.tsx`)
   - [ ] 9.3 Implémenter la demande de permission push (`Notification.requestPermission()`) et synchroniser avec le backend
   - [ ] 9.4 Afficher le badge de notifications non lues dans le layout principal (appel à `/notifications/compteur`)
@@ -109,11 +109,11 @@ Plan d'implémentation des 7 fonctionnalités P2 d'ArtisanPro sur la stack Larav
 - [ ] 11. Service académie : quiz (seuil 70%) et points bonus de parcours
   Implémenter `AcademieService` avec validation des quiz (seuil 70%) et attribution des points bonus à la complétion d'un parcours (Q18 : indépendamment des scores individuels).
   - [x] 11.1 Créer `app/Services/AcademieService.php` avec `soumettreQuiz()` (calcul score, enregistrement, incrémentation tentatives) et `verifierCompletionParcours()` (attribution points bonus si toutes formations complétées)
-  - [-] 11.2 Écrire les tests unitaires pour `soumettreQuiz` (seuil 70%) et `verifierCompletionParcours` (points bonus indépendants du score quiz)
+  - [ ] 11.2 Écrire les tests unitaires pour `soumettreQuiz` (seuil 70%) et `verifierCompletionParcours` (points bonus indépendants du score quiz)
 
 - [ ] 12. Contrôleur et routes académie P2
   Étendre `ArtisanAcademyController` pour les parcours et les quiz.
-  - [-] 12.1 Mettre à jour `ArtisanAcademyController::__invoke()` pour retourner formations, parcours, et `points_formation` de l'artisan
+  - [ ] 12.1 Mettre à jour `ArtisanAcademyController::__invoke()` pour retourner formations, parcours, et `points_formation` de l'artisan
   - [ ] 12.2 Ajouter la méthode `soumettreQuiz(Request $request, AcademieQuiz $quiz)` au contrôleur
   - [ ] 12.3 Mettre à jour `completer()` pour appeler `AcademieService::verifierCompletionParcours()` après marquage
   - [ ] 12.4 Enregistrer les routes : `POST artisan/academy/quiz/{quiz}/soumettre`, `POST artisan/academy/formations/{formation}/completer`
@@ -136,9 +136,9 @@ Plan d'implémentation des 7 fonctionnalités P2 d'ArtisanPro sur la stack Larav
 
 - [ ] 15. Frontend géolocalisation P2 : temps réel et mises à jour tardives
   Afficher les nouvelles positions en tête de liste sans rechargement. Indicateur de délai depuis la dernière mise à jour. Pas de défilement horizontal ≥ 375px (Q2).
-  - [-] 15.1 Mettre à jour `resources/js/pages/artisan/geolocalisation.tsx` : état local pour les nouvelles positions, ajout en tête de liste après enregistrement
+  - [ ] 15.1 Mettre à jour `resources/js/pages/artisan/geolocalisation.tsx` : état local pour les nouvelles positions, ajout en tête de liste après enregistrement
   - [ ] 15.2 Ajouter un indicateur visuel du délai depuis la dernière mise à jour (ex: "Il y a 45s")
-  - [ ] 15.3 Appliquer `overflow-x-hidden` sur le conteneur principal pour éviter le défilement horizontal
+  - [x] 15.3 Appliquer `overflow-x-hidden` sur le conteneur principal pour éviter le défilement horizontal
 
 ### F7 — Partenaires (pages basiques)
 
@@ -150,9 +150,9 @@ Plan d'implémentation des 7 fonctionnalités P2 d'ArtisanPro sur la stack Larav
 
 - [ ] 17. Page publique partenaires : affichage et filtrage par type
   Créer ou améliorer `portal/partenaires.tsx` avec filtrage par type et mise en page responsive.
-  - [-] 17.1 Créer ou mettre à jour `resources/js/pages/portal/partenaires.tsx` avec cartes partenaires (nom, description, logo, site web, contact)
+  - [ ] 17.1 Créer ou mettre à jour `resources/js/pages/portal/partenaires.tsx` avec cartes partenaires (nom, description, logo, site web, contact)
   - [x] 17.2 Mettre à jour `PartenairesController` pour passer les types disponibles pour le filtre
-  - [-] 17.3 Appliquer `overflow-x-hidden` pour éviter le défilement horizontal ≥ 375px
+  - [ ] 17.3 Appliquer `overflow-x-hidden` pour éviter le défilement horizontal ≥ 375px
 
 
 ## Notes

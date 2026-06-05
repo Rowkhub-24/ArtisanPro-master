@@ -16,6 +16,7 @@ interface Reservation {
     date_reservation: string;
     montant_total: number | null;
     adresse_intervention: string | null;
+    has_paiement?: boolean;
     client: {
         user: { prenom: string; nom: string; telephone: string | null; email: string };
     } | null;
@@ -34,8 +35,13 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
 };
 
 export default function ArtisanReservations({ reservations = [] }: Props) {
-    const handleUpdateStatus = (reservationId: number, statut: 'confirmee' | 'annulee') => {
-        if (!window.confirm(`Êtes-vous sûr de vouloir ${statut === 'confirmee' ? 'confirmer' : 'refuser'} cette réservation ?`)) {
+    const handleUpdateStatus = (reservationId: number, statut: 'confirmee' | 'annulee' | 'terminee') => {
+        const labels: Record<string, string> = {
+            confirmee: 'confirmer',
+            annulee: 'refuser',
+            terminee: 'marquer comme terminée',
+        };
+        if (!window.confirm(`Êtes-vous sûr de vouloir ${labels[statut] ?? statut} cette réservation ?`)) {
             return;
         }
         router.patch(route('artisan.reservations.statut', reservationId), { statut }, {
@@ -152,7 +158,8 @@ export default function ArtisanReservations({ reservations = [] }: Props) {
                                                     </p>
                                                 </div>
                                             )}
-                                            {['en_attente', 'en_cours'].includes(r.statut ?? '') && (
+                                            {/* Confirmer/Refuser : uniquement si en attente ET aucun paiement reçu */}
+                                            {['en_attente', 'en_cours'].includes(r.statut ?? '') && !r.has_paiement && (
                                                 <>
                                                     <button
                                                         type="button"
@@ -171,6 +178,17 @@ export default function ArtisanReservations({ reservations = [] }: Props) {
                                                         Refuser
                                                     </button>
                                                 </>
+                                            )}
+                                            {/* Marquer comme terminée : si payée et en cours */}
+                                            {['en_cours'].includes(r.statut ?? '') && r.has_paiement && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleUpdateStatus(r.id, 'terminee')}
+                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold px-3 py-1.5 text-sm transition-colors"
+                                                >
+                                                    <CheckCircle className="h-4 w-4" />
+                                                    Terminer
+                                                </button>
                                             )}
                                             <Link
                                                 href={route('artisan.reservations.show', r.id)}

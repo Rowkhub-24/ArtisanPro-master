@@ -9,6 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::dropIfExists('academie_quiz');
         Schema::create('academie_quiz', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('id_formation');

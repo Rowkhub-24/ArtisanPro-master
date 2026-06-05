@@ -16,6 +16,7 @@ use App\Listeners\EnvoyerSmsInscription;
 use App\Listeners\EnvoyerSmsMissionTerminee;
 use App\Listeners\EnvoyerSmsNouvelleReservation;
 use App\Listeners\EnvoyerSmsPaiement;
+use App\Listeners\ReservationAutoAcceptListener;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
@@ -40,6 +41,7 @@ class EventServiceProvider extends ServiceProvider
 
         ReservationCreee::class => [
             EnvoyerSmsNouvelleReservation::class,
+            ReservationAutoAcceptListener::class,
         ],
 
         ReservationConfirmee::class => [

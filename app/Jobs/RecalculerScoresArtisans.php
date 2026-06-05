@@ -19,6 +19,11 @@ class RecalculerScoresArtisans implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    /**
+     * Timeout : recalcul peut prendre du temps sur beaucoup d'artisans.
+     */
+    public int $timeout = 120;
+
     public function handle(ScoringService $scoring): void
     {
         $scoring->recalculerTous();

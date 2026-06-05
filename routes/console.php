@@ -2,6 +2,7 @@
 
 use App\Jobs\EscaladerLitigesExpires;
 use App\Jobs\LibererFondsSequestre;
+use App\Jobs\MissionTerminaisonDetector;
 use App\Jobs\NotifierArtisansInactifs;
 use App\Jobs\RecalculerScoresArtisans;
 use Illuminate\Foundation\Inspiring;
@@ -11,6 +12,10 @@ use Illuminate\Support\Facades\Schedule;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+// ── Mission termination detector ─────────────────────────────────────────────
+// Détecte la fin de mission via GPS ou durée toutes les 2 minutes (Req 5.1)
+Schedule::job(new MissionTerminaisonDetector)->everyTwoMinutes();
 
 // ── Scores & badges ───────────────────────────────────────────────────────────
 // Recalcul automatique des scores de confiance chaque nuit à minuit

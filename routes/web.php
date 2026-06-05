@@ -152,7 +152,7 @@ Route::middleware(['auth'])->group(function () {
             }
 
             $reservations = $client->reservations()
-                ->with(['artisan.user', 'avis'])
+                ->with(['artisan.user', 'avis', 'paiements'])
                 ->orderByDesc('date_creation')
                 ->get()
                 ->map(fn ($reservation) => [
@@ -168,8 +168,13 @@ Route::middleware(['auth'])->group(function () {
                         ],
                     ] : null,
                     'montant' => $reservation->montant_total,
-                    'has_avis' => $reservation->avis ? true : false,
-                    'can_leave_review' => in_array($reservation->statut, ['confirmee', 'terminee'], true) && ! $reservation->avis,
+                    'has_avis' => (bool) $reservation->avis,
+                    // Paiement réussi existant pour cette réservation
+                    'has_paiement' => $reservation->paiements
+                        ->whereIn('statut', ['reussi', 'complete'])
+                        ->isNotEmpty(),
+                    // Peut laisser un avis uniquement si payé ET terminé
+                    'can_leave_review' => in_array($reservation->statut, ['terminee', 'termine'], true) && ! $reservation->avis,
                 ])
                 ->toArray();
 
@@ -1293,7 +1298,7 @@ Route::middleware(['auth'])->group(function () {
             }
 
             $reservations = $artisan->reservations()
-                ->with('client.user')
+                ->with(['client.user', 'paiements'])
                 ->orderByDesc('date_creation')
                 ->get()
                 ->map(fn ($reservation) => [
@@ -1302,6 +1307,10 @@ Route::middleware(['auth'])->group(function () {
                     'date_reservation' => optional($reservation->date)->format('d/m/Y'),
                     'montant_total' => $reservation->montant_total,
                     'adresse_intervention' => $reservation->adresse_intervention,
+                    // True si un paiement réussi existe pour cette réservation
+                    'has_paiement' => $reservation->paiements
+                        ->whereIn('statut', ['reussi', 'complete'])
+                        ->isNotEmpty(),
                     'client' => $reservation->client ? [
                         'user' => [
                             'prenom' => $reservation->client->user?->prenom,
@@ -1962,10 +1971,10 @@ Route::middleware(['auth'])->group(function () {
                 ->get()
                 ->map(function ($p) {
                     $montant    = (float) $p->montant;
-                    $commission = round($montant * 0.10, 2); // 10% commission plateforme
+                    $commission = round($montant * 0.10, 2);
                     $montantNet = $montant - $commission;
 
-                    $client = $p->reservation?->client?->user;
+                    $client    = $p->reservation?->client?->user;
                     $clientNom = $client
                         ? trim($client->prenom . ' ' . $client->nom)
                         : 'Client inconnu';
@@ -1984,14 +1993,15 @@ Route::middleware(['auth'])->group(function () {
                 })
                 ->toArray();
 
+            // Revenus totaux nets (paiements 'reussi' ou 'complete' — les deux statuts sont valides)
             $revenus_total = array_sum(array_column(
-                array_filter($paiements, fn ($p) => $p['statut'] === 'complete'),
+                array_filter($paiements, fn ($p) => in_array($p['statut'], ['complete', 'reussi'], true)),
                 'montant_net'
             ));
 
-            $debutMois = now()->startOfMonth()->format('Y-m-d');
+            $debutMois    = now()->startOfMonth()->format('Y-m-d');
             $revenus_mois = array_sum(array_column(
-                array_filter($paiements, fn ($p) => $p['statut'] === 'complete' && $p['date'] >= $debutMois),
+                array_filter($paiements, fn ($p) => in_array($p['statut'], ['complete', 'reussi'], true) && $p['date'] >= $debutMois),
                 'montant_net'
             ));
 
@@ -2000,13 +2010,20 @@ Route::middleware(['auth'])->group(function () {
                 'montant'
             ));
 
+            // Solde disponible = revenus totaux nets - montants déjà demandés/en cours/virés
+            $total_vire = (float) $artisan->payouts()
+                ->whereIn('status', ['requested', 'processing', 'completed'])
+                ->sum('amount');
+
+            $solde_disponible = max(0, $revenus_total - $total_vire);
+
             return Inertia::render('artisan/paiements', [
-                'paiements'     => $paiements,
-                'revenus_total'  => $revenus_total,
-                'revenus_mois'   => $revenus_mois,
-                'en_attente'     => $en_attente,
-                'telephone'      => Auth::user()->telephone ?? '',
-                'solde_disponible' => $revenus_total,
+                'paiements'        => $paiements,
+                'revenus_total'    => $revenus_total,
+                'revenus_mois'     => $revenus_mois,
+                'en_attente'       => $en_attente,
+                'telephone'        => Auth::user()->telephone ?? '',
+                'solde_disponible' => $solde_disponible,
             ]);
         })->name('paiements');
 
@@ -2071,26 +2088,30 @@ Route::middleware(['auth'])->group(function () {
                 'provider'  => ['nullable', 'string', 'max:50'],
             ]);
 
-            // Calcul du solde disponible (paiements nets - virements déjà en cours)
-            $paiementsNets = \App\Models\Paiement::query()
+            $montant = (float) $request->montant;
+
+            // Calcul du solde disponible depuis les paiements réels (pas le wallet qui dépend de la queue)
+            $revenus_total = (float) \App\Models\Paiement::query()
                 ->whereHas('reservation', fn ($q) => $q->where('id_artisan', $artisan->id))
                 ->whereIn('statut', ['reussi', 'complete'])
                 ->get()
-                ->sum(fn ($p) => (float) $p->montant * 0.90);
+                ->sum(fn ($p) => (float) $p->montant * 0.90); // net après 10% commission
 
-            $virementsEnCours = (float) $artisan->payouts()
-                ->whereIn('status', ['requested', 'processing'])
+            $total_vire = (float) $artisan->payouts()
+                ->whereIn('status', ['requested', 'processing', 'completed'])
                 ->sum('amount');
 
-            $soldeDisponible = $paiementsNets - $virementsEnCours;
+            $soldeDisponible = max(0, $revenus_total - $total_vire);
 
-            if ((float) $request->montant > $soldeDisponible) {
-                return back()->withErrors(['montant' => 'Le montant demandé dépasse votre solde disponible (' . number_format($soldeDisponible, 0, ',', ' ') . ' FCFA).']);
+            if ($montant > $soldeDisponible) {
+                return back()->withErrors([
+                    'montant' => 'Le montant demandé (' . number_format($montant, 0, ',', ' ') . ' FCFA) dépasse votre solde disponible (' . number_format($soldeDisponible, 0, ',', ' ') . ' FCFA).',
+                ]);
             }
 
             $payout = \App\Models\Payout::create([
                 'id_artisan' => $artisan->id,
-                'amount'     => (float) $request->montant,
+                'amount'     => $montant,
                 'currency'   => 'XOF',
                 'provider'   => $request->provider ?? 'mobile_money',
                 'status'     => 'requested',
@@ -2104,11 +2125,11 @@ Route::middleware(['auth'])->group(function () {
             // Notification in-app
             \App\Models\Notification::notifier(
                 Auth::id(),
-                "Votre demande de virement de " . number_format($payout->amount, 0, ',', ' ') . " FCFA vers " . $request->telephone . " a bien été enregistrée. Traitement sous 48h.",
-                'paiement'
+                'Votre demande de virement de ' . number_format($montant, 0, ',', ' ') . ' FCFA vers ' . $request->telephone . ' a bien été enregistrée. Traitement sous 48h.',
+                'systeme'
             );
 
-            return back()->with('success', 'Demande de virement enregistrée. Vous serez payé sur le numéro ' . $request->telephone . ' sous 48h ouvrées.');
+            return back()->with('success', 'Demande de virement de ' . number_format($montant, 0, ',', ' ') . ' FCFA enregistrée. Vous serez payé sur le numéro ' . $request->telephone . ' sous 48h ouvrées.');
         })->name('paiements.virement');
 
         Route::get('avis', function () {

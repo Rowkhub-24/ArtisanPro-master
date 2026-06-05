@@ -25,14 +25,19 @@ class Litige extends Model
         'escalade',
         'raison_decision',
         'date_decision',
+        'source_resolution',
+        'score_preuve_gps',
+        'decision_auto',
     ];
 
     protected $casts = [
-        'date_ouverture' => 'datetime',
-        'fonds_geles'    => 'boolean',
-        'escalade'       => 'boolean',
-        'date_escalade'  => 'datetime',
-        'date_decision'  => 'datetime',
+        'date_ouverture'   => 'datetime',
+        'fonds_geles'      => 'boolean',
+        'escalade'         => 'boolean',
+        'date_escalade'    => 'datetime',
+        'date_decision'    => 'datetime',
+        'score_preuve_gps' => 'float',
+        'decision_auto'    => 'array',
     ];
 
     public function client(): BelongsTo

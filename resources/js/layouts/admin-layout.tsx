@@ -153,6 +153,11 @@ export default function AdminLayout({ children, title }: Props) {
                         ✓ {flash.success}
                     </div>
                 )}
+                {flash?.error && (
+                    <div className="mx-6 mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
+                        ✗ {flash.error}
+                    </div>
+                )}
 
                 {/* Content */}
                 <main className="flex-1 overflow-y-auto p-6">

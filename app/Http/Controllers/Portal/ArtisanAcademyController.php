@@ -87,10 +87,33 @@ class ArtisanAcademyController extends Controller
             abort(403);
         }
 
+        $formation = AcademieFormation::with('parcours')->findOrFail($id);
+
         $artisan->formations()->syncWithoutDetaching([
             $id => ['date_achevement' => now()],
         ]);
 
+        // Vérifier la complétion des parcours contenant cette formation
+        $service = new \App\Services\AcademieService();
+        foreach ($formation->parcours as $parcours) {
+            $service->verifierCompletionParcours($artisan, $parcours);
+        }
+
         return back()->with('success', 'Formation marquée comme complétée !');
+    }
+
+    public function soumettreQuiz(Request $request, \App\Models\AcademieQuiz $quiz): \Illuminate\Http\JsonResponse
+    {
+        $artisan = auth()->user()->artisan;
+        if (!$artisan) return response()->json(['error' => 'Non autorisé'], 403);
+
+        $validated = $request->validate([
+            'reponse' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $service = new \App\Services\AcademieService();
+        $result  = $service->soumettreQuiz($artisan, $quiz, (int) $validated['reponse']);
+
+        return response()->json($result);
     }
 }

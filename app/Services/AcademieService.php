@@ -2,29 +2,28 @@
 
 namespace App\Services;
 
-use App\Models\Artisan;
 use App\Models\AcademieQuiz;
 use App\Models\AcademieParcours;
+use App\Models\Artisan;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Service académie : gestion des quiz et des points bonus de parcours.
+ * Service de gestion de l'académie de formation pour les artisans.
  *
- * - soumettreQuiz()              : calcul du score, enregistrement, incrémentation des tentatives
- * - verifierCompletionParcours() : attribution des points bonus à la complétion (Q18 — indépendamment des scores quiz)
+ * Gère la soumission des quiz et la vérification de la complétion
+ * des parcours avec attribution des points bonus.
  */
 class AcademieService
 {
     /**
-     * Soumettre une réponse à un quiz.
+     * Soumettre une réponse à un quiz et enregistrer le score dans le pivot artisan_formation.
      *
-     * Un quiz = une question. Le score est 100 si la réponse est correcte, 0 sinon.
-     * - Incrémente les tentatives dans le pivot artisan_formation
-     * - Met à jour score_quiz si le nouveau score est supérieur au score existant
+     * Le score est mis à jour uniquement si la nouvelle valeur est supérieure au score actuel.
+     * Le compteur de tentatives est incrémenté à chaque soumission.
      *
-     * @param  Artisan       $artisan
-     * @param  AcademieQuiz  $quiz
-     * @param  int           $reponseChoisie  Index de la réponse choisie
+     * @param  Artisan      $artisan         L'artisan qui répond au quiz.
+     * @param  AcademieQuiz $quiz            Le quiz auquel il répond.
+     * @param  int          $reponseChoisie  L'index (0-based) de la réponse choisie.
      * @return array{score: int, correct: bool, bonne_reponse: int}
      */
     public function soumettreQuiz(Artisan $artisan, AcademieQuiz $quiz, int $reponseChoisie): array
@@ -33,23 +32,25 @@ class AcademieService
         $score   = $correct ? 100 : 0;
 
         // Récupérer le pivot artisan_formation pour cette formation
-        $pivot = $artisan->formations()
+        $formation = $artisan->formations()
             ->wherePivot('id_formation', $quiz->id_formation)
             ->first();
 
-        if ($pivot) {
-            $tentativesActuelles = $pivot->pivot->tentatives ?? 0;
-            $scoreActuel         = $pivot->pivot->score_quiz;
+        if ($formation !== null) {
+            $pivot          = $formation->pivot;
+            $tentatives     = (int) ($pivot->tentatives ?? 0);
+            $scoreActuel    = $pivot->score_quiz;
 
-            $artisan->formations()->updateExistingPivot($quiz->id_formation, [
-                'tentatives' => $tentativesActuelles + 1,
-                'score_quiz' => ($scoreActuel === null || $score > $scoreActuel) ? $score : $scoreActuel,
-            ]);
-        } else {
-            Log::warning('AcademieService::soumettreQuiz — formation non trouvée dans le pivot artisan_formation', [
-                'artisan_id'   => $artisan->id,
-                'id_formation' => $quiz->id_formation,
-            ]);
+            $nouvellesValeurs = [
+                'tentatives' => $tentatives + 1,
+            ];
+
+            // Mettre à jour le score uniquement si supérieur (ou si null)
+            if ($scoreActuel === null || $score > (int) $scoreActuel) {
+                $nouvellesValeurs['score_quiz'] = $score;
+            }
+
+            $artisan->formations()->updateExistingPivot($quiz->id_formation, $nouvellesValeurs);
         }
 
         return [
@@ -60,65 +61,64 @@ class AcademieService
     }
 
     /**
-     * Vérifier si l'artisan a complété toutes les formations d'un parcours.
+     * Vérifier si un artisan a complété toutes les formations d'un parcours.
      *
-     * Si toutes les formations sont complétées ET que les points bonus n'ont pas encore
+     * Si toutes les formations sont complétées et que les points bonus n'ont pas encore
      * été attribués, met à jour le pivot artisan_parcours et incrémente points_formation
-     * de l'artisan. Les points bonus sont attribués indépendamment des scores quiz (Q18).
+     * de l'artisan.
+     *
+     * Note (Q18) : les points bonus sont attribués indépendamment des scores aux quiz.
+     * Seule la date d'achèvement de chaque formation est requise.
+     *
+     * @param  Artisan          $artisan  L'artisan dont on vérifie la progression.
+     * @param  AcademieParcours $parcours Le parcours à vérifier.
      */
     public function verifierCompletionParcours(Artisan $artisan, AcademieParcours $parcours): void
     {
-        // Charger toutes les formations du parcours
-        $formations = $parcours->formations()->get();
+        $formations = $parcours->formations;
 
         if ($formations->isEmpty()) {
             return;
         }
 
-        // Vérifier que l'artisan a complété toutes les formations (date_achevement non null)
-        $formationsIds = $formations->pluck('id');
+        // Vérifier que chaque formation du parcours possède une date d'achèvement
+        foreach ($formations as $formation) {
+            $aComplete = $artisan->formations()
+                ->wherePivot('id_formation', $formation->id)
+                ->wherePivotNotNull('date_achevement')
+                ->exists();
 
-        $formationsCompletees = $artisan->formations()
-            ->whereIn('artisan_formation.id_formation', $formationsIds)
-            ->wherePivotNotNull('date_achevement')
-            ->count();
-
-        if ($formationsCompletees < $formations->count()) {
-            // Parcours pas encore complété
-            return;
+            if (! $aComplete) {
+                return;
+            }
         }
 
-        // Vérifier que les points bonus n'ont pas déjà été attribués
-        $pivotParcours = $artisan->parcours()
+        // Toutes les formations sont complétées — vérifier si les points ont déjà été attribués
+        $dejaAttribue = $artisan->parcours()
             ->wherePivot('id_parcours', $parcours->id)
-            ->first();
-
-        $dejaAttribue = $pivotParcours && $pivotParcours->pivot->date_completion !== null;
+            ->wherePivotNotNull('date_completion')
+            ->exists();
 
         if ($dejaAttribue) {
             return;
         }
 
-        // Attribuer les points bonus et marquer la complétion
-        if ($pivotParcours) {
-            $artisan->parcours()->updateExistingPivot($parcours->id, [
+        // Enregistrer la complétion du parcours et attribuer les points bonus
+        $artisan->parcours()->syncWithoutDetaching([
+            $parcours->id => [
                 'date_completion'  => now(),
                 'points_attribues' => $parcours->points_bonus,
-            ]);
-        } else {
-            $artisan->parcours()->attach($parcours->id, [
-                'date_completion'  => now(),
-                'points_attribues' => $parcours->points_bonus,
-            ]);
-        }
+            ],
+        ]);
 
-        // Incrémenter les points_formation de l'artisan
-        $artisan->increment('points_formation', $parcours->points_bonus);
+        $artisan->points_formation = ((int) $artisan->points_formation) + $parcours->points_bonus;
+        $artisan->save();
 
-        Log::info('AcademieService::verifierCompletionParcours — points bonus attribués', [
-            'artisan_id'   => $artisan->id,
-            'parcours_id'  => $parcours->id,
-            'points_bonus' => $parcours->points_bonus,
+        Log::info('Parcours complété — points bonus attribués', [
+            'id_artisan'    => $artisan->id,
+            'id_parcours'   => $parcours->id,
+            'points_bonus'  => $parcours->points_bonus,
+            'total_points'  => $artisan->points_formation,
         ]);
     }
 }

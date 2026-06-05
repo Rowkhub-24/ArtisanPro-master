@@ -24,6 +24,16 @@ interface Props {
     position_actuelle: { latitude: number | null; longitude: number | null };
 }
 
+function formatRelativeTime(dateStr: string | undefined): string {
+    if (!dateStr) return '';
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const secs = Math.floor(diffMs / 1000);
+    if (secs < 60) return `Il y a ${secs}s`;
+    const mins = Math.floor(secs / 60);
+    if (mins < 60) return `Il y a ${mins}min`;
+    return `Il y a ${Math.floor(mins / 60)}h`;
+}
+
 export default function ArtisanGeolocalisation({ historique: historiqueInitial, position_actuelle }: Props) {
     const [tracking, setTracking] = useState(false);
     const [currentPos, setCurrentPos] = useState<{ lat: number; lng: number } | null>(
@@ -33,6 +43,7 @@ export default function ArtisanGeolocalisation({ historique: historiqueInitial, 
     );
     const [status, setStatus] = useState<string>('');
     const [historique, setHistorique] = useState<HistoriqueEntry[]>(historiqueInitial);
+    const [relativeTime, setRelativeTime] = useState<string>(() => formatRelativeTime(historiqueInitial[0]?.date_position));
     const watchIdRef = useRef<number | null>(null);
 
     const enregistrerPosition = (lat: number, lng: number) => {
@@ -118,10 +129,18 @@ export default function ArtisanGeolocalisation({ historique: historiqueInitial, 
         };
     }, []);
 
+    useEffect(() => {
+        setRelativeTime(formatRelativeTime(historique[0]?.date_position));
+        const intervalId = setInterval(() => {
+            setRelativeTime(formatRelativeTime(historique[0]?.date_position));
+        }, 1000);
+        return () => clearInterval(intervalId);
+    }, [historique]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Géolocalisation - ArtisanPro" />
-            <div className="flex flex-col gap-8 p-6 bg-[hsl(36,33%,97%)] min-h-screen">
+            <div className="flex flex-col gap-8 p-6 bg-[hsl(36,33%,97%)] min-h-screen overflow-x-hidden">
 
                 {/* Header */}
                 <div className="flex items-center justify-between flex-wrap gap-4">
@@ -231,7 +250,7 @@ export default function ArtisanGeolocalisation({ historique: historiqueInitial, 
                             <Clock className="h-4 w-4 text-amber-500" />
                             Historique des positions
                         </h2>
-                        <span className="text-sm text-gray-400">{historique.length} entrées</span>
+                        <span className="text-sm text-gray-400">{historique.length} entrées{relativeTime && <> · <span className="text-amber-500">{relativeTime}</span></>}</span>
                     </div>
                     {historique.length === 0 ? (
                         <div className="p-12 text-center">

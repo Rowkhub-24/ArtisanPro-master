@@ -6,20 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
+import { type Formation } from '@/types/academie';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Tableau de bord', href: '/artisan/dashboard' },
     { title: 'Académie', href: '/artisan/academy' },
 ];
-
-interface Formation {
-    id: number;
-    titre: string;
-    description: string | null;
-    url_contenu: string | null;
-    complete: boolean;
-    date_achevement: string | null;
-}
 
 interface Props {
     formations: Formation[];
@@ -81,11 +73,13 @@ export default function ArtisanAcademy({ formations, completees, total }: Props)
                     </div>
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {formations.map((f) => (
+                        {formations.map((f) => {
+                            const complete = f.pivot?.date_achevement != null;
+                            return (
                             <Card
                                 key={f.id}
                                 className={`rounded-2xl border shadow-sm bg-white hover:shadow-md transition-shadow ${
-                                    f.complete
+                                    complete
                                         ? 'border-emerald-200 bg-emerald-50/30'
                                         : 'border-[hsl(30,20%,88%)]'
                                 }`}
@@ -93,16 +87,16 @@ export default function ArtisanAcademy({ formations, completees, total }: Props)
                                 <CardContent className="p-5 flex flex-col h-full">
                                     <div className="flex items-start justify-between mb-3">
                                         <div className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${
-                                            f.complete
+                                            complete
                                                 ? 'bg-emerald-100 text-emerald-600'
                                                 : 'bg-amber-100 text-amber-600'
                                         }`}>
-                                            {f.complete
+                                            {complete
                                                 ? <CheckCircle className="h-5 w-5" />
                                                 : <BookOpen className="h-5 w-5" />
                                             }
                                         </div>
-                                        {f.complete && (
+                                        {complete && (
                                             <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs">
                                                 ✓ Complétée
                                             </Badge>
@@ -117,9 +111,9 @@ export default function ArtisanAcademy({ formations, completees, total }: Props)
                                         </p>
                                     )}
 
-                                    {f.complete && f.date_achevement && (
+                                    {complete && f.pivot?.date_achevement && (
                                         <p className="text-xs text-emerald-600 mb-3">
-                                            Complétée le {new Date(f.date_achevement).toLocaleDateString('fr-FR')}
+                                            Complétée le {new Date(f.pivot.date_achevement).toLocaleDateString('fr-FR')}
                                         </p>
                                     )}
 
@@ -135,7 +129,7 @@ export default function ArtisanAcademy({ formations, completees, total }: Props)
                                                 Accéder
                                             </a>
                                         )}
-                                        {!f.complete && (
+                                        {!complete && (
                                             <Button
                                                 size="sm"
                                                 onClick={() => marquerComplete(f.id)}
@@ -148,7 +142,8 @@ export default function ArtisanAcademy({ formations, completees, total }: Props)
                                     </div>
                                 </CardContent>
                             </Card>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>
