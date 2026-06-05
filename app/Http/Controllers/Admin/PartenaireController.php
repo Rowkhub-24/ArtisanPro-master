@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\PaginatesForInertia;
 use App\Http\Controllers\Controller;
 use App\Models\FournisseurPartenaire;
 use Illuminate\Http\RedirectResponse;
@@ -11,6 +12,8 @@ use Inertia\Response;
 
 class PartenaireController extends Controller
 {
+    use PaginatesForInertia;
+
     public function index(): Response
     {
         // Aucune mise en cache intentionnelle : les modifications d'état (activation/désactivation)
@@ -18,7 +21,7 @@ class PartenaireController extends Controller
         $partenaires = FournisseurPartenaire::orderBy('nom_fournisseur')->paginate(20);
 
         return Inertia::render('admin/partenaires/index', [
-            'partenaires' => $partenaires,
+            'partenaires' => $this->paginateForInertia($partenaires),
         ]);
     }
 

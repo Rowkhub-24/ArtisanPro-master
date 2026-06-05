@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\PaginatesForInertia;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendSmsJob;
 use App\Models\SmsLog;
@@ -12,6 +13,7 @@ use Inertia\Response;
 
 class SmsLogController extends Controller
 {
+    use PaginatesForInertia;
     /**
      * Liste tous les SMS avec filtres et stats globales.
      */
@@ -67,7 +69,7 @@ class SmsLogController extends Controller
             ->map(fn ($row) => $row->count);
 
         return Inertia::render('admin/sms/index', [
-            'smsLogs'    => $smsLogs,
+            'smsLogs'    => $this->paginateForInertia($smsLogs),
             'stats'      => $stats,
             'smsByDay'   => $smsByDay,
             'smsByMonth' => $smsByMonth,

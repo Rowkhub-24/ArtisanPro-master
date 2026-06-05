@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\PaginatesForInertia;
 use App\Http\Controllers\Controller;
 use App\Models\Artisan;
 use App\Models\Category;
@@ -12,6 +13,8 @@ use Inertia\Response;
 
 class ArtisanController extends Controller
 {
+    use PaginatesForInertia;
+
     public function index(Request $request): Response
     {
         $artisans = Artisan::with(['user:id,nom,prenom,email,statut,date_inscription,avatar', 'categories:id,nom'])
@@ -27,7 +30,7 @@ class ArtisanController extends Controller
         $categories = Category::orderBy('nom')->get(['id', 'nom']);
 
         return Inertia::render('admin/artisans/index', [
-            'artisans'   => $artisans,
+            'artisans'   => $this->paginateForInertia($artisans),
             'categories' => $categories,
             'filters'    => $request->only(['q', 'badge']),
         ]);

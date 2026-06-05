@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\PaginatesForInertia;
 use App\Http\Controllers\Controller;
 use App\Models\Artisan;
 use App\Models\Avis;
@@ -13,6 +14,7 @@ use Inertia\Response;
 
 class AvisController extends Controller
 {
+    use PaginatesForInertia;
     public function index(Request $request): Response
     {
         $avis = Avis::with([
@@ -37,7 +39,7 @@ class AvisController extends Controller
         ];
 
         return Inertia::render('admin/avis/index', [
-            'avis'    => $avis,
+            'avis'    => $this->paginateForInertia($avis),
             'stats'   => $stats,
             'filters' => $request->only(['q', 'statut']),
         ]);

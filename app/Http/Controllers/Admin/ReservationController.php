@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\PaginatesForInertia;
 use App\Http\Controllers\Controller;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
@@ -10,6 +11,7 @@ use Inertia\Response;
 
 class ReservationController extends Controller
 {
+    use PaginatesForInertia;
     public function index(Request $request): Response
     {
         $reservations = Reservation::with([
@@ -35,7 +37,7 @@ class ReservationController extends Controller
         ];
 
         return Inertia::render('admin/reservations/index', [
-            'reservations' => $reservations,
+            'reservations' => $this->paginateForInertia($reservations),
             'stats'        => $stats,
             'filters'      => $request->only(['q', 'statut']),
         ]);

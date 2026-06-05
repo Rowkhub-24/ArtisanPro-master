@@ -32,6 +32,16 @@ class ArtisanAnnuaireController extends Controller
 
         $artisans = $query->orderByDesc('note_moyenne')->paginate(12)->withQueryString();
 
+        // Mapper avatar_url explicitement car l'attribut calculé n'est pas résolu
+        // automatiquement quand eager loading avec sélection de colonnes (user:id,nom,...)
+        $artisans->getCollection()->transform(function (Artisan $artisan) {
+            if ($artisan->user) {
+                $artisan->user->makeVisible(['avatar_url'])
+                              ->append('avatar_url');
+            }
+            return $artisan;
+        });
+
         return Inertia::render('artisans/index', [
             'artisans'   => $artisans,
             'categories' => Category::query()->orderBy('nom')->get(['id', 'nom']),

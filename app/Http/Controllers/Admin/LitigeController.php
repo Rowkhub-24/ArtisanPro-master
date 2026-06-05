@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\PaginatesForInertia;
 use App\Http\Controllers\Controller;
 use App\Models\Litige;
 use App\Models\Notification;
@@ -13,6 +14,8 @@ use Inertia\Response;
 
 class LitigeController extends Controller
 {
+    use PaginatesForInertia;
+
     public function __construct(private LitigeService $litigeService) {}
 
     public function index(Request $request): Response
@@ -45,7 +48,7 @@ class LitigeController extends Controller
         ];
 
         return Inertia::render('admin/litiges/index', [
-            'litiges' => $litiges,
+            'litiges' => $this->paginateForInertia($litiges),
             'stats'   => $stats,
             'filters' => $request->only(['q', 'statut', 'escalade']),
         ]);

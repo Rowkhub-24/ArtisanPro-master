@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Events\ArtisanValide;
+use App\Http\Controllers\Concerns\PaginatesForInertia;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -12,6 +13,7 @@ use Inertia\Response;
 
 class UserController extends Controller
 {
+    use PaginatesForInertia;
     public function index(Request $request): Response
     {
         $query = User::query()
@@ -31,7 +33,7 @@ class UserController extends Controller
         $users = $query->paginate(20)->withQueryString();
 
         return Inertia::render('admin/users/index', [
-            'users'   => $users,
+            'users'   => $this->paginateForInertia($users),
             'filters' => $request->only(['q', 'type', 'statut']),
         ]);
     }

@@ -32,14 +32,19 @@ class KkiapayCallbackController extends Controller
 
     public function __invoke(Request $request)
     {
-        $transactionId = $request->query('transaction_id');
+        // Kkiapay envoie les paramètres en camelCase (transactionId) OU snake_case
+        // selon la version du widget — on accepte les deux formats
+        $transactionId = $request->query('transaction_id')
+            ?? $request->query('transactionId');
         $status        = $request->query('status', 'failed');
-        $reservationId = $request->query('reservation_id');
+        $reservationId = $request->query('reservation_id')
+            ?? $request->query('reservationId');
 
         Log::info('KkiaPay callback recu', [
             'transaction_id' => $transactionId,
             'status'         => $status,
             'reservation_id' => $reservationId,
+            'all_params'     => $request->query(),
         ]);
 
         if (! $transactionId) {
@@ -49,6 +54,23 @@ class KkiapayCallbackController extends Controller
         }
 
         if ($status !== 'success') {
+            // Vérifier si le paiement a déjà été confirmé via le canal JS (onSuccess)
+            // Le POST /kkiapay-confirm enregistre le paiement avant ce callback GET
+            if ($reservationId) {
+                $alreadyPaid = \App\Models\Paiement::query()
+                    ->where('id_reservation', $reservationId)
+                    ->whereIn('statut', ['reussi', 'complete'])
+                    ->exists();
+
+                if ($alreadyPaid) {
+                    Log::info('KkiaPay callback: paiement déjà confirmé via onSuccess JS', [
+                        'reservation_id' => $reservationId,
+                    ]);
+                    return redirect()->route('client.reservations.show', $reservationId)
+                        ->with('success', 'Paiement confirmé avec succès !');
+                }
+            }
+
             return redirect()->route('client.reservations')
                 ->with('error', 'Le paiement a echoue ou a ete annule. Veuillez reessayer.');
         }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\PaginatesForInertia;
 use App\Http\Controllers\Controller;
 use App\Models\Paiement;
 use Illuminate\Http\Request;
@@ -11,6 +12,7 @@ use Inertia\Response;
 
 class PaiementController extends Controller
 {
+    use PaginatesForInertia;
     public function index(Request $request): Response
     {
         $paiements = Paiement::with([
@@ -30,7 +32,7 @@ class PaiementController extends Controller
         ];
 
         return Inertia::render('admin/paiements/index', [
-            'paiements' => $paiements,
+            'paiements' => $this->paginateForInertia($paiements),
             'stats'     => $stats,
             'filters'   => $request->only(['statut']),
         ]);

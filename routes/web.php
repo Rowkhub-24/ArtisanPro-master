@@ -1222,7 +1222,7 @@ Route::middleware(['auth'])->group(function () {
 
             if ($request->hasFile('avatar')) {
                 $path = $request->file('avatar')->store('avatars', 'public');
-                $userUpdates['avatar'] = \Illuminate\Support\Facades\Storage::url($path);
+                $userUpdates['avatar'] = $path;
             }
 
             $user->update($userUpdates);
@@ -2288,7 +2288,7 @@ Route::middleware(['auth'])->group(function () {
 
             if ($request->hasFile('avatar')) {
                 $path = $request->file('avatar')->store('avatars', 'public');
-                $userUpdates['avatar'] = \Illuminate\Support\Facades\Storage::url($path);
+                $userUpdates['avatar'] = $path;
             }
 
             if (! empty($validated['smtp_password'])) {
