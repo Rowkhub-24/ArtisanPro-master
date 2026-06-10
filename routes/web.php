@@ -2249,23 +2249,21 @@ Route::middleware(['auth'])->group(function () {
             ] : null]);
         })->name('profil');
 
-        Route::patch('profil', function (\Illuminate\Http\Request $request) {
+        Route::post('profil', function (\Illuminate\Http\Request $request) {
             $validated = $request->validate([
-                'prenom'           => ['required', 'string', 'max:100'],
-                'nom'              => ['required', 'string', 'max:100'],
-                'email'            => ['required', 'email', 'max:255', 'unique:utilisateurs,email,' . Auth::id()],
+                'prenom'           => ['nullable', 'string', 'max:100'],
+                'nom'              => ['nullable', 'string', 'max:100'],
+                'email'            => ['nullable', 'email', 'max:255', 'unique:utilisateurs,email,' . Auth::id()],
                 'telephone'        => ['nullable', 'string', 'max:20'],
                 'smtp_username'    => ['nullable', 'email', 'max:255'],
                 'smtp_password'    => ['nullable', 'string', 'max:255'],
-                'metier'           => ['required', 'string', 'max:150'],
+                'metier'           => ['nullable', 'string', 'max:150'],
                 'description'      => ['nullable', 'string'],
                 'bio'              => ['nullable', 'string'],
                 'zone_intervention'=> ['nullable', 'string', 'max:255'],
                 'tarifs_horaire'   => ['nullable', 'numeric', 'min:0'],
-                'payment_provider' => ['nullable', 'in:kkiapay,fedapay'],
                 'payment_account_id' => ['nullable', 'string', 'max:255'],
                 'payment_account_key' => ['nullable', 'string', 'max:255'],
-                'payment_method' => ['nullable', 'in:card,mobile_money,virement'],
                 'avatar'          => ['nullable', 'image', 'max:2048'],
                 // Coordonnées GPS — restreintes aux 5 arrondissements de Porto-Novo
                 'latitude'        => ['nullable', 'numeric', 'between:6.47,6.52'],
@@ -2278,13 +2276,12 @@ Route::middleware(['auth'])->group(function () {
                 abort(403);
             }
 
-            $userUpdates = [
-                'prenom'        => $validated['prenom'],
-                'nom'           => $validated['nom'],
-                'email'         => $validated['email'],
-                'telephone'     => $validated['telephone'] ?? null,
-                'smtp_username' => $validated['smtp_username'] ?? null,
-            ];
+            $userUpdates = [];
+            foreach (['prenom', 'nom', 'email', 'telephone', 'smtp_username'] as $field) {
+                if ($request->has($field) && $request->input($field) !== null && $request->input($field) !== '') {
+                    $userUpdates[$field] = $validated[$field];
+                }
+            }
 
             if ($request->hasFile('avatar')) {
                 $path = $request->file('avatar')->store('avatars', 'public');
@@ -2297,19 +2294,28 @@ Route::middleware(['auth'])->group(function () {
 
             $user->update($userUpdates);
 
-            Auth::user()->artisan?->update([
-                'metier'            => $validated['metier'],
-                'description'       => $validated['description'] ?? null,
-                'bio'               => $validated['bio'] ?? null,
-                'zone_intervention' => $validated['zone_intervention'] ?? null,
-                'tarifs_horaire'    => $validated['tarifs_horaire'] ?? null,
-                'payment_provider'  => $validated['payment_provider'] ?? null,
-                'payment_account_id'=> $validated['payment_account_id'] ?? null,
-                'payment_account_key'=> $validated['payment_account_key'] ?? null,
-                'payment_method'   => $validated['payment_method'] ?? null,
-                'latitude'          => $validated['latitude'] ?? null,
-                'longitude'         => $validated['longitude'] ?? null,
-            ]);
+            // Mettre à jour tous les champs artisan présents
+            $artisanData = [];
+            // payment_provider et payment_method sont des colonnes enum — on les exclut
+            // car ces champs ont été retirés de l'interface
+            $artisanFields = [
+                'metier', 'description', 'bio', 'zone_intervention',
+                'tarifs_horaire', 'payment_account_id',
+                'payment_account_key', 'latitude', 'longitude',
+            ];
+            foreach ($artisanFields as $field) {
+                if (array_key_exists($field, $validated) && $validated[$field] !== null && $validated[$field] !== '') {
+                    $artisanData[$field] = $validated[$field];
+                }
+            }
+
+            if ($user->artisan) {
+                if (! empty($artisanData)) {
+                    $user->artisan->update($artisanData);
+                }
+            } else {
+                $user->artisan()->create($artisanData);
+            }
 
             return redirect()->route('artisan.profil')->with('success', 'Profil mis à jour.');
         })->name('profil.update');
@@ -2321,6 +2327,13 @@ Route::middleware(['auth'])->group(function () {
 
         // ── Academy ───────────────────────────────────────────────────────────
         Route::post('academy/{id}/completer', [\App\Http\Controllers\Portal\ArtisanAcademyController::class, 'completer'])->name('academy.completer');
+    });
+
+    // ── Contrats (portail client/artisan) ─────────────────────────────────────
+    Route::prefix('portal/contrats')->name('portal.contrats.')->group(function () {
+        Route::get('{contrat}',              [\App\Http\Controllers\Portal\ContratController::class, 'show'])        ->name('show');
+        Route::post('{contrat}/signer',      [\App\Http\Controllers\Portal\ContratController::class, 'signer'])     ->name('signer');
+        Route::get('{contrat}/telecharger',  [\App\Http\Controllers\Portal\ContratController::class, 'telecharger'])->name('telecharger');
     });
 });
 

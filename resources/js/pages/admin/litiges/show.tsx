@@ -89,7 +89,7 @@ export default function AdminLitigeShow({ litige }: Props) {
         <AdminLayout title={`Litige #${litige.id}`}>
             <Head title={`Litige #${litige.id} - Admin ArtisanPro`} />
 
-            <div className="space-y-6 max-w-4xl">
+            <div className="space-y-6 max-w-4xl overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center gap-4">
                     <Link href={route('admin.litiges.index')} className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-amber-600 transition-colors">
@@ -195,7 +195,7 @@ export default function AdminLitigeShow({ litige }: Props) {
                         <FileText className="h-4 w-4 text-amber-500" />
                         Description du litige
                     </h2>
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{litige.description_litige}</p>
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap break-all [overflow-wrap:anywhere]">{litige.description_litige}</p>
                 </div>
 
                 {/* Gestion des fonds */}
@@ -254,7 +254,7 @@ export default function AdminLitigeShow({ litige }: Props) {
                             <p className="text-xs font-medium text-emerald-600 uppercase tracking-wide mb-1">
                                 Décision enregistrée le {new Date(litige.date_decision).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                             </p>
-                            <p className="text-sm text-gray-700 whitespace-pre-wrap">{litige.raison_decision}</p>
+                            <p className="text-sm text-gray-700 whitespace-pre-wrap break-all [overflow-wrap:anywhere]">{litige.raison_decision}</p>
                         </div>
                     )}
 

@@ -87,7 +87,8 @@ class DatabaseSeeder extends Seeder
             'type_utilisateur'=>'admin','statut'=>'actif',
             'date_inscription'=>Carbon::now()->subYear(),
             'email_verified_at'=>now(),
-            'avatar'=>'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=200&h=200&fit=crop&crop=face',
+            // Homme africain, peau noire
+            'avatar'=>'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=200&h=200&fit=crop&crop=face',
         ]);
     }
 

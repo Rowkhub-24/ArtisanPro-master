@@ -44,17 +44,11 @@ type ArtisanProfilForm = {
     nom: string;
     email: string;
     telephone: string;
-    smtp_username: string;
-    smtp_password: string;
     metier: string;
     description: string;
     bio: string;
     zone_intervention: string;
     tarifs_horaire: string;
-    payment_provider: string;
-    payment_account_id: string;
-    payment_account_key: string;
-    payment_method: string;
     latitude: string;
     longitude: string;
     avatar: File | null;
@@ -180,22 +174,16 @@ export default function ArtisanProfil({ artisan }: Props) {
     const { auth, flash } = usePage<SharedData>().props;
     const user = auth.user;
 
-    const { data, setData, patch, processing, errors, clearErrors } = useForm<ArtisanProfilForm>({
+    const { data, setData, post, processing, errors, clearErrors } = useForm<ArtisanProfilForm>({
         prenom:             user?.prenom ?? '',
         nom:                user?.nom ?? '',
         email:              user?.email ?? '',
         telephone:          (user?.telephone ?? '') as string,
-        smtp_username:      (user?.smtp_username as string | undefined) ?? '',
-        smtp_password:      '',
         metier:             artisan?.metier ?? '',
         description:        artisan?.description ?? '',
         bio:                artisan?.bio ?? '',
         zone_intervention:  artisan?.zone_intervention ?? '',
         tarifs_horaire:     artisan?.tarifs_horaire?.toString() ?? '',
-        payment_provider:   artisan?.payment_provider ?? 'kkiapay',
-        payment_account_id: artisan?.payment_account_id ?? '',
-        payment_account_key: '',
-        payment_method:     artisan?.payment_method ?? 'card',
         latitude:           artisan?.latitude?.toString() ?? '',
         longitude:          artisan?.longitude?.toString() ?? '',
         avatar:             null,
@@ -208,16 +196,11 @@ export default function ArtisanProfil({ artisan }: Props) {
         nom: Boolean(user?.nom),
         email: Boolean(user?.email),
         telephone: Boolean(user?.telephone),
-        smtp_username: Boolean(user?.smtp_username),
         metier: Boolean(artisan?.metier),
         description: Boolean(artisan?.description),
         bio: Boolean(artisan?.bio),
         zone_intervention: Boolean(artisan?.zone_intervention),
         tarifs_horaire: Boolean(artisan?.tarifs_horaire),
-        payment_provider: Boolean(artisan?.payment_provider),
-        payment_account_id: Boolean(artisan?.payment_account_id),
-        payment_account_key: Boolean(artisan?.payment_account_key),
-        payment_method: Boolean(artisan?.payment_method),
         latitude: Boolean(artisan?.latitude),
         longitude: Boolean(artisan?.longitude),
     };
@@ -260,7 +243,7 @@ export default function ArtisanProfil({ artisan }: Props) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        patch(route('artisan.profil.update'), {
+        post(route('artisan.profil.update'), {
             forceFormData: true,
         });
     };
@@ -307,8 +290,8 @@ export default function ArtisanProfil({ artisan }: Props) {
                         <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm p-8 text-center">
                             <div className="relative inline-block mb-6">
                                 <div className="overflow-hidden rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white text-4xl font-bold mx-auto h-28 w-28 flex items-center justify-center">
-                                    {(avatarPreview || user?.avatar) ? (
-                                        <img src={avatarPreview ?? user?.avatar ?? ''} alt="Avatar" className="h-full w-full object-cover" />
+                                    {(avatarPreview || user?.avatar_url) ? (
+                                        <img src={avatarPreview ?? user?.avatar_url ?? ''} alt="Avatar" className="h-full w-full object-cover" />
                                     ) : (
                                         <>{user?.prenom?.charAt(0)}{user?.nom?.charAt(0)}</>
                                     )}
@@ -411,17 +394,6 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                 <Input id="telephone" name="telephone" value={data.telephone} onChange={handleFieldChange('telephone')} placeholder="+229 XX XX XX XX" className={inputClass} readOnly={lockedFields.telephone} />
                                                 <InputError message={errors.telephone} />
                                             </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="smtp_username" className="text-sm font-medium text-[hsl(20,14%,12%)]">Adresse SMTP Gmail</Label>
-                                                <Input id="smtp_username" name="smtp_username" type="email" value={data.smtp_username} onChange={handleFieldChange('smtp_username')} placeholder="artisan@gmail.com" className={inputClass} readOnly={lockedFields.smtp_username} />
-                                                <InputError message={errors.smtp_username} />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="smtp_password" className="text-sm font-medium text-[hsl(20,14%,12%)]">Mot de passe d'application</Label>
-                                                <Input id="smtp_password" name="smtp_password" type="password" value={data.smtp_password} onChange={handleFieldChange('smtp_password')} placeholder="Mot de passe d'application Gmail" className={inputClass} disabled={false} />
-                                                <p className="text-sm text-[hsl(20,10%,50%)]">Utilisez un mot de passe d'application Gmail. Laissez vide pour conserver le mot de passe SMTP actuel.</p>
-                                                <InputError message={errors.smtp_password} />
-                                            </div>
                                         </div>
                                     </div>
 
@@ -454,72 +426,6 @@ export default function ArtisanProfil({ artisan }: Props) {
                                                 </Label>
                                                 <Input id="tarifs_horaire" name="tarifs_horaire" type="number" value={data.tarifs_horaire} onChange={handleFieldChange('tarifs_horaire')} placeholder="Ex: 15000" className={inputClass} readOnly={lockedFields.tarifs_horaire} />
                                                 <InputError message={errors.tarifs_horaire} />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="payment_method" className="text-sm font-medium text-[hsl(20,14%,12%)]">Mode de paiement</Label>
-                                                <select
-                                                    id="payment_method"
-                                                    name="payment_method"
-                                                    aria-label="Mode de paiement"
-                                                    value={data.payment_method}
-                                                    onChange={handleFieldChange('payment_method')}
-                                                    className={selectClass}
-                                                    disabled={false}
-                                                >
-                                                    <option value="card">Carte bancaire</option>
-                                                    <option value="mobile_money">Mobile Money</option>
-                                                    <option value="virement">Virement bancaire</option>
-                                                </select>
-                                                {lockedFields.payment_method && (
-                                                    <input type="hidden" name="payment_method" value={data.payment_method} />
-                                                )}
-                                                <InputError message={errors.payment_method} />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="payment_provider" className="text-sm font-medium text-[hsl(20,14%,12%)]">Prestataire de paiement</Label>
-                                                <select
-                                                    id="payment_provider"
-                                                    name="payment_provider"
-                                                    aria-label="Prestataire de paiement"
-                                                    value={data.payment_provider}
-                                                    onChange={handleFieldChange('payment_provider')}
-                                                    className={selectClass}
-                                                    disabled={false}
-                                                >
-                                                    <option value="kkiapay">Kkiapay</option>
-                                                    <option value="fedapay">Fedapay</option>
-                                                </select>
-                                                {lockedFields.payment_provider && (
-                                                    <input type="hidden" name="payment_provider" value={data.payment_provider} />
-                                                )}
-                                                <InputError message={errors.payment_provider} />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="payment_account_id" className="text-sm font-medium text-[hsl(20,14%,12%)]">Identifiant du compte</Label>
-                                                <Input
-                                                    id="payment_account_id"
-                                                    name="payment_account_id"
-                                                    value={data.payment_account_id}
-                                                    onChange={handleFieldChange('payment_account_id')}
-                                                    placeholder="ID de compte Kkiapay/Fedapay"
-                                                    className={inputClass}
-                                                    readOnly={lockedFields.payment_account_id}
-                                                />
-                                                <InputError message={errors.payment_account_id} />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="payment_account_key" className="text-sm font-medium text-[hsl(20,14%,12%)]">Clé secrète du compte</Label>
-                                                <Input
-                                                    id="payment_account_key"
-                                                    name="payment_account_key"
-                                                    type="password"
-                                                    value={data.payment_account_key}
-                                                    onChange={handleFieldChange('payment_account_key')}
-                                                    placeholder="Laissez vide pour conserver la clé actuelle"
-                                                    className={inputClass}
-                                                    readOnly={lockedFields.payment_account_key}
-                                                />
-                                                <InputError message={errors.payment_account_key} />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="description" className="text-sm font-medium text-[hsl(20,14%,12%)]">

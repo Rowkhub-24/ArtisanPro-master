@@ -2,11 +2,20 @@
 
 namespace App\Providers;
 
+use App\Contracts\ContratServiceInterface;
+use App\Contracts\PdfGeneratorServiceInterface;
+use App\Contracts\SignatureServiceInterface;
+use App\Models\Contrat;
+use App\Policies\ContratPolicy;
 use App\Services\AutomationConfigService;
 use App\Services\AutomationEngine;
+use App\Services\ContratService;
 use App\Services\NotificationService;
+use App\Services\PdfGeneratorService;
+use App\Services\SignatureService;
 use App\Services\SmsNotificationService;
 use App\Services\WalletService;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +28,24 @@ class AppServiceProvider extends ServiceProvider
         // Bind SMS service as singleton so config is loaded once
         $this->app->singleton(SmsNotificationService::class, function ($app) {
             return new SmsNotificationService();
+        });
+
+        // Bind PdfGeneratorService
+        $this->app->bind(PdfGeneratorServiceInterface::class, function ($app) {
+            return new PdfGeneratorService();
+        });
+
+        // Bind ContratService — lazily resolved so PdfGeneratorService binding
+        // (registered in ContratServiceProvider or later) is available first.
+        $this->app->bind(ContratServiceInterface::class, function ($app) {
+            return new ContratService(
+                $app->make(PdfGeneratorServiceInterface::class),
+            );
+        });
+
+        // Bind SignatureService
+        $this->app->bind(SignatureServiceInterface::class, function ($app) {
+            return new SignatureService();
         });
 
         // Bind WalletService as singleton
@@ -41,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Register ContratPolicy
+        Gate::policy(Contrat::class, ContratPolicy::class);
     }
 }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ArtisanController;
 use App\Http\Controllers\Admin\AvisController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ContratController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LitigeController;
 use App\Http\Controllers\Admin\PaiementController;
@@ -68,4 +69,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('sms',                  [SmsLogController::class, 'index'])->name('sms.index');
     Route::get('sms/{smsLog}',         [SmsLogController::class, 'show'])->name('sms.show');
     Route::post('sms/{smsLog}/resend', [SmsLogController::class, 'resend'])->name('sms.resend');
+
+    // Contrats
+    Route::get('contrats',          [\App\Http\Controllers\Admin\ContratController::class, 'index'])->name('contrats.index');
+    Route::get('contrats/{contrat}', [\App\Http\Controllers\Admin\ContratController::class, 'show'])->name('contrats.show');
 });

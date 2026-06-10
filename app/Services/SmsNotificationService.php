@@ -140,6 +140,37 @@ class SmsNotificationService
     }
 
     /**
+     * SMS de notification de contrat finalisé envoyé au client ou à l'artisan.
+     * Les deux parties ont signé : le contrat est maintenant finalisé.
+     * Vérifie les préférences SMS de l'utilisateur avant envoi.
+     *
+     * @param  string    $telephone      Numéro de téléphone du destinataire
+     * @param  string    $numeroContrat  Numéro du contrat finalisé (ex. CP-2024-00001)
+     * @param  User|null $user           Utilisateur destinataire pour vérifier les préférences
+     */
+    public function envoyerContratFinalise(string $telephone, string $numeroContrat, ?User $user = null): void
+    {
+        // Guard : bloquer si sms_notifications_enabled !== true (Q15)
+        if ($user !== null && $user->sms_notifications_enabled !== true) {
+            Log::debug('SMS contrat finalisé bloqué : préférences SMS désactivées', [
+                'user_id'                   => $user->id,
+                'sms_notifications_enabled' => $user->sms_notifications_enabled,
+                'numero_contrat'            => $numeroContrat,
+            ]);
+            return;
+        }
+
+        if (empty($telephone)) {
+            Log::warning('SMS contrat finalisé ignoré : numéro de téléphone vide', ['numero_contrat' => $numeroContrat]);
+            return;
+        }
+
+        $message = "ArtisanPro : Votre contrat {$numeroContrat} a été signé par les deux parties. Consultez votre espace.";
+
+        $this->envoyerViaApi($telephone, $message, 'contrat_finalise');
+    }
+
+    /**
      * SMS d'alerte ouverture de litige envoyé à l'artisan.
      * Vérifie les préférences SMS de l'artisan avant envoi.
      *
@@ -303,9 +334,10 @@ class SmsNotificationService
     private function typeContexte(string $type): ?string
     {
         return match (true) {
-            str_contains($type, 'reservation') => \App\Models\Reservation::class,
-            str_contains($type, 'litige')      => \App\Models\Litige::class,
-            default                            => null,
+            str_contains($type, 'reservation')   => \App\Models\Reservation::class,
+            str_contains($type, 'litige')        => \App\Models\Litige::class,
+            str_contains($type, 'contrat')       => \App\Models\Contrat::class,
+            default                              => null,
         };
     }
 }

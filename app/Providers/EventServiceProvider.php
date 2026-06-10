@@ -9,6 +9,8 @@ use App\Events\ReservationConfirmee;
 use App\Events\ReservationCreee;
 use App\Events\ReservationTerminee;
 use App\Events\UserRegistered;
+use App\Listeners\ContratAnnulationListener;
+use App\Listeners\ContratGenerationListener;
 use App\Listeners\EnvoyerSmsAnnulation;
 use App\Listeners\EnvoyerSmsArtisanValide;
 use App\Listeners\EnvoyerSmsConfirmationReservation;
@@ -46,10 +48,12 @@ class EventServiceProvider extends ServiceProvider
 
         ReservationConfirmee::class => [
             EnvoyerSmsConfirmationReservation::class,
+            ContratGenerationListener::class,
         ],
 
         ReservationAnnulee::class => [
             EnvoyerSmsAnnulation::class,
+            ContratAnnulationListener::class,
         ],
 
         ReservationTerminee::class => [
