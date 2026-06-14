@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Events\PaiementValide;
 use App\Jobs\SendSmsJob;
 use App\Models\Artisan;
+use App\Services\SmsNotificationService;
 use App\Services\WalletService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
@@ -54,7 +55,7 @@ class EnvoyerSmsPaiement implements ShouldQueue
         // ── 2. SMS a l'artisan ────────────────────────────────────────────────
         $artisanUser = $reservation?->artisan?->user;
         if ($artisanUser) {
-            $phoneArtisan = $this->normaliserTelephone($artisanUser->telephone ?? '');
+            $phoneArtisan = SmsNotificationService::normaliserTelephone($artisanUser->telephone ?? '');
             if ($phoneArtisan && $artisanUser->sms_notifications_enabled !== false) {
                 $messageArtisan = "ArtisanPro: Paiement de {$montantFormate} FCFA recu pour la demande #{$reservation->id}. Ref: {$reference}. Solde mis a jour.";
                 SendSmsJob::dispatch($phoneArtisan, $messageArtisan, 'paiement', $paiement->id, 'paiement')
@@ -65,23 +66,12 @@ class EnvoyerSmsPaiement implements ShouldQueue
         // ── 3. SMS au client ──────────────────────────────────────────────────
         $clientUser = $reservation?->client?->user ?? $paiement->user;
         if ($clientUser) {
-            $phoneClient = $this->normaliserTelephone($clientUser->telephone ?? '');
+            $phoneClient = SmsNotificationService::normaliserTelephone($clientUser->telephone ?? '');
             if ($phoneClient && $clientUser->sms_notifications_enabled !== false) {
                 $messageClient = "ArtisanPro: Votre paiement de {$montantFormate} FCFA est confirme. Ref: {$reference}. Merci !";
                 SendSmsJob::dispatch($phoneClient, $messageClient, 'paiement', $paiement->id, 'paiement')
                     ->onQueue('sms');
             }
         }
-    }
-
-    private function normaliserTelephone(?string $phone): ?string
-    {
-        if (! $phone) return null;
-        $clean = preg_replace('/\D/', '', $phone);
-        if (str_starts_with($clean, '229') && in_array(strlen($clean), [11, 13])) return '+' . $clean;
-        if (strlen($clean) === 10) return '+229' . $clean;
-        if (strlen($clean) === 8)  return '+229' . $clean;
-        if (strlen($clean) >= 10)  return '+' . $clean;
-        return null;
     }
 }

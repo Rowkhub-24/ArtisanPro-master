@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FileText } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
@@ -41,9 +41,15 @@ interface Reservation {
 
 interface Props {
     reservation?: Reservation | null;
+    contrat?: {
+        id: number;
+        numero_contrat: string;
+        statut: 'genere' | 'en_attente_signatures' | 'partiellement_signe' | 'finalise' | 'annule';
+        peut_signer: boolean;
+    } | null;
 }
 
-export default function ArtisanReservationDetail({ reservation }: Props) {
+export default function ArtisanReservationDetail({ reservation, contrat }: Props) {
     const updateReservationStatus = (statut: 'confirmee' | 'annulee') => {
         if (!reservation) {
             return;
@@ -195,6 +201,50 @@ export default function ArtisanReservationDetail({ reservation }: Props) {
                                                 <p className="text-base text-[hsl(20,14%,12%)] whitespace-pre-wrap">{reservation.devis.description_travaux}</p>
                                             </div>
                                         </div>
+                                    </div>
+                                )}
+
+                                {/* Contrat card */}
+                                {contrat && (
+                                    <div className="rounded-2xl border border-amber-200 bg-amber-50 shadow-sm p-6">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <FileText className="h-5 w-5 text-amber-600" />
+                                            <h2 className="text-lg font-semibold text-[hsl(20,14%,12%)]">Contrat de prestation</h2>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div>
+                                                <p className="text-sm text-[hsl(20,10%,50%)]">Numéro</p>
+                                                <p className="text-base font-medium text-[hsl(20,14%,12%)] font-mono">{contrat.numero_contrat}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-[hsl(20,10%,50%)] mb-1">Statut</p>
+                                                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                                                    contrat.statut === 'finalise'
+                                                        ? 'bg-emerald-100 text-emerald-800'
+                                                        : contrat.statut === 'annule'
+                                                        ? 'bg-red-100 text-red-800'
+                                                        : contrat.statut === 'partiellement_signe'
+                                                        ? 'bg-blue-100 text-blue-800'
+                                                        : 'bg-amber-100 text-amber-800'
+                                                }`}>
+                                                    {contrat.statut === 'finalise' ? 'Signé'
+                                                        : contrat.statut === 'annule' ? 'Annulé'
+                                                        : contrat.statut === 'partiellement_signe' ? 'Partiellement signé'
+                                                        : 'En attente de signature'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <Link
+                                            href={route('portal.contrats.show', contrat.id)}
+                                            className="mt-4 flex items-center gap-2 w-full justify-center rounded-xl bg-amber-500 hover:bg-amber-400 text-white font-semibold px-4 py-2.5 text-sm transition-all"
+                                        >
+                                            <FileText className="h-4 w-4" />
+                                            {contrat.statut === 'finalise'
+                                                ? 'Voir le contrat signé'
+                                                : contrat.peut_signer
+                                                ? 'Signer le contrat'
+                                                : 'Voir le contrat'}
+                                        </Link>
                                     </div>
                                 )}
                             </div>

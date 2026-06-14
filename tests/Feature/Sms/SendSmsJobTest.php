@@ -23,6 +23,36 @@ test('stub provider logs and does not call HTTP', function () {
     )->toBeTrue();
 });
 
+// ── Phone normalisation ───────────────────────────────────────────────────────
+
+test('8-digit local number is normalised to E.164', function () {
+    config(['africastalking.provider' => 'stub']);
+    Http::fake();
+
+    $job = new SendSmsJob('90123456', 'Normalise test', 'general');
+    $job->handle();
+
+    // Stored as +22990123456 after normalisation
+    expect(\App\Models\SmsLog::where('recipient', '+22990123456')
+        ->where('status', 'sent')
+        ->exists()
+    )->toBeTrue();
+});
+
+test('invalid phone number fails immediately without HTTP call', function () {
+    config(['africastalking.provider' => 'africastalking']);
+    Http::fake();
+
+    $job = new SendSmsJob('abc', 'Bad phone', 'general');
+    $job->handle();
+
+    Http::assertNothingSent();
+    expect(\App\Models\SmsLog::where('recipient', 'abc')
+        ->where('status', 'failed')
+        ->exists()
+    )->toBeTrue();
+});
+
 // ── Africa's Talking sandbox success ─────────────────────────────────────────
 
 test('africastalking sandbox success marks log as sent', function () {
@@ -64,6 +94,39 @@ test('africastalking sandbox success marks log as sent', function () {
     });
 });
 
+// ── AT returns InvalidPhoneNumber (HTTP 200 + error status) ──────────────────
+
+test('AT InvalidPhoneNumber response marks log as failed', function () {
+    config([
+        'africastalking.provider' => 'africastalking',
+        'africastalking.username' => 'sandbox',
+        'africastalking.api_key'  => 'test_key_123',
+    ]);
+
+    Http::fake([
+        'api.sandbox.africastalking.com/*' => Http::response([
+            'SMSMessageData' => [
+                'Message'    => 'Sent to 0/1 Total Cost: 0',
+                'Recipients' => [[
+                    'statusCode' => 403,
+                    'status'     => 'InvalidPhoneNumber',
+                    'number'     => '+22900000000',
+                    'cost'       => 'XOF 0',
+                ]],
+            ],
+        ], 200),
+    ]);
+
+    $job = new SendSmsJob('+22900000000', 'Bad number test', 'general');
+    $job->handle();
+
+    expect(\App\Models\SmsLog::where('recipient', '+22900000000')
+        ->where('status', 'failed')
+        ->where('error_message', 'InvalidPhoneNumber')
+        ->exists()
+    )->toBeTrue();
+});
+
 // ── Production endpoint ───────────────────────────────────────────────────────
 
 test('production uses correct endpoint and includes sender_id', function () {
@@ -89,6 +152,30 @@ test('production uses correct endpoint and includes sender_id', function () {
         return str_contains($request->url(), 'api.africastalking.com')
             && ! str_contains($request->url(), 'sandbox')
             && $request['from'] === 'ArtisanPro';
+    });
+});
+
+test('sandbox does not send sender_id', function () {
+    config([
+        'africastalking.provider'  => 'africastalking',
+        'africastalking.username'  => 'sandbox',
+        'africastalking.api_key'   => 'test_key_123',
+        'africastalking.sender_id' => 'ArtisanPro',
+    ]);
+
+    Http::fake([
+        'api.sandbox.africastalking.com/*' => Http::response([
+            'SMSMessageData' => [
+                'Recipients' => [['statusCode' => 101, 'status' => 'Success']],
+            ],
+        ], 200),
+    ]);
+
+    $job = new SendSmsJob('+22990000001', 'Sandbox no sender_id', 'general');
+    $job->handle();
+
+    Http::assertSent(function ($request) {
+        return ! isset($request['from']);
     });
 });
 

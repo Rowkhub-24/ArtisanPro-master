@@ -1472,6 +1472,13 @@ Route::middleware(['auth'])->group(function () {
             $dbStatut = $allowed[$input];
             $reservation->update(['statut' => $dbStatut]);
 
+            // Dispatcher les événements Laravel pour déclencher les listeners (contrat, SMS, etc.)
+            if ($dbStatut === 'confirmee') {
+                \App\Events\ReservationConfirmee::dispatch($reservation->fresh());
+            } elseif ($dbStatut === 'annulee') {
+                \App\Events\ReservationAnnulee::dispatch($reservation->fresh());
+            }
+
             // Alimenter la table notifications selon le statut
             try {
                 $notifService = new \App\Services\NotificationService();

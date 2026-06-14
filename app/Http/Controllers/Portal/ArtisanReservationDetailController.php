@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Contrat;
 use App\Models\Reservation;
 use Inertia\Inertia;
 
@@ -16,7 +17,16 @@ class ArtisanReservationDetailController extends Controller
 
         $reservation->load(['client.user', 'artisan.user', 'devis']);
 
+        $contrat = Contrat::where('id_reservation', $reservation->id)->first();
+        $user    = auth()->user();
+
         return Inertia::render('artisan/reservation-detail', [
+            'contrat' => $contrat ? [
+                'id'            => $contrat->id,
+                'numero_contrat'=> $contrat->numero_contrat,
+                'statut'        => $contrat->statut,
+                'peut_signer'   => $contrat->peutSigner($user, 'artisan'),
+            ] : null,
             'reservation' => [
                 'id' => $reservation->id,
                 'statut' => $reservation->statut,

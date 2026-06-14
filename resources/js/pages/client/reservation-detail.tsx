@@ -53,8 +53,16 @@ interface Reservation {
     has_avis: boolean;
 }
 
+interface Contrat {
+    id: number;
+    numero_contrat: string;
+    statut: 'genere' | 'en_attente_signatures' | 'partiellement_signe' | 'finalise' | 'annule';
+    peut_signer: boolean;
+}
+
 interface Props {
     reservation: Reservation;
+    contrat: Contrat | null;
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -82,7 +90,7 @@ const creneauLabels: Record<string, string> = {
     soir:       'Soir (16h - 20h)',
 };
 
-export default function ClientReservationDetail({ reservation }: Props) {
+export default function ClientReservationDetail({ reservation, contrat }: Props) {
     const sc = statusConfig[reservation.statut] ?? statusConfig.en_cours;
 
     const canCancel = ['en_cours', 'en_attente', 'confirmee', 'confirme'].includes(reservation.statut);
@@ -233,6 +241,21 @@ export default function ClientReservationDetail({ reservation }: Props) {
                                 >
                                     <CreditCard className="h-4 w-4" />
                                     Payer maintenant
+                                </Link>
+                            )}
+
+                            {/* Contrat */}
+                            {contrat && (
+                                <Link
+                                    href={route('portal.contrats.show', contrat.id)}
+                                    className="flex items-center gap-2 w-full rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-800 font-medium px-4 py-2.5 text-sm transition-all"
+                                >
+                                    <FileText className="h-4 w-4 text-amber-600" />
+                                    {contrat.statut === 'finalise'
+                                        ? 'Voir le contrat signé'
+                                        : contrat.peut_signer
+                                        ? 'Signer le contrat'
+                                        : 'Voir le contrat'}
                                 </Link>
                             )}
 

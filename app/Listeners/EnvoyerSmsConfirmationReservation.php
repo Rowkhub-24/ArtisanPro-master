@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\ReservationConfirmee;
 use App\Jobs\SendSmsJob;
+use App\Services\SmsNotificationService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
 /**
@@ -19,10 +20,10 @@ class EnvoyerSmsConfirmationReservation implements ShouldQueue
         $client = $reservation->client?->user;
         if (! $client) return;
 
-        $phone = $this->normaliserTelephone($client->telephone ?? '');
-        if (! $phone) return;
-
         if ($client->sms_notifications_enabled === false) return;
+
+        $phone = SmsNotificationService::normaliserTelephone($client->telephone ?? '');
+        if (! $phone) return;
 
         $artisanNom = $reservation->artisan?->user
             ? trim($reservation->artisan->user->prenom . ' ' . $reservation->artisan->user->nom)
@@ -35,16 +36,5 @@ class EnvoyerSmsConfirmationReservation implements ShouldQueue
 
         SendSmsJob::dispatch($phone, $message, 'confirmation', $reservation->id, 'reservation')
             ->onQueue('sms');
-    }
-
-    private function normaliserTelephone(?string $phone): ?string
-    {
-        if (! $phone) return null;
-        $clean = preg_replace('/\D/', '', $phone);
-        if (str_starts_with($clean, '229') && in_array(strlen($clean), [11, 13])) return '+' . $clean;
-        if (strlen($clean) === 10) return '+229' . $clean;
-        if (strlen($clean) === 8)  return '+229' . $clean;
-        if (strlen($clean) >= 10)  return '+' . $clean;
-        return null;
     }
 }

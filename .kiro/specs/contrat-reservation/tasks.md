@@ -232,7 +232,7 @@ Ce plan décompose le module **Contrat de Réservation** en étapes incrémental
     - Tester que `ReservationAnnulee` ne modifie pas un contrat déjà `finalise`
     - _Requirements : 1.1, 5.5, 11.4_
 
-- [ ] 10. Composant React ContratViewer
+- [x] 10. Composant React ContratViewer
   - [x] 10.1 Créer `resources/js/pages/portal/contrat-viewer.tsx`
     - Définir les interfaces TypeScript : `ContratViewerProps`, `ClauseLitige`
     - Afficher les informations du contrat (numéro, parties, prestation, montant, dates, adresse)
@@ -247,7 +247,7 @@ Ce plan décompose le module **Contrat de Réservation** en étapes incrémental
     - Formulaire de signature via `router.post()` Inertia avec confirmation utilisateur
     - _Requirements : 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
 
-  - [ ] 10.2 Écrire les tests du composant ContratViewer dans `tests/Feature/Contrat/ContratViewerTest.php`
+  - [x] 10.2 Écrire les tests du composant ContratViewer dans `tests/Feature/Contrat/ContratViewerTest.php`
     - Tester le rendu Inertia de la page pour chaque statut de contrat (via `get()` HTTP)
     - Tester que `peut_signer` est calculé correctement par le contrôleur pour chaque combinaison (client signé, artisan signé, aucun signé, les deux signés)
     - _Requirements : 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_

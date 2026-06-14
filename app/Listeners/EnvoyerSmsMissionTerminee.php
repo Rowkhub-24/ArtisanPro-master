@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Events\ReservationTerminee;
 use App\Jobs\SendSmsJob;
 use App\Models\Artisan;
+use App\Services\SmsNotificationService;
 use App\Services\WalletService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
@@ -43,7 +44,7 @@ class EnvoyerSmsMissionTerminee implements ShouldQueue
         // ── 2. SMS au client ──────────────────────────────────────────────────
         $clientUser = $reservation->client?->user;
         if ($clientUser) {
-            $phone = $this->normaliserTelephone($clientUser->telephone ?? '');
+            $phone = SmsNotificationService::normaliserTelephone($clientUser->telephone ?? '');
             if ($phone && $clientUser->sms_notifications_enabled !== false) {
                 $artisanNom = $reservation->artisan?->user
                     ? trim($reservation->artisan->user->prenom . ' ' . $reservation->artisan->user->nom)
@@ -57,7 +58,7 @@ class EnvoyerSmsMissionTerminee implements ShouldQueue
         // ── 3. SMS a l'artisan ────────────────────────────────────────────────
         $artisanUser = $reservation->artisan?->user;
         if ($artisanUser) {
-            $phone = $this->normaliserTelephone($artisanUser->telephone ?? '');
+            $phone = SmsNotificationService::normaliserTelephone($artisanUser->telephone ?? '');
             if ($phone && $artisanUser->sms_notifications_enabled !== false) {
                 $montantFormate = number_format((float) $reservation->acompte_verse, 0, '.', ' ');
                 $msg = "ArtisanPro: Mission #{$reservation->id} validee ! Vos fonds de {$montantFormate} FCFA sont disponibles dans votre portefeuille.";
@@ -65,16 +66,5 @@ class EnvoyerSmsMissionTerminee implements ShouldQueue
                     ->onQueue('sms');
             }
         }
-    }
-
-    private function normaliserTelephone(?string $phone): ?string
-    {
-        if (! $phone) return null;
-        $clean = preg_replace('/\D/', '', $phone);
-        if (str_starts_with($clean, '229') && in_array(strlen($clean), [11, 13])) return '+' . $clean;
-        if (strlen($clean) === 10) return '+229' . $clean;
-        if (strlen($clean) === 8)  return '+229' . $clean;
-        if (strlen($clean) >= 10)  return '+' . $clean;
-        return null;
     }
 }

@@ -110,6 +110,20 @@ test('rendu Inertia portal/contrat-viewer pour statut finalise', function () {
         );
 });
 
+test('rendu Inertia portal/contrat-viewer pour statut en_attente_signatures', function () {
+    ['contrat' => $contrat, 'clientUser' => $clientUser] = makeViewerContrat([
+        'statut' => Contrat::STATUT_EN_ATTENTE_SIGNATURES,
+    ]);
+
+    $this->actingAs($clientUser)
+        ->get("/portal/contrats/{$contrat->id}")
+        ->assertStatus(200)
+        ->assertInertia(fn ($page) => $page
+            ->component('portal/contrat-viewer')
+            ->where('contrat.statut', Contrat::STATUT_EN_ATTENTE_SIGNATURES)
+        );
+});
+
 test('rendu Inertia portal/contrat-viewer pour statut annule', function () {
     ['contrat' => $contrat, 'clientUser' => $clientUser] = makeViewerContrat([
         'statut' => Contrat::STATUT_ANNULE,
