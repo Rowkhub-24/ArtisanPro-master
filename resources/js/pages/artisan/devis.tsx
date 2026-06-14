@@ -1,9 +1,12 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import { FileText, Clock, CheckCircle, XCircle, ArrowLeft, Search, Eye } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
+import { FileText, Clock, CheckCircle, XCircle, ArrowLeft, Search } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type SharedData } from '@/types';
+import DevisReponsePanel from '@/components/DevisReponsePanel';
+import { type LigneMateriel } from '@/components/MaterielsEditor';
+import { type BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Tableau de bord', href: '/dashboard' },
@@ -15,6 +18,10 @@ interface DevisItem {
     description_travaux: string;
     statut: 'en_attente' | 'accepte' | 'refuse' | 'contre_offre';
     created_at: string;
+    montant_propose?: number | null;
+    notes_artisan?: string | null;
+    sous_total_materiels?: number | null;
+    materiels?: LigneMateriel[];
     client?: {
         user: {
             prenom: string;
@@ -29,11 +36,35 @@ interface Props {
     devis?: DevisItem[];
 }
 
-export default function ArtisanDevis({ devis = [] }: Props) {
-    const { auth } = usePage<SharedData>().props;
+export default function ArtisanDevis({ devis: initialDevis = [] }: Props) {
+    const [devisList, setDevisList] = useState<DevisItem[]>(initialDevis);
+    const [panelDevis, setPanelDevis] = useState<DevisItem | null>(null);
+    const [refusingId, setRefusingId] = useState<number | null>(null);
 
-    const updateStatut = (devisId: number, statut: 'accepte' | 'refuse') => {
-        router.patch(route('artisan.devis.statut', devisId), { statut }, { preserveScroll: true });
+    const handleRefuser = (devisItem: DevisItem) => {
+        if (!confirm('Êtes-vous sûr de vouloir refuser ce devis ?')) return;
+        setRefusingId(devisItem.id);
+        router.patch(
+            route('artisan.devis.statut', devisItem.id),
+            { statut: 'refuse' },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setDevisList(prev => prev.map(d =>
+                        d.id === devisItem.id ? { ...d, statut: 'refuse' } : d
+                    ));
+                },
+                onFinish: () => setRefusingId(null),
+            }
+        );
+    };
+
+    const handleReponseSuccess = (updated: Partial<DevisItem>) => {
+        if (!panelDevis) return;
+        setDevisList(prev => prev.map(d =>
+            d.id === panelDevis.id ? { ...d, ...updated } : d
+        ));
+        setPanelDevis(null);
     };
 
     const getStatusBadge = (statut: string) => {
@@ -95,10 +126,10 @@ export default function ArtisanDevis({ devis = [] }: Props) {
                 {/* Stats */}
                 <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-4">
                     {[
-                        { label: 'Total',      value: devis.length,                                              color: 'text-[hsl(20,14%,12%)]', icon: FileText,   iconColor: 'text-amber-600',   bg: 'bg-amber-100' },
-                        { label: 'En attente', value: devis.filter(d => d.statut === 'en_attente').length,       color: 'text-amber-600',          icon: Clock,      iconColor: 'text-amber-600',   bg: 'bg-amber-100' },
-                        { label: 'Acceptés',   value: devis.filter(d => d.statut === 'accepte').length,          color: 'text-emerald-600',        icon: CheckCircle, iconColor: 'text-emerald-600', bg: 'bg-emerald-100' },
-                        { label: 'En cours',   value: devis.filter(d => d.statut === 'en_cours' as any).length,  color: 'text-blue-600',           icon: Clock,      iconColor: 'text-blue-600',    bg: 'bg-blue-100' },
+                        { label: 'Total',      value: devisList.length,                                                    color: 'text-[hsl(20,14%,12%)]', icon: FileText,    iconColor: 'text-amber-600',   bg: 'bg-amber-100' },
+                        { label: 'En attente', value: devisList.filter(d => d.statut === 'en_attente').length,              color: 'text-amber-600',          icon: Clock,       iconColor: 'text-amber-600',   bg: 'bg-amber-100' },
+                        { label: 'Acceptés',   value: devisList.filter(d => d.statut === 'accepte').length,                 color: 'text-emerald-600',        icon: CheckCircle, iconColor: 'text-emerald-600', bg: 'bg-emerald-100' },
+                        { label: 'En cours',   value: devisList.filter(d => d.statut === ('en_cours' as any)).length,       color: 'text-blue-600',           icon: Clock,       iconColor: 'text-blue-600',    bg: 'bg-blue-100' },
                     ].map((s) => (
                         <div key={s.label} className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm p-6">
                             <div className="flex items-center justify-between">
@@ -116,14 +147,14 @@ export default function ArtisanDevis({ devis = [] }: Props) {
 
                 {/* Devis List */}
                 <div className="space-y-4">
-                    {devis.length === 0 ? (
+                    {devisList.length === 0 ? (
                         <div className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm p-12 text-center">
                             <FileText className="h-12 w-12 text-[hsl(20,10%,50%)] mx-auto mb-4" />
                             <h3 className="text-lg font-semibold text-[hsl(20,14%,12%)] mb-2">Aucune demande de devis</h3>
                             <p className="text-[hsl(20,10%,50%)]">Vous n'avez pas encore reçu de demandes de devis de clients.</p>
                         </div>
                     ) : (
-                        devis.map((devisItem) => (
+                        devisList.map((devisItem) => (
                             <div key={devisItem.id} className="rounded-2xl border border-[hsl(30,20%,88%)] bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                                 {/* Amber top strip */}
                                 <div className="h-1 bg-gradient-to-r from-amber-400 to-orange-500" />
@@ -148,30 +179,46 @@ export default function ArtisanDevis({ devis = [] }: Props) {
                                                 {devisItem.client?.user.email}
                                                 {devisItem.client?.user.telephone && ` · ${devisItem.client.user.telephone}`}
                                             </p>
+
+                                            {/* Sous-total matériels si présent */}
+                                            {devisItem.statut !== 'en_attente' && devisItem.sous_total_materiels != null && Number(devisItem.sous_total_materiels) > 0 && (
+                                                <div className="mt-2 inline-flex items-center rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-medium text-amber-800">
+                                                    Matériels : {Number(devisItem.sous_total_materiels).toLocaleString('fr-FR')} FCFA
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex gap-2 flex-wrap">
+                                            {/* Étape 1 : en_attente → Répondre au devis ou Refuser */}
                                             {devisItem.statut === 'en_attente' && (
                                                 <>
                                                     <button
-                                                        onClick={() => updateStatut(devisItem.id, 'accepte')}
-                                                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 text-sm transition-colors"
-                                                    >
-                                                        <CheckCircle className="h-4 w-4" />
-                                                        Accepter
-                                                    </button>
-                                                    <button
-                                                        onClick={() => updateStatut(devisItem.id, 'refuse')}
-                                                        className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 text-sm font-medium transition-colors"
+                                                        onClick={() => handleRefuser(devisItem)}
+                                                        disabled={refusingId === devisItem.id}
+                                                        className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-600 font-semibold px-3 py-1.5 text-sm transition-all disabled:opacity-50"
                                                     >
                                                         <XCircle className="h-4 w-4" />
-                                                        Refuser
+                                                        {refusingId === devisItem.id ? 'Refus…' : 'Refuser'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setPanelDevis(devisItem)}
+                                                        disabled={refusingId === devisItem.id}
+                                                        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold px-3 py-1.5 text-sm transition-all disabled:opacity-50"
+                                                    >
+                                                        <FileText className="h-4 w-4" />
+                                                        Répondre au devis
                                                     </button>
                                                 </>
                                             )}
-                                            <button className="inline-flex items-center gap-1.5 rounded-xl border border-[hsl(30,20%,82%)] bg-white text-[hsl(20,14%,12%)] hover:border-amber-400 px-3 py-1.5 text-sm font-medium transition-colors">
-                                                <Eye className="h-4 w-4" />
-                                                Voir détails
-                                            </button>
+                                            {/* Étape 2 : accepte → Remplir le devis (montant + matériels) */}
+                                            {devisItem.statut === 'accepte' && (
+                                                <button
+                                                    onClick={() => setPanelDevis(devisItem)}
+                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold px-3 py-1.5 text-sm transition-all"
+                                                >
+                                                    <FileText className="h-4 w-4" />
+                                                    Remplir le devis
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="mt-4 bg-[hsl(36,33%,97%)] rounded-xl p-4">
@@ -179,6 +226,12 @@ export default function ArtisanDevis({ devis = [] }: Props) {
                                             <span className="font-medium">Description :</span>{' '}
                                             {devisItem.description_travaux}
                                         </p>
+                                        {devisItem.notes_artisan && (
+                                            <p className="mt-2 text-sm text-[hsl(20,14%,12%)]">
+                                                <span className="font-medium">Notes artisan :</span>{' '}
+                                                {devisItem.notes_artisan}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -186,6 +239,15 @@ export default function ArtisanDevis({ devis = [] }: Props) {
                     )}
                 </div>
             </div>
+
+            {/* Panneau de réponse (modal) */}
+            {panelDevis && (
+                <DevisReponsePanel
+                    devis={panelDevis}
+                    onClose={() => setPanelDevis(null)}
+                    onSuccess={handleReponseSuccess}
+                />
+            )}
         </AppLayout>
     );
 }

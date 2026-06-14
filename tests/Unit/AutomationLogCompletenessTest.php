@@ -32,7 +32,7 @@ uses(RefreshDatabase::class);
  * Build an AutomationEngine with mocked notification services so no real
  * SMS/push calls are attempted during tests.
  */
-function makeEngine(): AutomationEngine
+function makeEngineForLogTest(): AutomationEngine
 {
     $config = new AutomationConfigService();
     $sms    = Mockery::mock(SmsNotificationService::class)->shouldIgnoreMissing();
@@ -72,7 +72,7 @@ function assertLogIsComplete(AutomationLog $log): void
  * entry must have all required fields non-null.
  */
 test('property 2 – evaluerAcceptationAuto always writes a complete automation_log', function () {
-    $engine = makeEngine();
+    $engine = makeEngineForLogTest();
 
     // Run N iterations with different random artisan scores
     $iterations = fake()->numberBetween(3, 8);
@@ -111,7 +111,7 @@ test('property 2 – evaluerAcceptationAuto always writes a complete automation_
  * entry must have all required fields non-null.
  */
 test('property 2 – genererDevisAuto always writes a complete automation_log', function () {
-    $engine = makeEngine();
+    $engine = makeEngineForLogTest();
 
     $iterations = fake()->numberBetween(3, 8);
 
@@ -142,7 +142,7 @@ test('property 2 – genererDevisAuto always writes a complete automation_log', 
  * entry must have all required fields non-null.
  */
 test('property 2 – evaluerValidationDevisAuto always writes a complete automation_log', function () {
-    $engine = makeEngine();
+    $engine = makeEngineForLogTest();
 
     $iterations = fake()->numberBetween(3, 8);
 
@@ -182,7 +182,7 @@ test('property 2 – evaluerValidationDevisAuto always writes a complete automat
  * entry must have all required fields non-null.
  */
 test('property 2 – detecterFinMission always writes a complete automation_log', function () {
-    $engine = makeEngine();
+    $engine = makeEngineForLogTest();
 
     $iterations = fake()->numberBetween(3, 8);
 
@@ -216,7 +216,7 @@ test('property 2 – detecterFinMission always writes a complete automation_log'
  * entry must have all required fields non-null.
  */
 test('property 2 – resoudreLitigeAuto always writes a complete automation_log', function () {
-    $engine = makeEngine();
+    $engine = makeEngineForLogTest();
 
     $iterations = fake()->numberBetween(3, 8);
 
@@ -271,7 +271,7 @@ test('property 2 – resoudreLitigeAuto always writes a complete automation_log'
  * `automation_logs` entry must also have all required fields non-null.
  */
 test('property 2 – rate_limit_exceeded action writes a complete automation_log', function () {
-    $engine = makeEngine();
+    $engine = makeEngineForLogTest();
 
     $artisan     = Artisan::factory()->create([
         'score_confiance' => fake()->numberBetween(70, 100),
@@ -305,7 +305,7 @@ test('property 2 – rate_limit_exceeded action writes a complete automation_log
  * auto_accept, auto_devis, auto_validate, auto_mission, auto_litige.
  */
 test('property 2 – every automation_log row created during N random decisions has all required fields non-null', function () {
-    $engine = makeEngine();
+    $engine = makeEngineForLogTest();
 
     $n = fake()->numberBetween(2, 5);
 

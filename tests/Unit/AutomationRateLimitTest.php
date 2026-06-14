@@ -28,7 +28,7 @@ uses(RefreshDatabase::class);
 /**
  * Create a fresh AutomationEngine instance with real services.
  */
-function makeEngine(): AutomationEngine
+function makeEngineForRateLimitTest(): AutomationEngine
 {
     return new AutomationEngine(
         app(AutomationConfigService::class),
@@ -63,7 +63,7 @@ beforeEach(function () {
  * must produce an `automation_logs` row with `type_action = 'rate_limit_exceeded'`.
  */
 test('property 6 – 4th evaluation within the hour window is rejected as rate_limit_exceeded', function () {
-    $engine  = makeEngine();
+    $engine  = makeEngineForRateLimitTest();
     // Use a score well above the acceptance threshold to ensure the first 3 calls
     // are not rejected on score grounds — the focus is on rate limiting alone.
     $artisan = Artisan::factory()->create(['score_confiance' => 85]);
@@ -124,7 +124,7 @@ test('property 6 – 4th evaluation within the hour window is rejected as rate_l
  * without a rate_limit_exceeded entry.
  */
 test('property 6 – rate limit is per-artisan and does not affect other artisans', function () {
-    $engine   = makeEngine();
+    $engine  = makeEngineForRateLimitTest();
     $artisanA = Artisan::factory()->create(['score_confiance' => 80]);
     $artisanB = Artisan::factory()->create(['score_confiance' => 80]);
 
@@ -166,7 +166,7 @@ test('property 6 – rate limit is per-artisan and does not affect other artisan
  * must also be rejected — not just the 4th one.
  */
 test('property 6 – every call after the 3rd is rejected as rate_limit_exceeded', function () {
-    $engine  = makeEngine();
+    $engine  = makeEngineForRateLimitTest();
     // Use score 0 to avoid any ambiguity: the first 3 calls may themselves be
     // rejected on score grounds, but must NOT be tagged rate_limit_exceeded.
     $artisan = Artisan::factory()->create(['score_confiance' => 75]);
@@ -205,7 +205,7 @@ test('property 6 – every call after the 3rd is rejected as rate_limit_exceeded
  * the same artisan can make 3 fresh calls without hitting the rate limit.
  */
 test('property 6 – rate limit resets after the window expires (cache flush simulation)', function () {
-    $engine  = makeEngine();
+    $engine  = makeEngineForRateLimitTest();
     $artisan = Artisan::factory()->create(['score_confiance' => 80]);
 
     // Exhaust the quota in window 1
@@ -250,7 +250,7 @@ test('property 6 – rate limit resets after the window expires (cache flush sim
  * completeness invariant: all required fields must be non-null.
  */
 test('property 6 – rate_limit_exceeded log contains all required non-null fields', function () {
-    $engine  = makeEngine();
+    $engine  = makeEngineForRateLimitTest();
     $artisan = Artisan::factory()->create(['score_confiance' => 90]);
 
     // Exhaust the quota

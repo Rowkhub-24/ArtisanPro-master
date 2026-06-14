@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Events\ArtisanValide;
+use App\Events\DevisRepondu;
 use App\Events\PaiementValide;
 use App\Events\ReservationAnnulee;
 use App\Events\ReservationConfirmee;
@@ -14,6 +15,7 @@ use App\Listeners\ContratGenerationListener;
 use App\Listeners\EnvoyerSmsAnnulation;
 use App\Listeners\EnvoyerSmsArtisanValide;
 use App\Listeners\EnvoyerSmsConfirmationReservation;
+use App\Listeners\EnvoyerSmsDevisRepondu;
 use App\Listeners\EnvoyerSmsInscription;
 use App\Listeners\EnvoyerSmsMissionTerminee;
 use App\Listeners\EnvoyerSmsNouvelleReservation;
@@ -66,6 +68,10 @@ class EventServiceProvider extends ServiceProvider
 
         ArtisanValide::class => [
             EnvoyerSmsArtisanValide::class,
+        ],
+
+        DevisRepondu::class => [
+            EnvoyerSmsDevisRepondu::class,
         ],
     ];
 

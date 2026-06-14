@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Portal\ArtisanAnnuaireController;
+use App\Http\Controllers\Portal\ArtisanDevisRepondreController;
 use App\Http\Controllers\Portal\ArtisanFicheController;
+use App\Http\Controllers\Portal\ClientDevisDetailController;
 use App\Http\Controllers\Portal\DevisStoreController;
 use App\Http\Controllers\Portal\HomeController;
 use App\Models\Artisan;
@@ -221,7 +223,7 @@ Route::middleware(['auth'])->group(function () {
             }
 
             $devis = $client->devis()
-                ->with('artisan.user')
+                ->with(['artisan.user', 'materiels'])
                 ->orderByDesc('date_demande')
                 ->get()
                 ->map(fn ($devisModel) => [
@@ -230,6 +232,17 @@ Route::middleware(['auth'])->group(function () {
                     'statut' => $devisModel->statut,
                     'date_demande' => optional($devisModel->date_demande)->toDateTimeString(),
                     'montant_propose' => $devisModel->montant_propose,
+                    'notes_artisan' => $devisModel->notes_artisan,
+                    'sous_total_materiels' => $devisModel->sous_total_materiels,
+                    'materiels' => $devisModel->materiels->map(fn ($m) => [
+                        'id'            => $m->id,
+                        'nom'           => $m->nom,
+                        'quantite'      => (float) $m->quantite,
+                        'unite'         => $m->unite,
+                        'prix_unitaire' => (float) $m->prix_unitaire,
+                        'ordre'         => $m->ordre,
+                        'sous_total'    => $m->sous_total,
+                    ])->values()->toArray(),
                     'artisan' => $devisModel->artisan ? [
                         'id' => $devisModel->artisan->id,
                         'metier' => $devisModel->artisan->metier,
@@ -244,6 +257,8 @@ Route::middleware(['auth'])->group(function () {
 
             return Inertia::render('client/devis', ['devis' => $devis]);
         })->name('devis');
+
+        Route::get('devis/{devis}', ClientDevisDetailController::class)->name('devis.show');
 
         Route::get('messages/{withUser?}', function (\Illuminate\Http\Request $request, ?\App\Models\User $withUser = null) {
             $authUser = $request->user();
@@ -1550,7 +1565,7 @@ Route::middleware(['auth'])->group(function () {
             }
 
             $devis = $artisan->devis()
-                ->with('client.user')
+                ->with(['client.user', 'materiels'])
                 ->orderByDesc('date_demande')
                 ->get()
                 ->map(fn ($devisModel) => [
@@ -1558,6 +1573,18 @@ Route::middleware(['auth'])->group(function () {
                     'description_travaux' => $devisModel->description_travaux,
                     'statut' => $devisModel->statut,
                     'created_at' => optional($devisModel->date_demande)->toDateTimeString(),
+                    'montant_propose' => $devisModel->montant_propose,
+                    'notes_artisan' => $devisModel->notes_artisan,
+                    'sous_total_materiels' => $devisModel->sous_total_materiels,
+                    'materiels' => $devisModel->materiels->map(fn ($m) => [
+                        'id'            => $m->id,
+                        'nom'           => $m->nom,
+                        'quantite'      => (float) $m->quantite,
+                        'unite'         => $m->unite,
+                        'prix_unitaire' => (float) $m->prix_unitaire,
+                        'ordre'         => $m->ordre,
+                        'sous_total'    => $m->sous_total,
+                    ])->values()->toArray(),
                     'client' => [
                         'user' => [
                             'prenom' => $devisModel->client?->user?->prenom,
@@ -1571,6 +1598,8 @@ Route::middleware(['auth'])->group(function () {
 
             return Inertia::render('artisan/devis', ['devis' => $devis]);
         })->name('devis');
+
+        Route::patch('devis/{devis}/repondre', [ArtisanDevisRepondreController::class, 'repondre'])->name('devis.repondre');
 
         Route::patch('devis/{devis}/statut', function (
             \Illuminate\Http\Request $request,

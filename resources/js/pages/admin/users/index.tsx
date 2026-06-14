@@ -17,6 +17,7 @@ interface User {
     type_utilisateur: string;
     statut: string;
     date_inscription: string;
+    avatar_url: string | null;
 }
 
 interface Paginated<T> {
@@ -120,9 +121,17 @@ export default function AdminUsersIndex({ users, filters }: Props) {
                                         <tr key={u.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white text-xs font-bold shrink-0">
-                                                        {u.prenom.charAt(0)}{u.nom.charAt(0)}
-                                                    </div>
+                                                    {u.avatar_url ? (
+                                                        <img
+                                                            src={u.avatar_url}
+                                                            alt={`${u.prenom} ${u.nom}`}
+                                                            className="h-9 w-9 rounded-full object-cover shrink-0"
+                                                        />
+                                                    ) : (
+                                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white text-xs font-bold shrink-0">
+                                                            {u.prenom.charAt(0)}{u.nom.charAt(0)}
+                                                        </div>
+                                                    )}
                                                     <div>
                                                         <p className="font-medium text-gray-900">{u.prenom} {u.nom}</p>
                                                         <p className="text-xs text-gray-400">{u.email}</p>

@@ -17,17 +17,17 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface Paiement {
     id: number;
-    montant: number;
+    montant: number | null;
     statut: string;
-    methode_paiement: string;
+    methode_paiement: string | null;
     date_paiement: string | null;
-    reference_transaction: string;
+    reference_transaction: string | null;
 }
 
 interface Artisan {
     id: number;
     metier: string;
-    note_moyenne: number;
+    note_moyenne: number | string | null;
     zone_intervention: string | null;
     categories: string[];
     user: {
@@ -65,16 +65,18 @@ interface Props {
     contrat: Contrat | null;
 }
 
-const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-    en_cours:  { label: 'En cours',  color: 'bg-blue-100 text-blue-800 border border-blue-200',       icon: <Clock className="h-4 w-4 text-blue-600" /> },
-    en_attente:{ label: 'En attente',color: 'bg-amber-100 text-amber-800 border border-amber-200',    icon: <Clock className="h-4 w-4 text-amber-600" /> },
-    confirmee: { label: 'Confirmée', color: 'bg-emerald-100 text-emerald-800 border border-emerald-200', icon: <CheckCircle className="h-4 w-4 text-emerald-600" /> },
-    confirme:  { label: 'Confirmée', color: 'bg-emerald-100 text-emerald-800 border border-emerald-200', icon: <CheckCircle className="h-4 w-4 text-emerald-600" /> },
-    terminee:  { label: 'Terminée',  color: 'bg-gray-100 text-gray-700 border border-gray-200',       icon: <CheckCircle className="h-4 w-4 text-gray-500" /> },
-    termine:   { label: 'Terminée',  color: 'bg-gray-100 text-gray-700 border border-gray-200',       icon: <CheckCircle className="h-4 w-4 text-gray-500" /> },
-    annulee:   { label: 'Annulée',   color: 'bg-red-100 text-red-800 border border-red-200',          icon: <XCircle className="h-4 w-4 text-red-600" /> },
-    annule:    { label: 'Annulée',   color: 'bg-red-100 text-red-800 border border-red-200',          icon: <XCircle className="h-4 w-4 text-red-600" /> },
-    litige:    { label: 'Litige',    color: 'bg-orange-100 text-orange-800 border border-orange-200', icon: <AlertTriangle className="h-4 w-4 text-orange-600" /> },
+type StatusInfo = { label: string; color: string; iconName: 'clock' | 'check' | 'x' | 'alert' };
+
+const statusConfig: Record<string, StatusInfo> = {
+    en_cours:   { label: 'En cours',   color: 'bg-blue-100 text-blue-800 border border-blue-200',         iconName: 'clock' },
+    en_attente: { label: 'En attente', color: 'bg-amber-100 text-amber-800 border border-amber-200',      iconName: 'clock' },
+    confirmee:  { label: 'Confirmée',  color: 'bg-emerald-100 text-emerald-800 border border-emerald-200', iconName: 'check' },
+    confirme:   { label: 'Confirmée',  color: 'bg-emerald-100 text-emerald-800 border border-emerald-200', iconName: 'check' },
+    terminee:   { label: 'Terminée',   color: 'bg-gray-100 text-gray-700 border border-gray-200',          iconName: 'check' },
+    termine:    { label: 'Terminée',   color: 'bg-gray-100 text-gray-700 border border-gray-200',          iconName: 'check' },
+    annulee:    { label: 'Annulée',    color: 'bg-red-100 text-red-800 border border-red-200',             iconName: 'x' },
+    annule:     { label: 'Annulée',    color: 'bg-red-100 text-red-800 border border-red-200',             iconName: 'x' },
+    litige:     { label: 'Litige',     color: 'bg-orange-100 text-orange-800 border border-orange-200',    iconName: 'alert' },
 };
 
 const paiementStatusConfig: Record<string, { label: string; color: string }> = {
@@ -90,16 +92,32 @@ const creneauLabels: Record<string, string> = {
     soir:       'Soir (16h - 20h)',
 };
 
+function StatusIcon({ name, extraClass }: { name: StatusInfo['iconName']; extraClass?: string }) {
+    if (name === 'clock')  return <Clock className={`h-4 w-4 ${extraClass ?? ''}`} />;
+    if (name === 'check')  return <CheckCircle className={`h-4 w-4 ${extraClass ?? ''}`} />;
+    if (name === 'x')      return <XCircle className={`h-4 w-4 ${extraClass ?? ''}`} />;
+    return <AlertTriangle className={`h-4 w-4 ${extraClass ?? ''}`} />;
+}
+
+function iconColor(info: StatusInfo): string {
+    if (info.iconName === 'clock')  return info.color.includes('blue') ? 'text-blue-600' : 'text-amber-600';
+    if (info.iconName === 'check')  return info.color.includes('emerald') ? 'text-emerald-600' : 'text-gray-500';
+    if (info.iconName === 'x')      return 'text-red-600';
+    return 'text-orange-600';
+}
+
 export default function ClientReservationDetail({ reservation, contrat }: Props) {
-    const sc = statusConfig[reservation.statut] ?? statusConfig.en_cours;
+    const sc = statusConfig[reservation.statut] ?? statusConfig['en_attente'];
 
     const canCancel = ['en_cours', 'en_attente', 'confirmee', 'confirme'].includes(reservation.statut);
     const canPay    = ['confirmee', 'confirme'].includes(reservation.statut) && (reservation.paiements ?? []).length === 0;
     const canReview = ['confirmee', 'terminee', 'termine'].includes(reservation.statut) && !reservation.has_avis;
     const canLitige = ['confirmee', 'terminee', 'termine'].includes(reservation.statut);
 
+    const noteNum = Number(reservation.artisan?.note_moyenne ?? 0);
+
     const annuler = () => {
-        if (confirm('Confirmer l\'annulation de cette réservation ?')) {
+        if (confirm("Confirmer l'annulation de cette réservation ?")) {
             router.delete(route('client.reservations.cancel', { reservation: reservation.id }));
         }
     };
@@ -132,7 +150,7 @@ export default function ClientReservationDetail({ reservation, contrat }: Props)
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                         <Badge className={`${sc.color} flex items-center gap-1.5 px-3 py-1.5 text-sm`}>
-                            {sc.icon}
+                            <StatusIcon name={sc.iconName} extraClass={iconColor(sc)} />
                             {sc.label}
                         </Badge>
                     </div>
@@ -152,8 +170,8 @@ export default function ClientReservationDetail({ reservation, contrat }: Props)
                                 </h2>
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white font-bold text-sm shrink-0">
-                                        {reservation.artisan.user?.prenom?.charAt(0)}
-                                        {reservation.artisan.user?.nom?.charAt(0)}
+                                        {reservation.artisan.user?.prenom?.charAt(0) ?? '?'}
+                                        {reservation.artisan.user?.nom?.charAt(0) ?? ''}
                                     </div>
                                     <div>
                                         <p className="font-semibold text-[hsl(20,14%,12%)]">
@@ -168,10 +186,13 @@ export default function ClientReservationDetail({ reservation, contrat }: Props)
                                 {/* Note */}
                                 <div className="flex items-center gap-1.5 mb-3">
                                     {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className={`h-4 w-4 ${i < Math.floor(Number(reservation.artisan!.note_moyenne)) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+                                        <Star
+                                            key={i}
+                                            className={`h-4 w-4 ${i < Math.floor(noteNum) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`}
+                                        />
                                     ))}
                                     <span className="text-sm font-medium text-[hsl(20,14%,12%)] ml-1">
-                                        {Number(reservation.artisan.note_moyenne).toFixed(1)}/5
+                                        {noteNum.toFixed(1)}/5
                                     </span>
                                 </div>
 
@@ -215,7 +236,7 @@ export default function ClientReservationDetail({ reservation, contrat }: Props)
                                 {/* Lien profil */}
                                 <div className="mt-4">
                                     <Link
-                                        href={route('artisans.show', reservation.artisan.id)}
+                                        href={route('artisans.show', { artisan: reservation.artisan.id })}
                                         className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 hover:text-amber-700"
                                     >
                                         <User className="h-3.5 w-3.5" />
@@ -247,7 +268,7 @@ export default function ClientReservationDetail({ reservation, contrat }: Props)
                             {/* Contrat */}
                             {contrat && (
                                 <Link
-                                    href={route('portal.contrats.show', contrat.id)}
+                                    href={route('portal.contrats.show', { contrat: contrat.id })}
                                     className="flex items-center gap-2 w-full rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-800 font-medium px-4 py-2.5 text-sm transition-all"
                                 >
                                     <FileText className="h-4 w-4 text-amber-600" />
@@ -314,7 +335,7 @@ export default function ClientReservationDetail({ reservation, contrat }: Props)
                                 <div>
                                     <p className="text-xs text-[hsl(20,10%,55%)] mb-1">Statut</p>
                                     <Badge className={`${sc.color} flex items-center gap-1.5 w-fit`}>
-                                        {sc.icon}
+                                        <StatusIcon name={sc.iconName} extraClass={iconColor(sc)} />
                                         {sc.label}
                                     </Badge>
                                 </div>
@@ -350,7 +371,7 @@ export default function ClientReservationDetail({ reservation, contrat }: Props)
                                     </div>
                                 )}
 
-                                {reservation.montant_total && (
+                                {reservation.montant_total != null && (
                                     <div>
                                         <p className="text-xs text-[hsl(20,10%,55%)] mb-1">Montant total</p>
                                         <p className="text-lg font-bold text-[hsl(20,14%,12%)]">
@@ -359,7 +380,7 @@ export default function ClientReservationDetail({ reservation, contrat }: Props)
                                     </div>
                                 )}
 
-                                {reservation.acompte_verse && (
+                                {reservation.acompte_verse != null && (
                                     <div>
                                         <p className="text-xs text-[hsl(20,10%,55%)] mb-1">Acompte versé</p>
                                         <p className="text-sm font-medium text-emerald-600">
@@ -410,13 +431,15 @@ export default function ClientReservationDetail({ reservation, contrat }: Props)
                                             <div key={p.id} className="px-6 py-4 flex items-center justify-between flex-wrap gap-3">
                                                 <div>
                                                     <p className="text-sm font-semibold text-[hsl(20,14%,12%)]">
-                                                        {Number(p.montant).toLocaleString('fr-FR')} FCFA
+                                                        {p.montant != null ? Number(p.montant).toLocaleString('fr-FR') : '—'} FCFA
                                                     </p>
                                                     <p className="text-xs text-[hsl(20,10%,55%)] mt-0.5">
-                                                        {p.methode_paiement.replace('_', ' ')}
+                                                        {p.methode_paiement ? p.methode_paiement.replace(/_/g, ' ') : '—'}
                                                         {p.date_paiement && ` · ${new Date(p.date_paiement).toLocaleDateString('fr-FR')}`}
                                                     </p>
-                                                    <p className="text-xs font-mono text-[hsl(20,10%,65%)] mt-0.5">{p.reference_transaction}</p>
+                                                    {p.reference_transaction && (
+                                                        <p className="text-xs font-mono text-[hsl(20,10%,65%)] mt-0.5">{p.reference_transaction}</p>
+                                                    )}
                                                 </div>
                                                 <Badge className={`${ps.color} text-xs`}>{ps.label}</Badge>
                                             </div>

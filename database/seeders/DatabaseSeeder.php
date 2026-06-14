@@ -87,8 +87,8 @@ class DatabaseSeeder extends Seeder
             'type_utilisateur'=>'admin','statut'=>'actif',
             'date_inscription'=>Carbon::now()->subYear(),
             'email_verified_at'=>now(),
-            // Homme africain, peau noire
-            'avatar'=>'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=200&h=200&fit=crop&crop=face',
+            // Homme africain, costume pro
+            'avatar'=>'https://images.unsplash.com/photo-1580894732444-8ecded7900cd?w=200&h=200&fit=crop&crop=face',
         ]);
     }
 
@@ -223,8 +223,10 @@ class DatabaseSeeder extends Seeder
     }
 
     private function artisansData(): array { return [
+        // ── Kofi Hounsou — Plombier ──────────────────────────────────────────
         ['prenom'=>'Kofi','nom'=>'Hounsou','email'=>'kofi.hounsou@artisanpro.bj','telephone'=>'+22997110001',
-         'avatar'=>'https://images.unsplash.com/photo-1539701938214-0d9736e1c16b?w=200&h=200&fit=crop&crop=face',
+         // Plombier africain au travail avec clé, salopette bleue
+         'avatar'=>'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Plombier certifié',
          'description'=>'Spécialiste en plomberie résidentielle et tertiaire à Porto-Novo. Interventions rapides 7j/7 pour fuites, installations sanitaires, chauffe-eau et débouchage. Devis gratuit sous 2h.',
          'bio'=>"Titulaire d'un CAP Plomberie obtenu à l'École des Métiers de Cotonou, j'exerce depuis 12 ans dans la région de Porto-Novo. J'ai réalisé plus de 800 interventions chez des particuliers et des entreprises.",
@@ -237,10 +239,14 @@ class DatabaseSeeder extends Seeder
              ['titre'=>'Installation chauffe-eau','desc'=>'Pose et raccordement chauffe-eau électrique ou solaire. Toutes marques.','min'=>20000,'max'=>60000,'duree'=>180,'cat'=>'Plomberie'],
          ],
          'portfolio'=>[
-             ['titre'=>'Salle de bain moderne — Résidence Fidjrossè','desc'=>'Rénovation complète : douche italienne, double vasque, robinetterie chromée.','url'=>'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=800&h=600&fit=crop'],
-             ['titre'=>'Installation cuisine équipée — Villa Akpro','desc'=>'Raccordement évier, lave-vaisselle, machine à laver. Tuyauterie encastrée.','url'=>'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
-             ['titre'=>'Chauffe-eau solaire — Immeuble Porto-Novo','desc'=>'Installation de 3 chauffe-eaux solaires pour un immeuble de 6 appartements.','url'=>'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&h=600&fit=crop'],
-             ['titre'=>'Réparation urgence fuite — Nuit','desc'=>"Intervention d'urgence à 22h pour rupture de canalisation principale. Résolu en 1h30.",'url'=>'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&h=600&fit=crop'],
+             ['titre'=>'Salle de bain moderne — Résidence Fidjrossè','desc'=>'Rénovation complète : douche italienne, double vasque, robinetterie chromée.',
+              'url'=>'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=800&h=600&fit=crop'],
+             ['titre'=>'Plombier en intervention — Tuyauterie encastrée','desc'=>'Raccordement évier, lave-vaisselle, machine à laver. Tuyauterie encastrée.',
+              'url'=>'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&h=600&fit=crop'],
+             ['titre'=>'Chauffe-eau solaire — Immeuble Porto-Novo','desc'=>'Installation de 3 chauffe-eaux solaires pour un immeuble de 6 appartements.',
+              'url'=>'https://images.unsplash.com/photo-1620291249906-dce7a25b0e39?w=800&h=600&fit=crop'],
+             ['titre'=>'Réparation urgence fuite — Canalisation principale','desc'=>"Intervention d'urgence pour rupture de canalisation principale. Résolu en 1h30.",
+              'url'=>'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&h=600&fit=crop'],
          ],
          'certifications'=>[
              ['nom'=>'CAP Plomberie-Sanitaire','org'=>'École des Métiers de Cotonou','date'=>'2012-06-15'],
@@ -248,8 +254,10 @@ class DatabaseSeeder extends Seeder
              ['nom'=>'Certification Chauffe-eau Solaire','org'=>'ANADER Bénin','date'=>'2020-09-10'],
          ]],
 
+        // ── Aïcha Dossou — Électricienne ─────────────────────────────────────
         ['prenom'=>'Aïcha','nom'=>'Dossou','email'=>'aicha.dossou@artisanpro.bj','telephone'=>'+22997110002',
-         'avatar'=>'https://images.unsplash.com/photo-1614644147798-f8c0fc9da7f6?w=200&h=200&fit=crop&crop=face',
+         // Femme africaine technicienne en combinaison de travail
+         'avatar'=>'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Électricienne diplômée',
          'description'=>'Électricienne certifiée, spécialisée en installation résidentielle et tertiaire. Mise aux normes, dépannage, tableau électrique, éclairage LED, domotique.',
          'bio'=>"Diplômée en Électrotechnique de l'INMES de Cotonou (2015). L'une des rares femmes électriciennes certifiées au Bénin. Installations conformes aux normes NFC 15-100.",
@@ -262,10 +270,14 @@ class DatabaseSeeder extends Seeder
              ['titre'=>'Installation climatiseur','desc'=>'Pose et raccordement climatiseur split. Toutes marques. Garantie 1 an sur la pose.','min'=>25000,'max'=>60000,'duree'=>240,'cat'=>'Climatisation'],
          ],
          'portfolio'=>[
-             ['titre'=>'Tableau électrique neuf — Villa Cotonou','desc'=>'Remplacement complet du tableau vétuste par un tableau 3 rangées avec protection différentielle.','url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
-             ['titre'=>'Éclairage LED showroom — Porto-Novo','desc'=>'Installation de 120 spots LED encastrés dans un showroom de 400m². Économie 60%.','url'=>'https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?w=800&h=600&fit=crop'],
-             ['titre'=>'Installation domotique — Résidence Fidjrossè','desc'=>'Système domotique complet : éclairage, volets, alarme, contrôle smartphone.','url'=>'https://images.unsplash.com/photo-1558002038-1055907df827?w=800&h=600&fit=crop'],
-             ['titre'=>'Climatisation bureau — Immeuble Ganhi','desc'=>'Installation de 8 climatiseurs split dans un immeuble de bureaux.','url'=>'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&h=600&fit=crop'],
+             ['titre'=>'Tableau électrique neuf — Villa Cotonou','desc'=>'Remplacement complet du tableau vétuste par un tableau 3 rangées avec protection différentielle.',
+              'url'=>'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&h=600&fit=crop'],
+             ['titre'=>'Électricienne au travail — Câblage tableau','desc'=>'Installation de 120 spots LED encastrés dans un showroom de 400m². Économie 60%.',
+              'url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
+             ['titre'=>'Installation domotique — Résidence Fidjrossè','desc'=>'Système domotique complet : éclairage, volets, alarme, contrôle smartphone.',
+              'url'=>'https://images.unsplash.com/photo-1558002038-1055907df827?w=800&h=600&fit=crop'],
+             ['titre'=>'Climatisation bureau — Immeuble Ganhi','desc'=>'Installation de 8 climatiseurs split dans un immeuble de bureaux.',
+              'url'=>'https://images.unsplash.com/photo-1527689368864-3a821dbccc34?w=800&h=600&fit=crop'],
          ],
          'certifications'=>[
              ['nom'=>'BTS Électrotechnique','org'=>'INMES Cotonou','date'=>'2015-07-20'],
@@ -273,8 +285,10 @@ class DatabaseSeeder extends Seeder
              ['nom'=>'Certification Domotique KNX','org'=>'KNX Association','date'=>'2022-04-18'],
          ]],
 
+        // ── Théodore Agossou — Maçon & Carreleur ─────────────────────────────
         ['prenom'=>'Théodore','nom'=>'Agossou','email'=>'theodore.agossou@artisanpro.bj','telephone'=>'+22997110003',
-         'avatar'=>'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=200&h=200&fit=crop&crop=face',
+         // Maçon africain casque blanc, chantier de construction
+         'avatar'=>'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Maçon & Carreleur expert',
          'description'=>'Construction, rénovation et pose de carrelage haut de gamme. Spécialiste des finitions soignées pour villas, immeubles et locaux commerciaux.',
          'bio'=>"Artisan polyvalent avec 15 ans d'expérience dans le BTP béninois. J'ai participé à la construction de plus de 50 villas et 10 immeubles dans la région.",
@@ -287,17 +301,23 @@ class DatabaseSeeder extends Seeder
              ['titre'=>'Pose faïence salle de bain','desc'=>'Carrelage mural salle de bain, cuisine. Découpe précise, joints parfaits.','min'=>4000,'max'=>9000,'duree'=>60,'cat'=>'Carrelage'],
          ],
          'portfolio'=>[
-             ['titre'=>'Villa R+1 — Adjarra','desc'=>'Construction complète d\'une villa R+1 de 180m². Gros œuvre, enduits, carrelage. Livraison en 4 mois.','url'=>'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&h=600&fit=crop'],
-             ['titre'=>'Carrelage marbre — Salon de réception','desc'=>'Pose de 120m² de marbre blanc veiné dans un salon de réception. Joints époxy gris.','url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
-             ['titre'=>'Rénovation façade — Immeuble Porto-Novo','desc'=>'Ravalement complet d\'un immeuble R+3. Enduit projeté, peinture hydrofuge.','url'=>'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&h=600&fit=crop'],
-             ['titre'=>'Clôture et portail — Résidence Avrankou','desc'=>'Construction clôture 80m en parpaing + portail métallique. Finition crépi blanc.','url'=>'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=600&fit=crop'],
+             ['titre'=>'Construction villa R+1 — Adjarra','desc'=>'Construction complète d\'une villa R+1 de 180m². Gros œuvre, enduits, carrelage. Livraison en 4 mois.',
+              'url'=>'https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?w=800&h=600&fit=crop'],
+             ['titre'=>'Maçon pose parpaing — Chantier Porto-Novo','desc'=>'Pose de 120m² de marbre blanc veiné dans un salon de réception. Joints époxy gris.',
+              'url'=>'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&h=600&fit=crop'],
+             ['titre'=>'Rénovation façade — Immeuble Porto-Novo','desc'=>'Ravalement complet d\'un immeuble R+3. Enduit projeté, peinture hydrofuge.',
+              'url'=>'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&h=600&fit=crop'],
+             ['titre'=>'Clôture et portail — Résidence Avrankou','desc'=>'Construction clôture 80m en parpaing + portail métallique. Finition crépi blanc.',
+              'url'=>'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=600&fit=crop'],
          ],
          'certifications'=>[
              ['nom'=>'CAP Maçonnerie','org'=>'CFPA Porto-Novo','date'=>'2009-06-10'],
              ['nom'=>'Qualification RGE Rénovation','org'=>'ANADER Bénin','date'=>'2019-02-14'],
          ]],
 
+        // ── Rosine Kpossou — Menuisière ──────────────────────────────────────
         ['prenom'=>'Rosine','nom'=>'Kpossou','email'=>'rosine.kpossou@artisanpro.bj','telephone'=>'+22997110004',
+         // Femme africaine menuisière atelier bois
          'avatar'=>'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Menuisière ébéniste',
          'description'=>'Fabrication sur mesure de portes, fenêtres, meubles et parquets en bois massif. Travail artisanal de qualité, bois locaux et importés.',
@@ -311,18 +331,24 @@ class DatabaseSeeder extends Seeder
              ['titre'=>'Dressing sur mesure','desc'=>'Conception dressing personnalisé. Penderies, tiroirs, étagères. Portes coulissantes ou battantes.','min'=>150000,'max'=>600000,'duree'=>7200,'cat'=>'Menuiserie'],
          ],
          'portfolio'=>[
-             ['titre'=>'Cuisine teck massif — Villa Cotonou','desc'=>'Cuisine complète en teck massif avec îlot central. 12m² de plan de travail en granit.','url'=>'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
-             ['titre'=>'Bibliothèque murale — Bureau Porto-Novo','desc'=>'Bibliothèque sur mesure du sol au plafond en iroko verni. 8 mètres linéaires.','url'=>'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=600&fit=crop'],
-             ['titre'=>'Parquet fraké — Salon 60m²','desc'=>'Pose parquet fraké huilé dans un salon de 60m². Finition naturelle, joints serrés.','url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
-             ['titre'=>"Portes intérieures — Résidence Ouidah",'desc'=>'Fabrication et pose de 12 portes intérieures en bois massif pour une villa.','url'=>'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=600&fit=crop'],
+             ['titre'=>'Menuisier au travail — Atelier bois teck','desc'=>'Cuisine complète en teck massif avec îlot central. 12m² de plan de travail en granit.',
+              'url'=>'https://images.unsplash.com/photo-1601058268499-e52658b8bb88?w=800&h=600&fit=crop'],
+             ['titre'=>'Fabrication meuble — Établi atelier Porto-Novo','desc'=>'Bibliothèque sur mesure du sol au plafond en iroko verni. 8 mètres linéaires.',
+              'url'=>'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=600&fit=crop'],
+             ['titre'=>'Parquet fraké — Salon 60m²','desc'=>'Pose parquet fraké huilé dans un salon de 60m². Finition naturelle, joints serrés.',
+              'url'=>'https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=800&h=600&fit=crop'],
+             ['titre'=>'Portes intérieures bois — Résidence Ouidah','desc'=>'Fabrication et pose de 12 portes intérieures en bois massif pour une villa.',
+              'url'=>'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=600&fit=crop'],
          ],
          'certifications'=>[
              ['nom'=>'BEP Menuiserie-Ébénisterie','org'=>'École des Arts et Métiers de Cotonou','date'=>'2010-07-05'],
              ['nom'=>'Certification Bois Certifié FSC','org'=>'Forest Stewardship Council','date'=>'2021-01-20'],
          ]],
 
+        // ── Patrice Zinsou — Peintre décorateur ──────────────────────────────
         ['prenom'=>'Patrice','nom'=>'Zinsou','email'=>'patrice.zinsou@artisanpro.bj','telephone'=>'+22997110005',
-         'avatar'=>'https://images.unsplash.com/photo-1589156280159-27698a70f29e?w=200&h=200&fit=crop&crop=face',
+         // Peintre africain au rouleau, combinaison blanche
+         'avatar'=>'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Peintre décorateur',
          'description'=>'Peinture intérieure et extérieure, enduits décoratifs, ravalement de façade. Conseil en couleurs et décoration inclus.',
          'bio'=>"Artiste et artisan depuis 10 ans. Formé à la peinture décorative à Cotonou. Je propose aussi des fresques murales personnalisées pour hôtels et restaurants.",
@@ -335,18 +361,24 @@ class DatabaseSeeder extends Seeder
              ['titre'=>'Fresque murale','desc'=>'Création artistique sur mesure. Motifs africains, géométriques, portraits.','min'=>50000,'max'=>300000,'duree'=>2520,'cat'=>'Peinture'],
          ],
          'portfolio'=>[
-             ['titre'=>'Hôtel Azalaï — Lobby décoratif','desc'=>'Enduit tadelakt et fresque murale de 20m² dans le lobby d\'un hôtel 4 étoiles.','url'=>'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=600&fit=crop'],
-             ['titre'=>'Villa moderne — Peinture intérieure','desc'=>'Peinture complète d\'une villa de 250m². Couleurs tendance, finition velours.','url'=>'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&h=600&fit=crop'],
-             ['titre'=>'Restaurant — Décoration murale africaine','desc'=>'Fresque murale de 15m² représentant des scènes de vie béninoise.','url'=>'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=600&fit=crop'],
-             ['titre'=>'Façade immeuble — Ravalement','desc'=>'Ravalement complet d\'un immeuble R+4. Enduit projeté, peinture siloxane.','url'=>'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&h=600&fit=crop'],
+             ['titre'=>'Peintre au rouleau — Intérieur villa Cotonou','desc'=>'Enduit tadelakt et fresque murale de 20m² dans le lobby d\'un hôtel 4 étoiles.',
+              'url'=>'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&h=600&fit=crop'],
+             ['titre'=>'Ravalement façade — Immeuble Porto-Novo','desc'=>'Peinture complète d\'une villa de 250m². Couleurs tendance, finition velours.',
+              'url'=>'https://images.unsplash.com/photo-1612965607446-25e1332775ae?w=800&h=600&fit=crop'],
+             ['titre'=>'Fresque murale africaine — Restaurant','desc'=>'Fresque murale de 15m² représentant des scènes de vie béninoise.',
+              'url'=>'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=600&fit=crop'],
+             ['titre'=>'Peinture façade — Bâtiment commercial Djègan','desc'=>'Ravalement complet d\'un immeuble R+4. Enduit projeté, peinture siloxane.',
+              'url'=>'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&h=600&fit=crop'],
          ],
          'certifications'=>[
              ['nom'=>'CAP Peinture-Décoration','org'=>'CFPA Cotonou','date'=>'2014-06-20'],
              ['nom'=>'Formation Enduits Décoratifs','org'=>'Weber Saint-Gobain Bénin','date'=>'2019-09-15'],
          ]],
 
+        // ── Serge Gbaguidi — Technicien Climatisation ────────────────────────
         ['prenom'=>'Serge','nom'=>'Gbaguidi','email'=>'serge.gbaguidi@artisanpro.bj','telephone'=>'+22997110006',
-         'avatar'=>'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=200&h=200&fit=crop&crop=face',
+         // Technicien africain climatisation, outils frigoriste
+         'avatar'=>'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Technicien Climatisation & Froid',
          'description'=>'Installation, entretien et réparation de tous types de climatiseurs. Certifié Daikin, Samsung et LG. Contrats de maintenance disponibles.',
          'bio'=>"Technicien frigoriste depuis 8 ans, certifié par les principales marques. J'interviens pour les particuliers, hôtels, restaurants et entreprises.",
@@ -359,18 +391,24 @@ class DatabaseSeeder extends Seeder
              ['titre'=>'Climatisation centralisée','desc'=>'Installation système VRV/VRF pour immeubles et bureaux. Étude thermique incluse.','min'=>500000,'max'=>5000000,'duree'=>10800,'cat'=>'Climatisation'],
          ],
          'portfolio'=>[
-             ['titre'=>'Hôtel 4 étoiles — 40 chambres climatisées','desc'=>'Installation de 40 climatiseurs Daikin dans un hôtel de Porto-Novo. Système centralisé.','url'=>'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&h=600&fit=crop'],
-             ['titre'=>'Immeuble de bureaux — VRF Mitsubishi','desc'=>'Système VRF pour 800m² de bureaux. 15 unités intérieures, 2 groupes extérieurs.','url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
-             ['titre'=>'Restaurant — Climatisation salle 200 couverts','desc'=>'Installation 6 cassettes de plafond Samsung dans un restaurant.','url'=>'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=600&fit=crop'],
-             ['titre'=>'Villa — Climatisation 8 pièces','desc'=>'Équipement complet d\'une villa de 8 pièces en LG Artcool.','url'=>'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=600&fit=crop'],
+             ['titre'=>'Technicien pose climatiseur — Hôtel Porto-Novo','desc'=>'Installation de 40 climatiseurs Daikin dans un hôtel de Porto-Novo. Système centralisé.',
+              'url'=>'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&h=600&fit=crop'],
+             ['titre'=>'Unité extérieure VRF — Immeuble bureaux','desc'=>'Système VRF pour 800m² de bureaux. 15 unités intérieures, 2 groupes extérieurs.',
+              'url'=>'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&h=600&fit=crop'],
+             ['titre'=>'Maintenance climatiseur — Nettoyage filtre','desc'=>'Installation 6 cassettes de plafond Samsung dans un restaurant.',
+              'url'=>'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&h=600&fit=crop'],
+             ['titre'=>'Climatiseur mural installé — Villa 8 pièces','desc'=>'Équipement complet d\'une villa de 8 pièces en LG Artcool.',
+              'url'=>'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&h=600&fit=crop'],
          ],
          'certifications'=>[
              ['nom'=>'BTS Froid et Climatisation','org'=>'INMES Cotonou','date'=>'2016-07-15'],
              ['nom'=>'Certification Daikin D1','org'=>'Daikin Europe','date'=>'2018-05-20'],
              ['nom'=>'Certification Samsung HVAC','org'=>'Samsung Electronics','date'=>'2020-11-10'],
          ]],
+        // ── Gilles Akpovi — Soudeur-Ferronnier ───────────────────────────────
         ['prenom'=>'Gilles','nom'=>'Akpovi','email'=>'gilles.akpovi@artisanpro.bj','telephone'=>'+22997110007',
-         'avatar'=>'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=200&h=200&fit=crop&crop=face',
+         // Soudeur africain masque de soudure, atelier métal
+         'avatar'=>'https://images.unsplash.com/photo-1564564244660-5d73c057f2d2?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Soudeur-Ferronnier',
          'description'=>'Fabrication et pose de portails, grilles, escaliers, garde-corps et structures métalliques sur mesure. Soudure MIG/TIG/électrode.',
          'bio'=>"Ferronnier de métier depuis 14 ans, j'ai créé mon atelier à Porto-Novo en 2015. Je réalise des pièces uniques alliant solidité et esthétique.",
@@ -383,17 +421,24 @@ class DatabaseSeeder extends Seeder
              ['titre'=>'Réparation soudure','desc'=>'Réparation portail, grille, structure métallique. Intervention rapide.','min'=>5000,'max'=>40000,'duree'=>150,'cat'=>'Soudure'],
          ],
          'portfolio'=>[
-             ['titre'=>'Portail motorisé — Villa Adjarra','desc'=>'Portail coulissant 4m en acier galvanisé avec motorisation automatique et interphone.','url'=>'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=600&fit=crop'],
-             ['titre'=>'Escalier hélicoïdal — Duplex Porto-Novo','desc'=>'Escalier hélicoïdal en acier noir avec marches en bois. Garde-corps design.','url'=>'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&h=600&fit=crop'],
-             ['titre'=>'Grilles décoratives — Résidence Akpro','desc'=>'Grilles fenêtres avec motifs géométriques africains. 24 fenêtres équipées.','url'=>'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&h=600&fit=crop'],
-             ['titre'=>'Structure métallique — Hangar industriel','desc'=>'Charpente métallique pour hangar de 500m². Poteaux HEA, pannes, bardage.','url'=>'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&h=600&fit=crop'],
+             ['titre'=>'Soudeur au travail — Atelier ferronnerie Porto-Novo','desc'=>'Portail coulissant 4m en acier galvanisé avec motorisation automatique et interphone.',
+              'url'=>'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&h=600&fit=crop'],
+             ['titre'=>'Escalier hélicoïdal — Duplex Porto-Novo','desc'=>'Escalier hélicoïdal en acier noir avec marches en bois. Garde-corps design.',
+              'url'=>'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&h=600&fit=crop'],
+             ['titre'=>'Grilles décoratives africaines — Résidence Akpro','desc'=>'Grilles fenêtres avec motifs géométriques africains. 24 fenêtres équipées.',
+              'url'=>'https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?w=800&h=600&fit=crop'],
+             ['titre'=>'Charpente métallique — Hangar industriel','desc'=>'Charpente métallique pour hangar de 500m². Poteaux HEA, pannes, bardage.',
+              'url'=>'https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?w=800&h=600&fit=crop'],
          ],
          'certifications'=>[
              ['nom'=>'CAP Soudure-Chaudronnerie','org'=>'CFPA Porto-Novo','date'=>'2010-06-15'],
              ['nom'=>'Qualification Soudeur TIG Inox','org'=>'CODINORM Bénin','date'=>'2017-08-22'],
          ]],
+
+        // ── Éric Toviho — Technicien Informatique ────────────────────────────
         ['prenom'=>'Éric','nom'=>'Toviho','email'=>'eric.toviho@artisanpro.bj','telephone'=>'+22997110008',
-         'avatar'=>'https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=200&h=200&fit=crop&crop=face',
+         // Technicien informatique africain, réparation PC
+         'avatar'=>'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Technicien Informatique & Réseaux',
          'description'=>'Réparation PC et Mac, installation réseaux WiFi et filaires, maintenance informatique pour entreprises. Récupération de données, antivirus, formation utilisateurs.',
          'bio'=>"Technicien informatique certifié depuis 7 ans. J'interviens chez les particuliers et les entreprises. Contrats de maintenance mensuelle pour les PME de Porto-Novo.",
@@ -406,10 +451,14 @@ class DatabaseSeeder extends Seeder
              ['titre'=>'Récupération de données','desc'=>'Récupération données disque dur défaillant, clé USB, carte mémoire. Taux de succès 90%.','min'=>30000,'max'=>100000,'duree'=>1800,'cat'=>'Informatique'],
          ],
          'portfolio'=>[
-             ['titre'=>"Réseau d'entreprise — 30 postes",'desc'=>"Installation réseau filaire et WiFi pour une PME de 30 employés. Serveur NAS, VPN.",'url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
-             ['titre'=>'Salle informatique — École privée','desc'=>'Mise en place de 20 postes informatiques en réseau pour une école.','url'=>'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&h=600&fit=crop'],
-             ['titre'=>'Vidéosurveillance — Commerce Porto-Novo','desc'=>'Installation 8 caméras IP avec enregistrement cloud. Accès à distance smartphone.','url'=>'https://images.unsplash.com/photo-1558002038-1055907df827?w=800&h=600&fit=crop'],
-             ['titre'=>'Récupération données — Disque dur crashé','desc'=>'Récupération de 500 Go de données sur disque dur défaillant pour un cabinet médical.','url'=>'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&h=600&fit=crop'],
+             ['titre'=>'Technicien réseau — Installation PME Porto-Novo','desc'=>"Installation réseau filaire et WiFi pour une PME de 30 employés. Serveur NAS, VPN.",
+              'url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
+             ['titre'=>'Salle informatique — École privée Cotonou','desc'=>'Mise en place de 20 postes informatiques en réseau pour une école.',
+              'url'=>'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&h=600&fit=crop'],
+             ['titre'=>'Installation vidéosurveillance — Boutique Ganhi','desc'=>'Installation 8 caméras IP avec enregistrement cloud. Accès à distance smartphone.',
+              'url'=>'https://images.unsplash.com/photo-1558002038-1055907df827?w=800&h=600&fit=crop'],
+             ['titre'=>'Réparation PC — Récupération données cabinet médical','desc'=>'Récupération de 500 Go de données sur disque dur défaillant pour un cabinet médical.',
+              'url'=>'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&h=600&fit=crop'],
          ],
          'certifications'=>[
              ['nom'=>'CompTIA A+ Certified','org'=>'CompTIA','date'=>'2017-04-10'],
@@ -419,8 +468,10 @@ class DatabaseSeeder extends Seeder
 
         // ── Nouveaux artisans ────────────────────────────────────────────────
 
+        // ── Brice Dèdèhou — Jardinier paysagiste ─────────────────────────────
         ['prenom'=>'Brice','nom'=>'Dèdèhou','email'=>'brice.dededhou@artisanpro.bj','telephone'=>'+22997110009',
-         'avatar'=>'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face',
+         // Jardinier africain taille arbuste, équipement de travail
+         'avatar'=>'https://images.unsplash.com/photo-1546961342-ea5f62d97a1f?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Jardinier paysagiste',
          'description'=>'Création et entretien d\'espaces verts, jardins tropicaux, pelouses et haies. Spécialiste des plantes locales du Bénin. Devis gratuit à domicile.',
          'bio'=>"Passionné de nature depuis l'enfance, j'ai suivi une formation en horticulture à l'INRAB de Cotonou. Je crée des jardins qui respectent l'écosystème local tout en apportant fraîcheur et beauté.",
@@ -433,18 +484,24 @@ class DatabaseSeeder extends Seeder
              ['titre'=>'Pose gazon naturel ou synthétique','desc'=>'Fourniture et pose gazon. Préparation sol, drainage, arrosage automatique.','min'=>5000,'max'=>15000,'duree'=>60,'cat'=>'Jardinage'],
          ],
          'portfolio'=>[
-             ['titre'=>'Jardin tropical — Villa Anavié','desc'=>'Création d\'un jardin de 300m² avec palmiers, bananiers, hibiscus et allée en latérite.','url'=>'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&h=600&fit=crop'],
-             ['titre'=>'Haie décorative — Résidence Ouando','desc'=>'Plantation et taille d\'une haie de 50m en bougainvilliers multicolores.','url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
-             ['titre'=>'Pelouse gazon — Terrain de sport','desc'=>'Pose de 800m² de gazon naturel pour un terrain de football d\'école.','url'=>'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=600&fit=crop'],
-             ['titre'=>'Jardin zen — Hôtel Porto-Novo','desc'=>'Aménagement d\'un espace de détente avec bambous, pierres et bassin.','url'=>'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&h=600&fit=crop'],
+             ['titre'=>'Jardinier au travail — Jardin tropical Anavié','desc'=>'Création d\'un jardin de 300m² avec palmiers, bananiers, hibiscus et allée en latérite.',
+              'url'=>'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&h=600&fit=crop'],
+             ['titre'=>'Haie bougainvilliers — Résidence Ouando','desc'=>'Plantation et taille d\'une haie de 50m en bougainvilliers multicolores.',
+              'url'=>'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=800&h=600&fit=crop'],
+             ['titre'=>'Pose gazon — Terrain de sport école','desc'=>'Pose de 800m² de gazon naturel pour un terrain de football d\'école.',
+              'url'=>'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=600&fit=crop'],
+             ['titre'=>'Jardin paysager — Hôtel Porto-Novo','desc'=>'Aménagement d\'un espace de détente avec bambous, pierres et bassin.',
+              'url'=>'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&h=600&fit=crop'],
          ],
          'certifications'=>[
              ['nom'=>'BTS Horticulture','org'=>'INRAB Cotonou','date'=>'2013-07-10'],
              ['nom'=>'Certification Phytosanitaire','org'=>'MAEP Bénin','date'=>'2018-04-15'],
          ]],
 
+        // ── Célestine Vodounou — Carreleur & Faïencier ────────────────────────
         ['prenom'=>'Célestine','nom'=>'Vodounou','email'=>'celestine.vodounou@artisanpro.bj','telephone'=>'+22997110010',
-         'avatar'=>'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=face',
+         // Femme africaine artisane pose carrelage
+         'avatar'=>'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Carreleur & Faïencier',
          'description'=>'Pose de carrelage haut de gamme, faïence, mosaïque et pierre naturelle. Spécialiste des salles de bain et cuisines modernes. Finitions impeccables garanties.',
          'bio'=>"Artisane depuis 11 ans, formée à l'École des Métiers de Porto-Novo. Je suis l'une des rares femmes carreleurs certifiées au Bénin. Mon travail est reconnu pour sa précision et ses finitions soignées.",
@@ -457,18 +514,24 @@ class DatabaseSeeder extends Seeder
              ['titre'=>'Rénovation cuisine','desc'=>'Dépose ancien carrelage, ragréage, pose nouveau carrelage et crédence.','min'=>80000,'max'=>300000,'duree'=>2880,'cat'=>'Carrelage'],
          ],
          'portfolio'=>[
-             ['titre'=>'Salle de bain marbre — Villa Hinkoudé','desc'=>'Salle de bain 12m² entièrement en marbre blanc de Carrare. Douche à l\'italienne.','url'=>'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=800&h=600&fit=crop'],
-             ['titre'=>'Cuisine moderne — Appartement Agbokou','desc'=>'Carrelage grès cérame 60x60 gris anthracite + crédence en mosaïque dorée.','url'=>'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
-             ['titre'=>'Piscine mosaïque — Résidence Djègan','desc'=>'Revêtement piscine en mosaïque bleu turquoise. 45m² de surface.','url'=>'https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?w=800&h=600&fit=crop'],
-             ['titre'=>'Hall d\'entrée — Immeuble Attakè','desc'=>'Carrelage marbre noir et blanc en damier pour hall d\'entrée de 30m².','url'=>'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&h=600&fit=crop'],
+             ['titre'=>'Pose carrelage marbre — Salle de bain Hinkoudé','desc'=>'Salle de bain 12m² entièrement en marbre blanc. Douche à l\'italienne.',
+              'url'=>'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=800&h=600&fit=crop'],
+             ['titre'=>'Carreleur au travail — Cuisine Agbokou','desc'=>'Carrelage grès cérame 60x60 gris anthracite + crédence en mosaïque dorée.',
+              'url'=>'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
+             ['titre'=>'Mosaïque piscine — Résidence Djègan','desc'=>'Revêtement piscine en mosaïque bleu turquoise. 45m² de surface.',
+              'url'=>'https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?w=800&h=600&fit=crop'],
+             ['titre'=>'Carrelage damier — Hall d\'entrée Attakè','desc'=>'Carrelage marbre noir et blanc en damier pour hall d\'entrée de 30m².',
+              'url'=>'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&h=600&fit=crop'],
          ],
          'certifications'=>[
              ['nom'=>'CAP Carrelage-Mosaïque','org'=>'École des Métiers de Porto-Novo','date'=>'2013-06-20'],
              ['nom'=>'Formation Pose Grands Formats','org'=>'Mapei Bénin','date'=>'2020-03-10'],
          ]],
 
+        // ── Narcisse Agbangla — Électricien solaire ───────────────────────────
         ['prenom'=>'Narcisse','nom'=>'Agbangla','email'=>'narcisse.agbangla@artisanpro.bj','telephone'=>'+22997110011',
-         'avatar'=>'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=200&fit=crop&crop=face',
+         // Électricien africain installation panneaux solaires
+         'avatar'=>'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Électricien bâtiment & solaire',
          'description'=>'Installation électrique, énergie solaire photovoltaïque, onduleurs et batteries. Spécialiste des systèmes hybrides pour particuliers et entreprises.',
          'bio'=>"Électricien depuis 9 ans, reconverti dans le solaire en 2019. J'ai installé plus de 120 systèmes solaires dans la région de Porto-Novo. Formé par SolarEdge et Victron Energy.",
@@ -481,10 +544,14 @@ class DatabaseSeeder extends Seeder
              ['titre'=>'Éclairage solaire extérieur','desc'=>'Lampadaires solaires, spots de jardin, éclairage parking. Autonome et économique.','min'=>30000,'max'=>200000,'duree'=>480,'cat'=>'Électricité'],
          ],
          'portfolio'=>[
-             ['titre'=>'Système solaire 5kWc — Villa Adjina','desc'=>'Installation 12 panneaux 450W + onduleur Victron + 4 batteries lithium 200Ah.','url'=>'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&h=600&fit=crop'],
-             ['titre'=>'Éclairage solaire — Quartier Ouando','desc'=>'Installation de 15 lampadaires solaires pour l\'éclairage d\'une rue résidentielle.','url'=>'https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?w=800&h=600&fit=crop'],
-             ['titre'=>'Centrale solaire — École primaire','desc'=>'Système 3kWc pour alimenter 6 salles de classe. Économie 80% sur la facture SBEE.','url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
-             ['titre'=>'Tableau électrique neuf — Immeuble R+3','desc'=>'Remplacement tableau vétuste par tableau 4 rangées avec protection différentielle.','url'=>'https://images.unsplash.com/photo-1558002038-1055907df827?w=800&h=600&fit=crop'],
+             ['titre'=>'Installation panneaux solaires — Villa Adjina','desc'=>'Installation 12 panneaux 450W + onduleur Victron + 4 batteries lithium 200Ah.',
+              'url'=>'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&h=600&fit=crop'],
+             ['titre'=>'Éclairage solaire rue — Quartier Ouando','desc'=>'Installation de 15 lampadaires solaires pour l\'éclairage d\'une rue résidentielle.',
+              'url'=>'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800&h=600&fit=crop'],
+             ['titre'=>'Centrale solaire école — Porto-Novo','desc'=>'Système 3kWc pour alimenter 6 salles de classe. Économie 80% sur la facture SBEE.',
+              'url'=>'https://images.unsplash.com/photo-1497440001374-f26997328c1b?w=800&h=600&fit=crop'],
+             ['titre'=>'Tableau électrique — Immeuble R+3','desc'=>'Remplacement tableau vétuste par tableau 4 rangées avec protection différentielle.',
+              'url'=>'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&h=600&fit=crop'],
          ],
          'certifications'=>[
              ['nom'=>'BTS Électrotechnique','org'=>'INMES Cotonou','date'=>'2015-07-15'],
@@ -492,8 +559,10 @@ class DatabaseSeeder extends Seeder
              ['nom'=>'Victron Energy Certified Installer','org'=>'Victron Energy','date'=>'2021-11-08'],
          ]],
 
+        // ── Yvette Kossou — Peintre en bâtiment ──────────────────────────────
         ['prenom'=>'Yvette','nom'=>'Kossou','email'=>'yvette.kossou@artisanpro.bj','telephone'=>'+22997110012',
-         'avatar'=>'https://images.unsplash.com/photo-1523824921871-d6f1a15151f1?w=200&h=200&fit=crop&crop=face',
+         // Femme africaine peintre, rouleau peinture combinaison
+         'avatar'=>'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Peintre en bâtiment',
          'description'=>'Peinture intérieure et extérieure, enduits, ravalement. Travail soigné, délais respectés. Devis gratuit sous 24h.',
          'bio'=>"Artisane peintre depuis 8 ans à Porto-Novo. Formée à l'CFPA de Cotonou, je travaille aussi bien pour les particuliers que pour les promoteurs immobiliers.",
@@ -506,17 +575,23 @@ class DatabaseSeeder extends Seeder
              ['titre'=>'Peinture plafond','desc'=>'Peinture plafond blanc mat ou satiné. Traitement taches et auréoles.','min'=>1500,'max'=>3500,'duree'=>60,'cat'=>'Peinture'],
          ],
          'portfolio'=>[
-             ['titre'=>'Appartement neuf — Résidence Koutongbé','desc'=>'Peinture complète d\'un appartement T4 de 90m². Couleurs personnalisées par pièce.','url'=>'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&h=600&fit=crop'],
-             ['titre'=>'Façade villa — Quartier Djègan Daho','desc'=>'Ravalement façade villa R+1. Enduit projeté + peinture siloxane blanc cassé.','url'=>'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&h=600&fit=crop'],
-             ['titre'=>'Bureau moderne — Immeuble Hinkoudé','desc'=>'Peinture bureaux 200m². Couleurs corporate, finition satiné lavable.','url'=>'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=600&fit=crop'],
-             ['titre'=>'Chambre enfant — Villa Attakè','desc'=>'Décoration chambre enfant avec frise murale et peinture thématique jungle.','url'=>'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=600&fit=crop'],
+             ['titre'=>'Peinture appartement neuf — Résidence Koutongbé','desc'=>'Peinture complète d\'un appartement T4 de 90m². Couleurs personnalisées par pièce.',
+              'url'=>'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&h=600&fit=crop'],
+             ['titre'=>'Peintre en action — Façade villa Djègan Daho','desc'=>'Ravalement façade villa R+1. Enduit projeté + peinture siloxane blanc cassé.',
+              'url'=>'https://images.unsplash.com/photo-1612965607446-25e1332775ae?w=800&h=600&fit=crop'],
+             ['titre'=>'Peinture bureaux — Immeuble Hinkoudé','desc'=>'Peinture bureaux 200m². Couleurs corporate, finition satiné lavable.',
+              'url'=>'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=600&fit=crop'],
+             ['titre'=>'Chambre enfant décorée — Villa Attakè','desc'=>'Décoration chambre enfant avec frise murale et peinture thématique jungle.',
+              'url'=>'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=600&fit=crop'],
          ],
          'certifications'=>[
              ['nom'=>'CAP Peinture Bâtiment','org'=>'CFPA Cotonou','date'=>'2016-06-15'],
          ]],
 
+        // ── Damien Hounkpatin — Plombier & Sanitaire ─────────────────────────
         ['prenom'=>'Damien','nom'=>'Hounkpatin','email'=>'damien.hounkpatin@artisanpro.bj','telephone'=>'+22997110013',
-         'avatar'=>'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&h=200&fit=crop&crop=face',
+         // Plombier africain au travail avec matériel sanitaire
+         'avatar'=>'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Plombier & Sanitaire',
          'description'=>'Plomberie générale, installation sanitaire, chauffe-eau, fosse septique. Intervention rapide sur Porto-Novo et environs. Disponible week-end.',
          'bio'=>"Plombier depuis 10 ans, j'ai travaillé sur des chantiers de construction à Cotonou avant de m'installer à Porto-Novo. Je maîtrise les installations en PVC, PPR et cuivre.",
@@ -529,18 +604,24 @@ class DatabaseSeeder extends Seeder
              ['titre'=>'Chauffe-eau solaire','desc'=>'Installation chauffe-eau solaire 200L. Économie 70% sur la facture d\'eau chaude.','min'=>150000,'max'=>400000,'duree'=>480,'cat'=>'Plomberie'],
          ],
          'portfolio'=>[
-             ['titre'=>'Fosse septique — Villa Avakpa','desc'=>'Installation fosse septique 5000L pour villa de 6 personnes. Conforme normes SONEB.','url'=>'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&h=600&fit=crop'],
-             ['titre'=>'Salle de bain moderne — Appartement Agbokou','desc'=>'Installation complète : douche à l\'italienne, WC suspendu, double vasque.','url'=>'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=800&h=600&fit=crop'],
-             ['titre'=>'Réseau eau — Immeuble R+4','desc'=>'Installation réseau eau froide et chaude pour immeuble de 8 appartements.','url'=>'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&h=600&fit=crop'],
-             ['titre'=>'Chauffe-eau solaire — Résidence Sèdjèko','desc'=>'Installation 2 chauffe-eaux solaires 300L pour résidence de 4 appartements.','url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
+             ['titre'=>'Plombier installation fosse septique — Villa Avakpa','desc'=>'Installation fosse septique 5000L pour villa de 6 personnes. Conforme normes SONEB.',
+              'url'=>'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&h=600&fit=crop'],
+             ['titre'=>'Salle de bain moderne — Appartement Agbokou','desc'=>'Installation complète : douche à l\'italienne, WC suspendu, double vasque.',
+              'url'=>'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=800&h=600&fit=crop'],
+             ['titre'=>'Réseau eau immeuble — R+4 Porto-Novo','desc'=>'Installation réseau eau froide et chaude pour immeuble de 8 appartements.',
+              'url'=>'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&h=600&fit=crop'],
+             ['titre'=>'Chauffe-eau solaire — Résidence Sèdjèko','desc'=>'Installation 2 chauffe-eaux solaires 300L pour résidence de 4 appartements.',
+              'url'=>'https://images.unsplash.com/photo-1620291249906-dce7a25b0e39?w=800&h=600&fit=crop'],
          ],
          'certifications'=>[
              ['nom'=>'CAP Plomberie','org'=>'CFPA Porto-Novo','date'=>'2014-06-10'],
              ['nom'=>'Habilitation Assainissement','org'=>'SONEB Bénin','date'=>'2019-05-20'],
          ]],
 
+        // ── Fidèle Azonhiho — Menuisier aluminium & PVC ───────────────────────
         ['prenom'=>'Fidèle','nom'=>'Azonhiho','email'=>'fidele.azonhiho@artisanpro.bj','telephone'=>'+22997110014',
-         'avatar'=>'https://images.unsplash.com/photo-1596815064285-45ed8a9c0463?w=200&h=200&fit=crop&crop=face',
+         // Menuisier aluminium africain pose fenêtre
+         'avatar'=>'https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Menuisier aluminium & PVC',
          'description'=>'Fabrication et pose de menuiseries aluminium et PVC : fenêtres, portes, vérandas, garde-corps, pergolas. Isolation thermique et phonique garantie.',
          'bio'=>"Spécialiste de la menuiserie aluminium depuis 12 ans. J'ai équipé plus de 200 villas et immeubles à Porto-Novo. Mes réalisations allient esthétique moderne et performance thermique.",
@@ -553,18 +634,24 @@ class DatabaseSeeder extends Seeder
              ['titre'=>'Garde-corps aluminium','desc'=>'Garde-corps balcon, escalier, terrasse. Barreaux, câbles ou verre. Sur mesure.','min'=>40000,'max'=>200000,'duree'=>1440,'cat'=>'Menuiserie'],
          ],
          'portfolio'=>[
-             ['titre'=>'Véranda moderne — Villa Gbèdjromèdé','desc'=>'Véranda 25m² en aluminium blanc avec toit en verre feuilleté. Vue jardin.','url'=>'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&h=600&fit=crop'],
-             ['titre'=>'Fenêtres double vitrage — Immeuble Dodji','desc'=>'Remplacement 24 fenêtres par menuiseries aluminium double vitrage. Économie 40% climatisation.','url'=>'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=600&fit=crop'],
-             ['titre'=>'Garde-corps verre — Duplex Anavié','desc'=>'Garde-corps en verre feuilleté 10mm pour terrasse de 15m linéaires.','url'=>'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&h=600&fit=crop'],
-             ['titre'=>'Porte coulissante — Salon Gbodjè','desc'=>'Grande baie vitrée coulissante 4m en aluminium thermolaqué gris anthracite.','url'=>'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
+             ['titre'=>'Véranda aluminium — Villa Gbèdjromèdé','desc'=>'Véranda 25m² en aluminium blanc avec toit en verre feuilleté. Vue jardin.',
+              'url'=>'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&h=600&fit=crop'],
+             ['titre'=>'Fenêtres double vitrage — Immeuble Dodji','desc'=>'Remplacement 24 fenêtres par menuiseries aluminium double vitrage. Économie 40% climatisation.',
+              'url'=>'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=600&fit=crop'],
+             ['titre'=>'Garde-corps verre — Terrasse duplex Anavié','desc'=>'Garde-corps en verre feuilleté 10mm pour terrasse de 15m linéaires.',
+              'url'=>'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&h=600&fit=crop'],
+             ['titre'=>'Baie vitrée coulissante — Salon Gbodjè','desc'=>'Grande baie vitrée coulissante 4m en aluminium thermolaqué gris anthracite.',
+              'url'=>'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
          ],
          'certifications'=>[
              ['nom'=>'CAP Menuiserie Aluminium','org'=>'CFPA Cotonou','date'=>'2012-06-20'],
              ['nom'=>'Certification Technal Installateur','org'=>'Technal France','date'=>'2018-09-15'],
          ]],
 
+        // ── Sandrine Dossevi — Technicienne en climatisation ──────────────────
         ['prenom'=>'Sandrine','nom'=>'Dossevi','email'=>'sandrine.dossevi@artisanpro.bj','telephone'=>'+22997110015',
-         'avatar'=>'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop&crop=face',
+         // Femme technicienne africaine maintenance climatiseur
+         'avatar'=>'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=face',
          'metier'=>'Technicienne en climatisation',
          'description'=>'Installation, entretien et dépannage de climatiseurs résidentiels et commerciaux. Certifiée Mitsubishi et Gree. Contrats de maintenance annuelle disponibles.',
          'bio'=>"Technicienne frigoriste depuis 6 ans, je suis l'une des rares femmes dans ce métier au Bénin. Formée à l'INMES de Cotonou, je maîtrise tous les types de climatiseurs du marché.",
@@ -577,10 +664,14 @@ class DatabaseSeeder extends Seeder
              ['titre'=>'Climatisation commerciale','desc'=>'Systèmes multi-split pour boutiques, restaurants, bureaux. Étude et devis gratuits.','min'=>200000,'max'=>2000000,'duree'=>7200,'cat'=>'Climatisation'],
          ],
          'portfolio'=>[
-             ['titre'=>'Boutique climatisée — Centre commercial Ouando','desc'=>'Installation 4 climatiseurs Mitsubishi 18000 BTU dans une boutique de 80m².','url'=>'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&h=600&fit=crop'],
-             ['titre'=>'Villa 5 pièces — Quartier Akonaboè','desc'=>'Équipement complet villa : 5 climatiseurs Gree avec télécommande WiFi.','url'=>'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=600&fit=crop'],
-             ['titre'=>'Salle de conférence — Hôtel Djlado','desc'=>'Climatisation salle 100 personnes avec système VRF Daikin. Contrôle centralisé.','url'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop'],
-             ['titre'=>'Maintenance annuelle — Résidence Houinvié','desc'=>'Contrat maintenance 12 climatiseurs pour résidence de 6 appartements.','url'=>'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=600&fit=crop'],
+             ['titre'=>'Technicienne pose climatiseur — Boutique Ouando','desc'=>'Installation 4 climatiseurs Mitsubishi 18000 BTU dans une boutique de 80m².',
+              'url'=>'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&h=600&fit=crop'],
+             ['titre'=>'Climatisation villa 5 pièces — Akonaboè','desc'=>'Équipement complet villa : 5 climatiseurs Gree avec télécommande WiFi.',
+              'url'=>'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&h=600&fit=crop'],
+             ['titre'=>'VRF salle conférence — Hôtel Djlado','desc'=>'Climatisation salle 100 personnes avec système VRF Daikin. Contrôle centralisé.',
+              'url'=>'https://images.unsplash.com/photo-1527689368864-3a821dbccc34?w=800&h=600&fit=crop'],
+             ['titre'=>'Maintenance annuelle — Résidence Houinvié 12 clims','desc'=>'Contrat maintenance 12 climatiseurs pour résidence de 6 appartements.',
+              'url'=>'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&h=600&fit=crop'],
          ],
          'certifications'=>[
              ['nom'=>'BTS Génie Climatique','org'=>'INMES Cotonou','date'=>'2018-07-20'],

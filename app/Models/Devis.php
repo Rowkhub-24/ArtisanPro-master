@@ -20,6 +20,8 @@ class Devis extends Model
         'montant_propose',
         'statut',
         'date_acceptation',
+        'notes_artisan',
+        'sous_total_materiels',
     ];
 
     /**
@@ -33,6 +35,7 @@ class Devis extends Model
             'date_reponse' => 'datetime',
             'date_acceptation' => 'datetime',
             'montant_propose' => 'decimal:2',
+            'sous_total_materiels' => 'decimal:2',
         ];
     }
 
@@ -49,5 +52,10 @@ class Devis extends Model
     public function reservations(): HasMany
     {
         return $this->hasMany(Reservation::class, 'id_devis');
+    }
+
+    public function materiels(): HasMany
+    {
+        return $this->hasMany(DevisMateriel::class, 'id_devis')->orderBy('ordre');
     }
 }
